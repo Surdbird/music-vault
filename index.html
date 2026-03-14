@@ -1541,17 +1541,21 @@ async function initiateSpotifyAuth() {
   const poll = setInterval(async () => {
     try {
       if (!popup || popup.closed) { clearInterval(poll); return; }
-      const url = popup.location.href;
-      if (url.startsWith(redirectUri)) {
+      let url;
+      try { url = popup.location.href; } catch(e) { return; }
+      if (url && url.startsWith(redirectUri) && url.includes('code=')) {
         clearInterval(poll);
-        const code = new URL(url).searchParams.get('code');
-        const error = new URL(url).searchParams.get('error');
-        popup.close();
+        const urlParams = new URL(url).searchParams;
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        try { popup.close(); } catch(e) {}
         if (error) { toast('Spotify auth cancelled'); return; }
         if (code) await exchangeCode(code);
       }
-    } catch(e) { /* cross-origin — still loading */ }
-  }, 500);
+    } catch(e) { /* cross-origin — still loading, ignore */ }
+  }, 300);
+  // Timeout after 3 minutes
+  setTimeout(() => clearInterval(poll), 180000);
 }
 
 async function exchangeCode(code) {
