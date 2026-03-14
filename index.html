@@ -4,158 +4,851 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Vault — Community Music Archive</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+
 <style>
-:root{--bg:#f5f0e8;--paper:#faf7f2;--ink:#1a1612;--ink2:#3d3530;--muted:#9e8e7e;--rule:#ddd5c8;--accent:#c8401a;--yt:#c8401a;--yt-light:#fdf0ec;--sp:#1a7a3c;--sp-light:#edf7f1;--am:#b5254a;--am-light:#fceef2;--bc:#1a5a8a;--bc-light:#ecf3fa;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--ink);font-family:'Lora',serif;min-height:100vh;}
-.masthead{background:var(--ink);color:var(--bg);padding:2.5rem 3rem 2rem;border-bottom:4px solid var(--accent);}
-.masthead-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:end;}
-.pub-name{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2.5rem,6vw,5rem);letter-spacing:-0.02em;line-height:1;color:var(--bg);}
-.pub-name span{color:var(--accent);}
-.pub-sub{font-family:'Lora',serif;font-style:italic;color:var(--muted);font-size:0.9rem;margin-top:0.4rem;}
-.pub-meta{text-align:right;font-family:'Syne Mono',monospace;font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;line-height:1.8;}
-.toolbar{background:var(--paper);border-bottom:1px solid var(--rule);padding:1rem 3rem;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
-.toolbar-inner{max-width:1200px;margin:0 auto;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
-.search-wrap{position:relative;flex:1;min-width:200px;}
-.search-wrap::before{content:'⌕';position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.1rem;pointer-events:none;}
-input[type="search"],input[type="text"]{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:2px;color:var(--ink);font-family:'Syne Mono',monospace;font-size:0.8rem;padding:0.55rem 0.75rem 0.55rem 2.2rem;outline:none;transition:border-color 0.15s;}
-input[type="search"]:focus,input[type="text"]:focus{border-color:var(--accent);}
-.filter-pills{display:flex;gap:0.4rem;flex-wrap:wrap;}
-.pill{font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;padding:0.3rem 0.7rem;border-radius:2px;border:1.5px solid;cursor:pointer;transition:all 0.15s;background:transparent;}
-.pill.all{border-color:var(--ink);color:var(--ink);}
-.pill.all.active,.pill.all:hover{background:var(--ink);color:var(--bg);}
-.pill.yt{border-color:var(--yt);color:var(--yt);}
-.pill.yt.active,.pill.yt:hover{background:var(--yt);color:white;}
-.pill.sp{border-color:var(--sp);color:var(--sp);}
-.pill.sp.active,.pill.sp:hover{background:var(--sp);color:white;}
-.pill.am{border-color:var(--am);color:var(--am);}
-.pill.am.active,.pill.am:hover{background:var(--am);color:white;}
-.pill.bc{border-color:var(--bc);color:var(--bc);}
-.pill.bc.active,.pill.bc:hover{background:var(--bc);color:white;}
-.upload-panel{max-width:1200px;margin:2.5rem auto;padding:0 3rem;}
-.upload-card{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--accent);padding:2rem;}
-.upload-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:0.05em;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem;}
-.upload-title::after{content:'';flex:1;height:1px;background:var(--rule);}
-.drop-zone{border:1.5px dashed var(--rule);padding:2rem;text-align:center;cursor:pointer;position:relative;transition:all 0.2s;background:var(--bg);margin-bottom:1rem;}
-.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:var(--yt-light);}
-.drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.drop-label{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:0.08em;display:block;margin-bottom:0.35rem;}
-.drop-sub{font-size:0.75rem;color:var(--muted);font-family:'Syne Mono',monospace;}
-.or-row{display:flex;align-items:center;gap:1rem;margin:1rem 0;font-family:'Syne Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;color:var(--muted);}
-.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:var(--rule);}
-textarea{width:100%;background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'Syne Mono',monospace;font-size:0.72rem;padding:1rem;resize:vertical;min-height:120px;outline:none;transition:border-color 0.15s;line-height:1.6;border-radius:2px;}
-textarea:focus{border-color:var(--accent);}
-textarea::placeholder{color:var(--muted);}
-.btn-primary{margin-top:1rem;width:100%;background:var(--accent);color:white;border:none;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;letter-spacing:0.12em;padding:0.9rem 2rem;cursor:pointer;transition:all 0.15s;}
-.btn-primary:hover{background:#a33015;}
-.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
-.stats-row{max-width:1200px;margin:0 auto 2rem;padding:0 3rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);}
-.stat-box{background:var(--paper);padding:1rem 1.25rem;text-align:center;}
-.stat-n{font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;line-height:1;display:block;}
-.stat-label{font-family:'Syne Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;display:block;margin-top:0.25rem;}
-.main-area{max-width:1200px;margin:0 auto;padding:0 3rem 4rem;display:grid;grid-template-columns:260px 1fr;gap:2rem;align-items:start;}
-.sidebar{position:sticky;top:68px;}
-.sidebar-title{font-family:'Syne',sans-serif;font-weight:800;font-size:0.65rem;letter-spacing:0.18em;color:var(--muted);padding-bottom:0.5rem;border-bottom:1px solid var(--rule);margin-bottom:0.75rem;}
-.member-list{display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 160px);overflow-y:auto;}
-.member-list::-webkit-scrollbar{width:4px;}
-.member-list::-webkit-scrollbar-thumb{background:var(--rule);}
-.member-btn{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:transparent;border:none;border-radius:2px;cursor:pointer;text-align:left;width:100%;transition:background 0.12s;}
-.member-btn:hover{background:var(--paper);}
-.member-btn.active{background:var(--ink);}
-.member-avatar{width:28px;height:28px;border-radius:50%;font-family:'Syne',sans-serif;font-weight:800;font-size:0.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;}
-.member-info{min-width:0;flex:1;}
-.member-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;color:var(--ink);}
-.member-btn.active .member-name{color:var(--bg);}
-.member-count{font-family:'Syne Mono',monospace;font-size:0.6rem;color:var(--muted);display:block;}
-.member-btn.active .member-count{color:rgba(255,255,255,0.5);}
-.member-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--ink);flex-wrap:wrap;}
-.member-header-avatar{width:52px;height:52px;border-radius:50%;font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;}
-.member-header-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.02em;line-height:1;}
-.member-header-meta{font-family:'Lora',serif;font-style:italic;font-size:0.85rem;color:var(--muted);margin-top:0.25rem;}
-.member-actions{margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;}
-.btn-sm{font-family:'Syne',sans-serif;font-weight:700;font-size:0.6rem;letter-spacing:0.1em;padding:0.35rem 0.75rem;border:1.5px solid;border-radius:2px;background:transparent;cursor:pointer;transition:all 0.15s;}
-.btn-sm.ink{border-color:var(--ink);color:var(--ink);}
-.btn-sm.ink:hover{background:var(--ink);color:var(--bg);}
-.platform-blocks{display:flex;flex-direction:column;gap:1.25rem;}
-.platform-block{background:var(--paper);border:1px solid var(--rule);overflow:hidden;}
-.platform-block-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--rule);cursor:pointer;user-select:none;}
-.platform-block-header.yt-h{background:var(--yt-light);border-left:3px solid var(--yt);}
-.platform-block-header.sp-h{background:var(--sp-light);border-left:3px solid var(--sp);}
-.platform-block-header.am-h{background:var(--am-light);border-left:3px solid var(--am);}
-.platform-block-header.bc-h{background:var(--bc-light);border-left:3px solid var(--bc);}
-.platform-block-title{display:flex;align-items:center;gap:0.6rem;font-family:'Syne',sans-serif;font-weight:800;font-size:0.85rem;letter-spacing:0.08em;}
-.platform-block-title.yt-t{color:var(--yt);}
-.platform-block-title.sp-t{color:var(--sp);}
-.platform-block-title.am-t{color:var(--am);}
-.platform-block-title.bc-t{color:var(--bc);}
-.track-count-badge{font-family:'Syne Mono',monospace;font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:2px;background:rgba(0,0,0,0.08);color:var(--ink2);}
-.platform-block-acts{display:flex;gap:0.5rem;align-items:center;}
-.chevron-icon{font-size:0.75rem;color:var(--muted);transition:transform 0.2s;}
-.collapsed-block .chevron-icon{transform:rotate(-90deg);}
-.track-table{width:100%;border-collapse:collapse;}
-.collapsed-block .track-table-wrap{display:none;}
-.track-table td{padding:0.6rem 1.25rem;border-bottom:1px solid var(--rule);vertical-align:middle;font-size:0.78rem;}
-.track-table tr:last-child td{border-bottom:none;}
-.track-table tr:hover td{background:rgba(0,0,0,0.02);}
-.td-num{font-family:'Syne Mono',monospace;font-size:0.65rem;color:var(--muted);width:2.5rem;text-align:right;}
-.track-title-text{display:block;font-family:'Lora',serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;text-decoration:none;}
-.track-title-text:hover{color:var(--accent);}
-.track-url-text{display:block;font-family:'Syne Mono',monospace;font-size:0.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;}
-.fetching-badge{font-family:'Syne Mono',monospace;font-size:0.6rem;color:var(--muted);font-style:italic;}
-.td-date{font-family:'Syne Mono',monospace;font-size:0.62rem;color:var(--muted);white-space:nowrap;}
-.td-actions{white-space:nowrap;text-align:right;}
-.link-btn{font-family:'Syne',sans-serif;font-weight:700;font-size:0.58rem;letter-spacing:0.08em;padding:0.2rem 0.5rem;border-radius:2px;text-decoration:none;border:1px solid;display:inline-block;margin-left:0.25rem;transition:all 0.12s;}
-.link-btn.yt-btn{border-color:var(--yt);color:var(--yt);}
-.link-btn.yt-btn:hover{background:var(--yt);color:white;}
-.link-btn.sp-btn{border-color:var(--sp);color:var(--sp);}
-.link-btn.sp-btn:hover{background:var(--sp);color:white;}
-.link-btn.am-btn{border-color:var(--am);color:var(--am);}
-.link-btn.am-btn:hover{background:var(--am);color:white;}
-.link-btn.bc-btn{border-color:var(--bc);color:var(--bc);}
-.link-btn.bc-btn:hover{background:var(--bc);color:white;}
-.link-btn.search-btn{border-color:var(--muted);color:var(--muted);}
-.link-btn.search-btn:hover{border-color:var(--ink);color:var(--ink);}
-.empty-panel{text-align:center;padding:5rem 2rem;color:var(--muted);}
-.empty-big{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--ink);margin-bottom:0.5rem;}
-.empty-sub{font-size:0.85rem;font-style:italic;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.modal-overlay{position:fixed;inset:0;background:rgba(20,16,12,0.7);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;}
-.modal-overlay.hidden{display:none;}
-.modal-box{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--sp);max-width:520px;width:100%;padding:2rem;}
-.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;letter-spacing:0.05em;margin-bottom:0.4rem;color:var(--sp);}
-.modal-sub{font-size:0.8rem;color:var(--muted);font-style:italic;margin-bottom:1.5rem;line-height:1.5;}
-.modal-field{margin-bottom:1rem;}
-.modal-label{font-family:'Syne',sans-serif;font-weight:700;font-size:0.65rem;letter-spacing:0.12em;color:var(--muted);display:block;margin-bottom:0.35rem;}
-.modal-input{width:100%;background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'Syne Mono',monospace;font-size:0.8rem;padding:0.6rem 0.85rem;outline:none;border-radius:2px;transition:border-color 0.15s;}
-.modal-input:focus{border-color:var(--sp);}
-.modal-hint{font-family:'Syne Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.3rem;display:block;}
-.modal-hint a{color:var(--sp);}
-.modal-actions{display:flex;gap:0.75rem;margin-top:1.5rem;}
-.btn-sp{background:var(--sp);color:white;border:none;font-family:'Syne',sans-serif;font-weight:800;font-size:0.8rem;letter-spacing:0.1em;padding:0.65rem 1.25rem;cursor:pointer;border-radius:2px;transition:all 0.15s;flex:1;}
-.btn-sp:hover{background:#155f30;}
-.btn-sp:disabled{opacity:0.4;cursor:not-allowed;}
-.btn-cancel{background:transparent;border:1px solid var(--rule);color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:0.1em;padding:0.65rem 1.25rem;cursor:pointer;border-radius:2px;transition:all 0.15s;}
-.btn-cancel:hover{border-color:var(--muted);color:var(--ink);}
-.progress-wrap{margin-top:1.25rem;display:none;}
-.progress-wrap.visible{display:block;}
-.progress-label{font-family:'Syne Mono',monospace;font-size:0.65rem;color:var(--muted);margin-bottom:0.4rem;display:flex;justify-content:space-between;}
-.progress-bar-track{height:4px;background:var(--rule);border-radius:2px;overflow:hidden;}
-.progress-bar-fill{height:100%;background:var(--sp);border-radius:2px;width:0%;transition:width 0.3s;}
-.progress-log{margin-top:0.75rem;font-family:'Syne Mono',monospace;font-size:0.62rem;color:var(--muted);max-height:80px;overflow-y:auto;line-height:1.8;}
-.sp-connected{display:inline-flex;align-items:center;gap:0.4rem;font-family:'Syne Mono',monospace;font-size:0.65rem;color:var(--sp);padding:0.25rem 0.6rem;border:1px solid #1a3d22;border-radius:2px;background:var(--sp-light);}
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--bg);padding:0.75rem 1.25rem;font-family:'Syne Mono',monospace;font-size:0.72rem;letter-spacing:0.05em;transform:translateY(4rem);opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;}
-.toast.show{transform:translateY(0);opacity:1;}
-@media(max-width:768px){
-  .masthead,.upload-panel,.stats-row,.main-area{padding-left:1rem;padding-right:1rem;}
-  .toolbar{padding-left:1rem;padding-right:1rem;}
-  .main-area{grid-template-columns:1fr;}
-  .sidebar{position:static;}
-  .member-list{max-height:200px;}
+:root {
+  --bg: #f5f0e8;
+  --paper: #faf7f2;
+  --ink: #1a1612;
+  --ink2: #3d3530;
+  --muted: #9e8e7e;
+  --rule: #ddd5c8;
+  --accent: #c8401a;
+  --accent2: #1a6bc8;
+
+  --yt: #c8401a;
+  --yt-light: #fdf0ec;
+  --sp: #1a7a3c;
+  --sp-light: #edf7f1;
+  --am: #b5254a;
+  --am-light: #fceef2;
+  --bc: #1a5a8a;
+  --bc-light: #ecf3fa;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 4px solid var(--accent);
+}
+
+.masthead-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.pub-name {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--bg);
+}
+
+.pub-name span { color: var(--accent); }
+
+.pub-sub {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+.pub-meta {
+  text-align: right;
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+}
+
+/* ── TOOLBAR ── */
+.toolbar {
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: 1rem 3rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.toolbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-wrap::before {
+  content: '⌕';
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+input[type="search"], input[type="text"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink);
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.8rem;
+  padding: 0.55rem 0.75rem 0.55rem 2.2rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input[type="search"]:focus, input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.filter-pills {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.3rem 0.7rem;
+  border-radius: 2px;
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: transparent;
+}
+
+.pill.all { border-color: var(--ink); color: var(--ink); }
+.pill.all.active, .pill.all:hover { background: var(--ink); color: var(--bg); }
+.pill.yt { border-color: var(--yt); color: var(--yt); }
+.pill.yt.active, .pill.yt:hover { background: var(--yt); color: white; }
+.pill.sp { border-color: var(--sp); color: var(--sp); }
+.pill.sp.active, .pill.sp:hover { background: var(--sp); color: white; }
+.pill.am { border-color: var(--am); color: var(--am); }
+.pill.am.active, .pill.am:hover { background: var(--am); color: white; }
+.pill.bc { border-color: var(--bc); color: var(--bc); }
+.pill.bc.active, .pill.bc:hover { background: var(--bc); color: white; }
+
+/* ── UPLOAD PANEL ── */
+.upload-panel {
+  max-width: 1200px;
+  margin: 2.5rem auto;
+  padding: 0 3rem;
+}
+
+.upload-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent);
+  padding: 2rem;
+}
+
+.upload-title {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.upload-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.drop-zone {
+  border: 1.5px dashed var(--rule);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  background: var(--bg);
+  margin-bottom: 1rem;
+}
+
+.drop-zone:hover, .drop-zone.over { border-color: var(--accent); background: var(--yt-light); }
+
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+.drop-label {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.drop-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-family: 'SF Mono','Courier New',monospace;
+}
+
+.or-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+}
+.or-row::before, .or-row::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.72rem;
+  padding: 1rem;
+  resize: vertical;
+  min-height: 120px;
+  outline: none;
+  transition: border-color 0.15s;
+  line-height: 1.6;
+  border-radius: 2px;
+}
+
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--muted); }
+
+.btn-primary {
+  margin-top: 1rem;
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  padding: 0.9rem 2rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-primary:hover { background: #a33015; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0 3rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+
+.stat-box {
+  background: var(--paper);
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.stat-n {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+  display: block;
+}
+
+.stat-label {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* ── MAIN GRID ── */
+.main-area {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 3rem 4rem;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: sticky;
+  top: 68px;
+}
+
+.sidebar-title {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 0.75rem;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.member-list::-webkit-scrollbar { width: 4px; }
+.member-list::-webkit-scrollbar-track { background: transparent; }
+.member-list::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.member-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s;
+}
+
+.member-btn:hover { background: var(--paper); }
+.member-btn.active { background: var(--ink); }
+
+.member-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
+.member-info { min-width: 0; flex: 1; }
+
+.member-name {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: var(--ink);
+}
+
+.member-btn.active .member-name { color: var(--bg); }
+
+.member-count {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  display: block;
+}
+
+.member-btn.active .member-count { color: rgba(255,255,255,0.5); }
+
+/* ── CONTENT PANEL ── */
+.content-panel {}
+
+.member-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--ink);
+}
+
+.member-header-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.member-header-name {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.member-header-meta {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.member-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  padding: 0.35rem 0.75rem;
+  border: 1.5px solid;
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-sm.ink { border-color: var(--ink); color: var(--ink); }
+.btn-sm.ink:hover { background: var(--ink); color: var(--bg); }
+
+/* ── PLATFORM BLOCKS ── */
+.platform-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.platform-block {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+
+.platform-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  user-select: none;
+}
+
+.platform-block-header.yt-h { background: var(--yt-light); border-left: 3px solid var(--yt); }
+.platform-block-header.sp-h { background: var(--sp-light); border-left: 3px solid var(--sp); }
+.platform-block-header.am-h { background: var(--am-light); border-left: 3px solid var(--am); }
+.platform-block-header.bc-h { background: var(--bc-light); border-left: 3px solid var(--bc); }
+
+.platform-block-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+}
+
+.platform-block-title.yt-t { color: var(--yt); }
+.platform-block-title.sp-t { color: var(--sp); }
+.platform-block-title.am-t { color: var(--am); }
+.platform-block-title.bc-t { color: var(--bc); }
+
+.track-count-badge {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.08);
+  color: var(--ink2);
+}
+
+.platform-block-acts {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.chevron-icon { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+.collapsed-block .chevron-icon { transform: rotate(-90deg); }
+
+.track-table { width: 100%; border-collapse: collapse; }
+.collapsed-block .track-table-wrap { display: none; }
+
+.track-table td {
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  font-size: 0.78rem;
+}
+
+.track-table tr:last-child td { border-bottom: none; }
+.track-table tr:hover td { background: rgba(0,0,0,0.02); }
+
+.td-num {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  width: 2.5rem;
+  text-align: right;
+}
+
+.td-title { min-width: 0; }
+
+.track-title-text {
+  display: block;
+  font-family: 'Georgia', serif;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
+  text-decoration: none;
+}
+
+.track-title-text:hover { color: var(--accent); }
+
+.track-url-text {
+  display: block;
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
+}
+
+.fetching-badge {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.td-date {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.td-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.link-btn {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 700;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  text-decoration: none;
+  border: 1px solid;
+  display: inline-block;
+  margin-left: 0.25rem;
+  transition: all 0.12s;
+}
+
+.link-btn.yt-btn { border-color: var(--yt); color: var(--yt); }
+.link-btn.yt-btn:hover { background: var(--yt); color: white; }
+.link-btn.sp-btn { border-color: var(--sp); color: var(--sp); }
+.link-btn.sp-btn:hover { background: var(--sp); color: white; }
+.link-btn.am-btn { border-color: var(--am); color: var(--am); }
+.link-btn.am-btn:hover { background: var(--am); color: white; }
+.link-btn.bc-btn { border-color: var(--bc); color: var(--bc); }
+.link-btn.bc-btn:hover { background: var(--bc); color: white; }
+.link-btn.search-btn { border-color: var(--muted); color: var(--muted); }
+.link-btn.search-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ── EMPTY / LOADING ── */
+.empty-panel {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+.empty-big {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.empty-sub { font-size: 0.85rem; font-style: italic; }
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── SPOTIFY MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(20,16,12,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal-box {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--sp);
+  max-width: 520px; width: 100%;
+  padding: 2rem;
+  position: relative;
+}
+
+.modal-title {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.4rem;
+  color: var(--sp);
+}
+
+.modal-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.modal-field { margin-bottom: 1rem; }
+
+.modal-label {
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.modal-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.8rem;
+  padding: 0.6rem 0.85rem;
+  outline: none;
+  border-radius: 2px;
+  transition: border-color 0.15s;
+}
+
+.modal-input:focus { border-color: var(--sp); }
+
+.modal-hint {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-top: 0.3rem;
+  display: block;
+}
+
+.modal-hint a { color: var(--sp); }
+
+.modal-actions {
+  display: flex; gap: 0.75rem; margin-top: 1.5rem;
+}
+
+.btn-sp {
+  background: var(--sp);
+  color: white;
+  border: none;
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  padding: 0.65rem 1.25rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  flex: 1;
+}
+
+.btn-sp:hover { background: #155f30; }
+.btn-sp:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--muted);
+  font-family: 'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  padding: 0.65rem 1.25rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.btn-cancel:hover { border-color: var(--muted); color: var(--ink); }
+
+/* Progress bar */
+.progress-wrap {
+  margin-top: 1.25rem;
+  display: none;
+}
+
+.progress-wrap.visible { display: block; }
+
+.progress-label {
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.progress-bar-track {
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--sp);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s;
+}
+
+.progress-log {
+  margin-top: 0.75rem;
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  max-height: 80px;
+  overflow-y: auto;
+  line-height: 1.8;
+}
+
+/* Spotify connected badge */
+.sp-connected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.65rem;
+  color: var(--sp);
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--sp-border, #1a3d22);
+  border-radius: 2px;
+  background: var(--sp-light);
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem;
+  background: var(--ink); color: var(--bg);
+  padding: 0.75rem 1.25rem;
+  font-family: 'SF Mono','Courier New',monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  transform: translateY(4rem); opacity: 0;
+  transition: all 0.3s; pointer-events: none; z-index: 999;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .masthead, .upload-panel, .stats-row, .main-area { padding-left: 1rem; padding-right: 1rem; }
+  .toolbar { padding-left: 1rem; padding-right: 1rem; }
+  .main-area { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  .member-list { max-height: 200px; }
 }
 </style>
 </head>
 <body>
+
 <header class="masthead">
   <div class="masthead-inner">
     <div>
@@ -169,33 +862,38 @@ textarea::placeholder{color:var(--muted);}
     </div>
   </div>
 </header>
+
 <div class="toolbar">
   <div class="toolbar-inner">
     <div class="search-wrap">
-      <input type="search" id="memberSearch" placeholder="Search member..." oninput="filterMembers()">
+      <input type="search" id="memberSearch" placeholder="Search member..." oninput="filterMembers(this.value)">
     </div>
     <div class="filter-pills">
-      <button class="pill all active" onclick="setPlatformFilter('all',this)">ALL</button>
-      <button class="pill yt" onclick="setPlatformFilter('youtube',this)">YOUTUBE</button>
-      <button class="pill sp" onclick="setPlatformFilter('spotify',this)">SPOTIFY</button>
-      <button class="pill am" onclick="setPlatformFilter('applemusic',this)">APPLE</button>
-      <button class="pill bc" onclick="setPlatformFilter('bandcamp',this)">BANDCAMP</button>
+      <button class="pill all active" onclick="setPlatformFilter('all', this)">ALL</button>
+      <button class="pill yt" onclick="setPlatformFilter('youtube', this)">YOUTUBE</button>
+      <button class="pill sp" onclick="setPlatformFilter('spotify', this)">SPOTIFY</button>
+      <button class="pill am" onclick="setPlatformFilter('applemusic', this)">APPLE</button>
+      <button class="pill bc" onclick="setPlatformFilter('bandcamp', this)">BANDCAMP</button>
     </div>
   </div>
 </div>
+
+<!-- UPLOAD PANEL -->
 <div class="upload-panel" id="uploadSection">
   <div class="upload-card">
     <div class="upload-title">IMPORT CHAT</div>
     <div class="drop-zone" id="dropZone">
-      <input type="file" id="fileInput" accept=".txt">
+      <input type="file" id="fileInput" accept=".txt,.zip">
       <span class="drop-label">DROP WHATSAPP .TXT EXPORT HERE</span>
       <span class="drop-sub">WhatsApp → Group → Export Chat → Without Media</span>
     </div>
     <div class="or-row">OR PASTE DIRECTLY</div>
-    <textarea id="chatInput" placeholder="Paste your WhatsApp chat text here..."></textarea>
+    <textarea id="chatInput" placeholder="Paste your WhatsApp chat text here...&#10;&#10;Example:&#10;15/01/2024, 21:30 - Aditya Srinath: guys listen to this https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT&#10;15/01/2024, 21:45 - Priya: omg yes and this https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea>
     <button class="btn-primary" id="extractBtn" onclick="runExtraction()">◼ BUILD PLAYLISTS</button>
   </div>
 </div>
+
+<!-- STATS ROW (hidden until data loaded) -->
 <div class="stats-row" id="statsRow" style="display:none">
   <div class="stat-box"><span class="stat-n" id="statMembers">0</span><span class="stat-label">Members</span></div>
   <div class="stat-box"><span class="stat-n" id="statLinks">0</span><span class="stat-label">Total Links</span></div>
@@ -204,6 +902,8 @@ textarea::placeholder{color:var(--muted);}
   <div class="stat-box"><span class="stat-n" style="color:var(--am)" id="statAM">0</span><span class="stat-label">Apple Music</span></div>
   <div class="stat-box"><span class="stat-n" style="color:var(--bc)" id="statBC">0</span><span class="stat-label">Bandcamp</span></div>
 </div>
+
+<!-- MAIN AREA (hidden until data loaded) -->
 <div class="main-area" id="mainArea" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-title">MEMBERS — <span id="memberCountLabel">0</span></div>
@@ -216,21 +916,27 @@ textarea::placeholder{color:var(--muted);}
     </div>
   </div>
 </div>
+
+<!-- SPOTIFY MODAL -->
 <div class="modal-overlay hidden" id="spotifyModal">
   <div class="modal-box">
     <div class="modal-title">◎ Create Spotify Playlist</div>
-    <div class="modal-sub" id="modalSub">Connect your Spotify account to automatically create a playlist.</div>
+    <div class="modal-sub" id="modalSub">Connect your Spotify account to automatically create a playlist from this member's shared tracks.</div>
+
     <div id="setupFields">
       <div class="modal-field">
         <label class="modal-label">SPOTIFY CLIENT ID</label>
         <input class="modal-input" id="clientIdInput" type="text" placeholder="e.g. a1b2c3d4e5f6...">
-        <span class="modal-hint">Get this free at <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> → Create App</span>
+        <span class="modal-hint">
+          Get this free at <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> → Create App
+        </span>
       </div>
       <div class="modal-field">
         <label class="modal-label">PLAYLIST NAME</label>
-        <input class="modal-input" id="playlistNameInput" type="text">
+        <input class="modal-input" id="playlistNameInput" type="text" placeholder="e.g. Adi Singapore — The Vault">
       </div>
     </div>
+
     <div id="connectedFields" style="display:none">
       <div class="sp-connected">◎ Connected as <strong id="spUserName">...</strong></div>
       <div class="modal-field" style="margin-top:1rem">
@@ -241,218 +947,544 @@ textarea::placeholder{color:var(--muted);}
         <button class="btn-cancel" onclick="disconnectSpotify()" style="font-size:0.65rem;padding:0.3rem 0.75rem">✕ Disconnect &amp; reconnect</button>
       </div>
     </div>
+
     <div class="progress-wrap" id="progressWrap">
-      <div class="progress-label"><span id="progressText">Adding tracks...</span><span id="progressCount">0 / 0</span></div>
+      <div class="progress-label">
+        <span id="progressText">Adding tracks...</span>
+        <span id="progressCount">0 / 0</span>
+      </div>
       <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
       <div class="progress-log" id="progressLog"></div>
     </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeSpotifyModal()">Cancel</button>
       <button class="btn-sp" id="modalActionBtn" onclick="spotifyModalAction()">Connect Spotify →</button>
     </div>
   </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
-let allData={},activeMember=null,platformFilter='all',titleCache={},fetchQueue=[],isFetching=false;
-let spotifyToken=null,spotifyUserId=null,spotifyUserName=null,currentModalMember=null;
-const SPOTIFY_SCOPES='playlist-modify-public playlist-modify-private';
-const AVATAR_COLORS=['#c8401a','#1a6bc8','#1a7a3c','#7a1a6b','#c8961a','#1a4a7a','#7a4a1a','#1a7a6b','#6b1a1a','#3a6b1a','#1a3a6b','#6b3a1a','#3a1a6b','#1a6b3a','#6b1a3a'];
-document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
-function avatarColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))&0xffffffff;return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];}
-function initials(n){return n.split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
+// ──────────────────────────────────────────────
+// GLOBALS
+// ──────────────────────────────────────────────
+let allData = {};          // { memberName: { youtube: [], spotify: [], applemusic: [], bandcamp: [] } }
+let activeMember = null;
+let platformFilter = 'all';
+let titleCache = {};       // url → title string
+let fetchQueue = [];
+let isFetching = false;
+
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+
+// Avatar colour palette
+const AVATAR_COLORS = [
+  '#c8401a','#1a6bc8','#1a7a3c','#7a1a6b','#c8961a',
+  '#1a4a7a','#7a4a1a','#1a7a6b','#6b1a1a','#3a6b1a',
+  '#1a3a6b','#6b3a1a','#3a1a6b','#1a6b3a','#6b1a3a',
+];
+
 function safeId(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return'id'+(h>>>0).toString(36);}
-const dropZone=document.getElementById('dropZone'),fileInput=document.getElementById('fileInput');
-dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
-dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('over'));
-dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('over');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);});
-fileInput.addEventListener('change',e=>{if(e.target.files[0])readFile(e.target.files[0]);});
-function readFile(file){const r=new FileReader();r.onload=e=>{document.getElementById('chatInput').value=e.target.result;toast('Loaded: '+file.name);};r.readAsText(file,'UTF-8');}
-const PLATFORMS={
-  youtube:{name:'YouTube',icon:'▶',cls:'yt',patterns:[/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^\s<>"'\])]*/gi,/https?:\/\/youtu\.be\/[^\s<>"'\])]*/gi,/https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\s<>"'\])]*/gi,/https?:\/\/music\.youtube\.com\/[^\s<>"'\])]*/gi]},
-  spotify:{name:'Spotify',icon:'◎',cls:'sp',patterns:[/https?:\/\/open\.spotify\.com\/[^\s<>"'\])]*/gi,/https?:\/\/spotify\.link\/[^\s<>"'\])]*/gi]},
-  applemusic:{name:'Apple Music',icon:'♪',cls:'am',patterns:[/https?:\/\/music\.apple\.com\/[^\s<>"'\])]*/gi,/https?:\/\/itunes\.apple\.com\/[^\s<>"'\])]*/gi]},
-  bandcamp:{name:'Bandcamp',icon:'◈',cls:'bc',patterns:[/https?:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/[^\s<>"'\])]*/gi]}
-};
-function runExtraction(){
-  const text=document.getElementById('chatInput').value.trim();
-  if(!text){toast('Please paste or upload a WhatsApp chat first');return;}
-  const btn=document.getElementById('extractBtn');
-  btn.disabled=true;btn.textContent='⟳ PROCESSING...';
-  setTimeout(()=>{
-    try{const result=parseChat(text);allData=result.members;renderAll(result);}
-    catch(e){toast('Error: '+e.message);console.error(e);}
-    btn.disabled=false;btn.textContent='◼ BUILD PLAYLISTS';
-  },50);
+
+function avatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
-function parseChat(text){
-  const lines=text.split('\n'),members={};let totalLinks=0;
-  const lineRe=[
+
+function initials(name) {
+  return name.split(/\s+/).map(w => w[0] || '').join('').slice(0, 2).toUpperCase();
+}
+
+// ──────────────────────────────────────────────
+// FILE / DRAG HANDLING
+// ──────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) readFile(e.target.files[0]); });
+
+function readFile(file) {
+  const r = new FileReader();
+  r.onload = e => { document.getElementById('chatInput').value = e.target.result; toast(`Loaded: ${file.name}`); };
+  r.readAsText(file, 'UTF-8');
+}
+
+// ──────────────────────────────────────────────
+// PLATFORM PATTERNS
+// ──────────────────────────────────────────────
+const PLATFORMS = {
+  youtube: {
+    name: 'YouTube', icon: '▶', cls: 'yt',
+    patterns: [
+      /https?:\/\/(?:www\.)?youtube\.com\/watch\?[^\s<>"'\])]*/gi,
+      /https?:\/\/youtu\.be\/[^\s<>"'\])]*/gi,
+      /https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\s<>"'\])]*/gi,
+      /https?:\/\/music\.youtube\.com\/[^\s<>"'\])]*/gi,
+    ]
+  },
+  spotify: {
+    name: 'Spotify', icon: '◎', cls: 'sp',
+    patterns: [
+      /https?:\/\/open\.spotify\.com\/[^\s<>"'\])]*/gi,
+      /https?:\/\/spotify\.link\/[^\s<>"'\])]*/gi,
+    ]
+  },
+  applemusic: {
+    name: 'Apple Music', icon: '♪', cls: 'am',
+    patterns: [
+      /https?:\/\/music\.apple\.com\/[^\s<>"'\])]*/gi,
+      /https?:\/\/itunes\.apple\.com\/[^\s<>"'\])]*/gi,
+    ]
+  },
+  bandcamp: {
+    name: 'Bandcamp', icon: '◈', cls: 'bc',
+    patterns: [
+      /https?:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/[^\s<>"'\])]*/gi,
+    ]
+  }
+};
+
+// ──────────────────────────────────────────────
+// EXTRACTION
+// ──────────────────────────────────────────────
+function runExtraction() {
+  const text = document.getElementById('chatInput').value.trim();
+  if (!text) { toast('Please paste or upload a WhatsApp chat first'); return; }
+
+  const btn = document.getElementById('extractBtn');
+  btn.disabled = true; btn.textContent = '⟳ PROCESSING...';
+
+  // Small delay to let UI update
+  setTimeout(() => {
+    try {
+      const result = parseChat(text);
+      allData = result.members;
+      try{localStorage.setItem('vault_chat',JSON.stringify(allData));}catch(e){}
+      renderAll(result);
+    } catch(e) {
+      toast('Error parsing chat — ' + e.message);
+      console.error(e);
+    }
+    btn.disabled = false; btn.textContent = '◼ BUILD PLAYLISTS';
+  }, 50);
+}
+
+function parseChat(text) {
+  const lines = text.split('\n');
+  const members = {};
+  let totalLinks = 0;
+
+  // WhatsApp line patterns — supports:
+  // "[1/3/19, 2:58:31 AM] Name: message"   ← your format
+  // "[12/03/2025, 22:41:00] Name: message"
+  // "12/03/2025, 22:41 - Name: message"
+  const lineRe = [
+    // Bracketed with optional AM/PM (your format)
     /^\[(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}),\s*(\d{1,2}:\d{2}:\d{2}\s*[AP]M|\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2}\s*[AP]M|\d{1,2}:\d{2})\]\s*(~?\s*[^:]+?):\s*([\s\S]*)/i,
-    /^(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4})[,\s]+(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)\s*[-–]\s*(~?\s*[^:]+?):\s*([\s\S]*)/i
+    // Dash-separated without brackets
+    /^(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4})[,\s]+(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)\s*[-–]\s*(~?\s*[^:]+?):\s*([\s\S]*)/i,
   ];
-  let currentSender=null,currentDate='',currentTime='',messageBuffer=[];
-  const processBuffer=()=>{
-    if(!currentSender||!messageBuffer.length)return;
-    const msgText=messageBuffer.join(' ');
-    for(const[platform,cfg]of Object.entries(PLATFORMS)){
-      for(const pat of cfg.patterns){
-        const matches=[...msgText.matchAll(new RegExp(pat.source,'gi'))];
-        for(const m of matches){
-          let url=m[0].replace(/[).,;'">\]\[]+$/,'');
-          if(!members[currentSender])members[currentSender]={youtube:[],spotify:[],applemusic:[],bandcamp:[]};
-          const existing=members[currentSender][platform];
-          if(!existing.find(e=>e.url===url)){existing.push({url,date:currentDate,time:currentTime});totalLinks++;}
+
+  // Also grab message continuations (lines without date prefix)
+  let currentSender = null, currentDate = '', currentTime = '';
+  let messageBuffer = [];
+
+  const processBuffer = () => {
+    if (!currentSender || !messageBuffer.length) return;
+    const msgText = messageBuffer.join(' ');
+    for (const [platform, cfg] of Object.entries(PLATFORMS)) {
+      for (const pat of cfg.patterns) {
+        const matches = [...msgText.matchAll(new RegExp(pat.source, 'gi'))];
+        for (const m of matches) {
+          let url = m[0].replace(/[).,;'">\]\[]+$/, '');
+          if (!members[currentSender]) {
+            members[currentSender] = { youtube:[], spotify:[], applemusic:[], bandcamp:[] };
+          }
+          // Dedup per person per platform
+          const existing = members[currentSender][platform];
+          if (!existing.find(e => e.url === url)) {
+            existing.push({ url, date: currentDate, time: currentTime, title: null });
+            totalLinks++;
+          }
         }
       }
     }
-    messageBuffer=[];
+    messageBuffer = [];
   };
-  for(const line of lines){
-    let matched=false;
-    for(const re of lineRe){
-      const m=line.match(re);
-      if(m){
+
+  for (const line of lines) {
+    let matched = false;
+    for (const re of lineRe) {
+      const m = line.match(re);
+      if (m) {
         processBuffer();
-        currentDate=m[1];currentTime=m[2];
-        currentSender=m[3].trim().replace(/^~\s*/,'').trim();
-        const msgBody=m[4]||'';
-        const isSystem=line.includes('\u200e')||/end-to-end encrypted/i.test(msgBody)||/created this group/i.test(msgBody)||/Messages to this group/i.test(msgBody)||currentSender.includes('changed')||currentSender.includes('added')||currentSender.includes('left');
-        if(isSystem)currentSender=null;
-        else messageBuffer=[msgBody];
-        matched=true;break;
+        currentDate = m[1]; currentTime = m[2];
+        currentSender = m[3].trim().replace(/^~\s*/, '').trim();
+        const msgBody = m[4] || '';
+        // Skip system/notification lines (WhatsApp uses \u200e invisible char in them)
+        const isSystem = (
+          line.includes('\u200e') ||
+          /end-to-end encrypted/i.test(msgBody) ||
+          /created this group/i.test(msgBody) ||
+          /Messages to this group/i.test(msgBody) ||
+          currentSender.includes('changed') ||
+          currentSender.includes('added') ||
+          currentSender.includes('left')
+        );
+        if (isSystem) {
+          currentSender = null;
+        } else {
+          messageBuffer = [msgBody];
+        }
+        matched = true;
+        break;
       }
     }
-    if(!matched&&currentSender)messageBuffer.push(line);
+    if (!matched && currentSender) {
+      messageBuffer.push(line);
+    }
   }
   processBuffer();
-  const sorted={};
-  Object.entries(members).sort(([,a],[,b])=>(b.youtube.length+b.spotify.length+b.applemusic.length+b.bandcamp.length)-(a.youtube.length+a.spotify.length+a.applemusic.length+a.bandcamp.length)).forEach(([k,v])=>sorted[k]=v);
-  return{members:sorted,totalLinks};
+
+  // Sort members by total link count desc
+  const sorted = {};
+  Object.entries(members)
+    .sort(([,a],[,b]) => totalLinks_(b) - totalLinks_(a))
+    .forEach(([k,v]) => sorted[k] = v);
+
+  function totalLinks_(m) {
+    return m.youtube.length + m.spotify.length + m.applemusic.length + m.bandcamp.length;
+  }
+
+  return { members: sorted, totalLinks };
 }
-function renderAll(result){
-  const names=Object.keys(result.members);
-  if(!names.length){toast('No music links found');return;}
+
+// ──────────────────────────────────────────────
+// RENDER
+// ──────────────────────────────────────────────
+function renderAll(result) {
+  const members = result.members;
+  const names = Object.keys(members);
+
+  if (names.length === 0) {
+    toast('No music links found in this chat');
+    return;
+  }
+
+  // Stats
   let totYT=0,totSP=0,totAM=0,totBC=0;
-  for(const m of Object.values(result.members)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;}
-  document.getElementById('statMembers').textContent=names.length;
-  document.getElementById('statLinks').textContent=result.totalLinks;
-  document.getElementById('statYT').textContent=totYT;
-  document.getElementById('statSP').textContent=totSP;
-  document.getElementById('statAM').textContent=totAM;
-  document.getElementById('statBC').textContent=totBC;
-  document.getElementById('statsRow').style.display='grid';
-  document.getElementById('mainArea').style.display='grid';
-  document.getElementById('uploadSection').style.marginBottom='0';
-  renderMemberList(names);selectMember(names[0]);
-  for(const[,pd]of Object.entries(result.members))for(const t of pd.youtube)if(!titleCache[t.url])fetchQueue.push(t.url);
+  for (const m of Object.values(members)) {
+    totYT += m.youtube.length; totSP += m.spotify.length;
+    totAM += m.applemusic.length; totBC += m.bandcamp.length;
+  }
+  document.getElementById('statMembers').textContent = names.length;
+  document.getElementById('statLinks').textContent = result.totalLinks;
+  document.getElementById('statYT').textContent = totYT;
+  document.getElementById('statSP').textContent = totSP;
+  document.getElementById('statAM').textContent = totAM;
+  document.getElementById('statBC').textContent = totBC;
+  document.getElementById('statsRow').style.display = 'grid';
+  document.getElementById('mainArea').style.display = 'grid';
+  document.getElementById('uploadSection').style.marginBottom = '0';
+
+  // Member list
+  renderMemberList(names);
+
+  // Auto-select first
+  selectMember(names[0]);
+
+  // Queue YouTube title fetches
+  for (const [, platformData] of Object.entries(members)) {
+    for (const track of platformData.youtube) {
+      if (!titleCache[track.url]) fetchQueue.push(track.url);
+    }
+  }
   processFetchQueue();
 }
-function renderMemberList(names){
-  const list=document.getElementById('memberList'),query=document.getElementById('memberSearch').value.toLowerCase();
-  list.innerHTML='';document.getElementById('memberCountLabel').textContent=Object.keys(allData).length;
-  for(const name of names.filter(n=>n.toLowerCase().includes(query))){
-    const data=allData[name],count=data.youtube.length+data.spotify.length+data.applemusic.length+data.bandcamp.length;
-    const btn=document.createElement('button');
-    btn.className='member-btn'+(name===activeMember?' active':'');
-    btn.innerHTML=`<div class="member-avatar" style="background:${avatarColor(name)}">${initials(name)}</div><div class="member-info"><span class="member-name">${escHtml(name)}</span><span class="member-count">${count} link${count!==1?'s':''}</span></div>`;
-    btn.onclick=()=>selectMember(name);list.appendChild(btn);
+
+function renderMemberList(names) {
+  const list = document.getElementById('memberList');
+  const query = document.getElementById('memberSearch').value.toLowerCase();
+  list.innerHTML = '';
+  document.getElementById('memberCountLabel').textContent = names.length;
+
+  const filtered = names.filter(n => n.toLowerCase().includes(query));
+
+  for (const name of filtered) {
+    const data = allData[name];
+    const count = data.youtube.length + data.spotify.length + data.applemusic.length + data.bandcamp.length;
+    const btn = document.createElement('button');
+    btn.className = 'member-btn' + (name === activeMember ? ' active' : '');
+    btn.innerHTML = `
+      <div class="member-avatar" style="background:${avatarColor(name)}">${initials(name)}</div>
+      <div class="member-info">
+        <span class="member-name">${escHtml(name)}</span>
+        <span class="member-count">${count} link${count !== 1 ? 's' : ''}</span>
+      </div>`;
+    btn.onclick = () => selectMember(name);
+    list.appendChild(btn);
   }
 }
-function filterMembers(){renderMemberList(Object.keys(allData));}
-function selectMember(name){
-  activeMember=name;
-  document.querySelectorAll('.member-btn').forEach(b=>b.classList.toggle('active',b.querySelector('.member-name')?.textContent===name));
+
+function filterMembers(q) {
+  renderMemberList(Object.keys(allData));
+}
+
+function selectMember(name) {
+  activeMember = name;
+  // Update sidebar
+  document.querySelectorAll('.member-btn').forEach(b => {
+    b.classList.toggle('active', b.querySelector('.member-name')?.textContent === name);
+  });
   renderMemberContent(name);
 }
-function renderMemberContent(name){
-  const data=allData[name];if(!data)return;
-  const panel=document.getElementById('contentPanel');
-  const totalLinks=data.youtube.length+data.spotify.length+data.applemusic.length+data.bandcamp.length;
-  let platformsHtml='';
-  for(const[key,cfg]of Object.entries(PLATFORMS)){
-    if(platformFilter!=='all'&&platformFilter!==key)continue;
-    const tracks=data[key];if(!tracks.length)continue;
-    platformsHtml+=renderPlatformBlock(name,key,cfg,tracks);
+
+function renderMemberContent(name) {
+  const data = allData[name];
+  if (!data) return;
+
+  const panel = document.getElementById('contentPanel');
+  const totalLinks = data.youtube.length + data.spotify.length + data.applemusic.length + data.bandcamp.length;
+
+  let platformsHtml = '';
+  for (const [key, cfg] of Object.entries(PLATFORMS)) {
+    if (platformFilter !== 'all' && platformFilter !== key) continue;
+    const tracks = data[key];
+    if (tracks.length === 0) continue;
+    platformsHtml += renderPlatformBlock(name, key, cfg, tracks);
   }
-  if(!platformsHtml)platformsHtml=`<div style="padding:2rem;text-align:center;color:var(--muted);font-style:italic">No links for this filter</div>`;
-  panel.innerHTML=`
+
+  if (!platformsHtml) {
+    platformsHtml = `<div class="empty-panel" style="padding:2rem;text-align:center;color:var(--muted);font-style:italic">No links for this platform filter</div>`;
+  }
+
+  panel.innerHTML = `
     <div class="member-header">
       <div class="member-header-avatar" style="background:${avatarColor(name)}">${initials(name)}</div>
-      <div><div class="member-header-name">${escHtml(name)}</div>
-      <div class="member-header-meta">${totalLinks} links · ${data.youtube.length} YT · ${data.spotify.length} Spotify · ${data.applemusic.length} Apple · ${data.bandcamp.length} Bandcamp</div></div>
+      <div>
+        <div class="member-header-name">${escHtml(name)}</div>
+        <div class="member-header-meta">${totalLinks} shared link${totalLinks !== 1 ? 's' : ''} · ${data.youtube.length} YT · ${data.spotify.length} Spotify · ${data.applemusic.length} Apple · ${data.bandcamp.length} Bandcamp</div>
+      </div>
       <div class="member-actions">
         <button class="btn-sm ink" onclick="exportCSV('${escAttr(name)}')">↓ CSV</button>
         <button class="btn-sm ink" onclick="copyAllLinks('${escAttr(name)}')">⎘ Copy All</button>
         <button class="btn-sm" style="border-color:var(--sp);color:var(--sp)" onclick="openSpotifyModal('${escAttr(name)}')">◎ Spotify Playlist</button>
       </div>
     </div>
-    <div class="platform-blocks">${platformsHtml}</div>`;
+    <div class="platform-blocks">${platformsHtml}</div>
+  `;
 }
-function renderPlatformBlock(memberName,key,cfg,tracks){
-  const blockId=`blk-${safeId(memberName+key)}`;
-  const rows=tracks.map((t,i)=>renderTrackRow(i,t,key,cfg)).join('');
-  return `<div class="platform-block" id="${blockId}">
-    <div class="platform-block-header ${cfg.cls}-h" onclick="toggleBlock('${blockId}')">
-      <div class="platform-block-title ${cfg.cls}-t">${cfg.icon} &nbsp;${cfg.name} <span class="track-count-badge">${tracks.length}</span></div>
-      <div class="platform-block-acts">
-        <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
-        <span class="chevron-icon">▾</span>
+
+function renderPlatformBlock(memberName, key, cfg, tracks) {
+  const blockId = `block-${memberName.replace(/\s+/g,'-')}-${key}`;
+  const rows = tracks.map((t, i) => renderTrackRow(i, t, key, cfg)).join('');
+
+  return `
+    <div class="platform-block" id="${escAttr(blockId)}">
+      <div class="platform-block-header ${cfg.cls}-h" onclick="toggleBlock('${escAttr(blockId)}')">
+        <div class="platform-block-title ${cfg.cls}-t">${cfg.icon} &nbsp;${cfg.name} <span class="track-count-badge">${tracks.length}</span></div>
+        <div class="platform-block-acts">
+          <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
+          <span class="chevron-icon">▾</span>
+        </div>
       </div>
-    </div>
-    <div class="track-table-wrap"><table class="track-table"><tbody>${rows}</tbody></table></div>
-  </div>`;
+      <div class="track-table-wrap">
+        <table class="track-table"><tbody>${rows}</tbody></table>
+      </div>
+    </div>`;
 }
-function renderTrackRow(i,track,platform,cfg){
-  const tid=safeId(track.url);
-  const cachedTitle=titleCache[track.url];
+
+function renderTrackRow(i, track, platform, cfg) {
+  const trackId = safeId(track.url);
+  const cachedTitle = titleCache[track.url];
+
   let titleHtml;
-  if(cachedTitle)titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(cachedTitle)}</a>`;
-  else if(platform==='youtube')titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener" id="${tid}-title"><span class="fetching-badge">fetching title…</span></a>`;
-  else titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(shortUrl(track.url))}</a>`;
-  let ab=`<a class="link-btn ${cfg.cls}-btn" href="${escHtml(track.url)}" target="_blank" rel="noopener">↗ OPEN</a>`;
-  if(platform==='spotify'){const m=track.url.match(/track\/([a-zA-Z0-9]+)/);if(m)ab+=`<a class="link-btn sp-btn" href="https://open.spotify.com/track/${m[1]}" target="_blank">+ ADD</a>`;}
-  if(platform==='youtube'){const q=encodeURIComponent(cachedTitle||extractYTId(track.url)||'');if(q)ab+=`<a class="link-btn search-btn" href="https://open.spotify.com/search/${q}" target="_blank">SP ⌕</a>`;}
-  return `<tr><td class="td-num">${String(i+1).padStart(2,'0')}</td><td>${titleHtml}<span class="track-url-text">${escHtml(track.url)}</span></td><td class="td-date">${escHtml([track.date,track.time].filter(Boolean).join(' '))}</td><td class="td-actions">${ab}</td></tr>`;
-}
-function toggleBlock(id){document.getElementById(id)?.classList.toggle('collapsed-block');}
-function setPlatformFilter(key,btn){platformFilter=key;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');if(activeMember)renderMemberContent(activeMember);}
-async function processFetchQueue(){
-  if(isFetching||!fetchQueue.length)return;isFetching=true;
-  const unique=[...new Set(fetchQueue)].filter(u=>!titleCache[u]);fetchQueue=[];
-  for(const url of unique){
-    try{const res=await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-      if(res.ok){const j=await res.json();titleCache[url]=j.title||null;
-        const el=document.getElementById(`${safeId(url)}-title`);
-        if(el&&j.title){el.innerHTML=escHtml(j.title);const sb=el.closest('tr')?.querySelector('.search-btn');if(sb)sb.href=`https://open.spotify.com/search/${encodeURIComponent(j.title)}`;}}
-    }catch(e){}
-    await new Promise(r=>setTimeout(r,80));
+  if (cachedTitle) {
+    titleHtml = `<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(cachedTitle)}</a>`;
+  } else if (platform === 'youtube') {
+    titleHtml = `<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener" id="${trackId}-title"><span class="fetching-badge">fetching title…</span></a>`;
+  } else {
+    titleHtml = `<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(shortUrl(track.url))}</a>`;
   }
-  isFetching=false;if(fetchQueue.length)processFetchQueue();
+
+  // Action buttons
+  let actionBtns = `<a class="link-btn ${cfg.cls}-btn" href="${escHtml(track.url)}" target="_blank" rel="noopener">↗ OPEN</a>`;
+
+  if (platform === 'spotify') {
+    // Extract track ID and link to Spotify search
+    const trackMatch = track.url.match(/track\/([a-zA-Z0-9]+)/);
+    if (trackMatch) {
+      actionBtns += `<a class="link-btn sp-btn" href="https://open.spotify.com/track/${trackMatch[1]}" target="_blank" rel="noopener">+ ADD</a>`;
+    }
+  }
+
+  if (platform === 'youtube') {
+    const vidId = extractYTId(track.url);
+    if (vidId) {
+      const searchQuery = encodeURIComponent(cachedTitle || vidId);
+      actionBtns += `<a class="link-btn search-btn" href="https://open.spotify.com/search/${searchQuery}" target="_blank" rel="noopener">SP ⌕</a>`;
+    }
+  }
+
+  const dateStr = [track.date, track.time].filter(Boolean).join(' ');
+
+  return `<tr>
+    <td class="td-num">${String(i+1).padStart(2,'0')}</td>
+    <td class="td-title">
+      ${titleHtml}
+      <span class="track-url-text">${escHtml(track.url)}</span>
+    </td>
+    <td class="td-date">${escHtml(dateStr)}</td>
+    <td class="td-actions">${actionBtns}</td>
+  </tr>`;
 }
-function exportCSV(name){
-  const data=allData[name];if(!data)return;
-  const rows=[['Platform','Title','URL','Date','Time']];
-  for(const[p,tracks]of Object.entries(data))for(const t of tracks)rows.push([p,titleCache[t.url]||shortUrl(t.url),t.url,t.date||'',t.time||'']);
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}));
-  a.download=`${name.replace(/\s+/g,'_')}_music.csv`;a.click();toast(`Downloaded CSV for ${name}`);
+
+function toggleBlock(id) {
+  document.getElementById(id)?.classList.toggle('collapsed-block');
 }
-function copyAllLinks(name){navigator.clipboard.writeText(Object.values(allData[name]||{}).flat().map(t=>t.url).join('\n')).then(()=>toast(`Copied all links for ${name}`));}
-function copyPlatformLinks(e,name,platform){e.stopPropagation();navigator.clipboard.writeText((allData[name]?.[platform]||[]).map(t=>t.url).join('\n')).then(()=>toast(`Copied ${platform} links`));}
-function openSpotifyModal(memberName){
-  currentModalMember=memberName;
-  const spCount=allData[memberName]?.spotify?.length||0;
-  document.getElementById('modalSub').textContent=`${memberName} shared ${spCount} Spotify track${spCount!==1?'s':''}. Connect your Spotify account to create a playlist automatically.`;
-  document.getElementById('playlistNameInput').value=`${memberName} — The Vault`;
-  const saved=localStorage.getItem('sp_client_id');if(saved)document.getElementById('clientIdInput').value=saved;
-  if(spotifyToken){showConnectedState(memberName);}
-  else{document.getElementById('setupFields').style.display='block';document.getElementById('connectedFields').style.display='none';document.getElementById('modalActionBtn').textContent='Connect Spotify →';document.getElementById('progressWrap').classList.remove('visible');}
+
+function setPlatformFilter(key, btn) {
+  platformFilter = key;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  if (activeMember) renderMemberContent(activeMember);
+}
+
+// ──────────────────────────────────────────────
+// YOUTUBE TITLE FETCHING (oEmbed, no API key)
+// ──────────────────────────────────────────────
+async function processFetchQueue() {
+  if (isFetching || fetchQueue.length === 0) return;
+  isFetching = true;
+
+  // Dedupe
+  const unique = [...new Set(fetchQueue)].filter(u => !titleCache[u]);
+  fetchQueue = [];
+
+  for (const url of unique) {
+    try {
+      const oembed = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+      const res = await fetch(oembed);
+      if (res.ok) {
+        const json = await res.json();
+        titleCache[url] = json.title || null;
+        // Update any visible cells
+        const id = `${safeId(url)}-title`;
+        const el = document.getElementById(id);
+        if (el && json.title) {
+          el.innerHTML = escHtml(json.title);
+          // Also update sibling search link
+          const row = el.closest('tr');
+          if (row) {
+            const vidId = extractYTId(url);
+            if (vidId) {
+              const searchBtn = row.querySelector('.search-btn');
+              if (searchBtn) searchBtn.href = `https://open.spotify.com/search/${encodeURIComponent(json.title)}`;
+            }
+          }
+        }
+      }
+    } catch(e) { /* silently skip */ }
+    // Small delay to avoid hammering
+    await new Promise(r => setTimeout(r, 80));
+  }
+
+  isFetching = false;
+  if (fetchQueue.length > 0) processFetchQueue();
+}
+
+// ──────────────────────────────────────────────
+// EXPORT / COPY
+// ──────────────────────────────────────────────
+function exportCSV(name) {
+  const data = allData[name];
+  if (!data) return;
+
+  const rows = [['Platform','Title/URL','URL','Date','Time']];
+  for (const [platform, tracks] of Object.entries(data)) {
+    for (const t of tracks) {
+      const title = titleCache[t.url] || shortUrl(t.url);
+      rows.push([platform, title, t.url, t.date, t.time]);
+    }
+  }
+
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name.replace(/\s+/g,'_')}_music_links.csv`;
+  a.click();
+  toast(`Downloaded CSV for ${name}`);
+}
+
+function copyAllLinks(name) {
+  const data = allData[name];
+  if (!data) return;
+  const links = Object.values(data).flat().map(t => t.url).join('\n');
+  navigator.clipboard.writeText(links).then(() => toast(`Copied all links for ${name}`));
+}
+
+function copyPlatformLinks(e, name, platform) {
+  e.stopPropagation();
+  const tracks = allData[name]?.[platform] || [];
+  const links = tracks.map(t => t.url).join('\n');
+  navigator.clipboard.writeText(links).then(() => toast(`Copied ${tracks.length} ${platform} links`));
+}
+
+// ──────────────────────────────────────────────
+// SPOTIFY OAUTH + PLAYLIST CREATION
+// ──────────────────────────────────────────────
+let spotifyToken = null;
+let spotifyUserId = null;
+let spotifyUserName = null;
+let currentModalMember = null;
+const SPOTIFY_SCOPES = 'playlist-modify-public playlist-modify-private';
+
+// Called when user clicks "◎ Spotify Playlist" button
+function openSpotifyModal(memberName) {
+  currentModalMember = memberName;
+  const data = allData[memberName];
+  const spCount = data?.spotify?.length || 0;
+
+  document.getElementById('modalSub').textContent =
+    `${memberName} shared ${spCount} Spotify track${spCount !== 1 ? 's' : ''}. Connect your Spotify account to create a playlist automatically.`;
+  document.getElementById('playlistNameInput').value = `${memberName} — The Vault`;
+
+  // Restore saved client ID if present
+  const saved = localStorage.getItem('sp_client_id');
+  if (saved) document.getElementById('clientIdInput').value = saved;
+
+  // If already authenticated
+  if (spotifyToken) {
+    showConnectedState(memberName);
+  } else {
+    document.getElementById('setupFields').style.display = 'block';
+    document.getElementById('connectedFields').style.display = 'none';
+    document.getElementById('modalActionBtn').textContent = 'Connect Spotify →';
+    document.getElementById('progressWrap').classList.remove('visible');
+  }
+
   document.getElementById('spotifyModal').classList.remove('hidden');
 }
-function closeSpotifyModal(){document.getElementById('spotifyModal').classList.add('hidden');}
-function disconnectSpotify(){
-  localStorage.removeItem('sp_token');localStorage.removeItem('sp_token_expiry');
-  spotifyToken=null;spotifyUserId=null;spotifyUserName=null;
+
+function closeSpotifyModal() {
+  document.getElementById('spotifyModal').classList.add('hidden');
+  document.getElementById('progressWrap').classList.remove('visible');
+}
+
+function disconnectSpotify() {
+  localStorage.removeItem('sp_token');
+  localStorage.removeItem('sp_token_expiry');
+  spotifyToken=null; spotifyUserId=null; spotifyUserName=null;
   document.getElementById('setupFields').style.display='block';
   document.getElementById('connectedFields').style.display='none';
   document.getElementById('modalActionBtn').textContent='Connect Spotify →';
@@ -460,90 +1492,322 @@ function disconnectSpotify(){
   document.getElementById('progressLog').innerHTML='';
   toast('Disconnected — reconnect for fresh permissions');
 }
-function showConnectedState(memberName){
-  document.getElementById('setupFields').style.display='none';document.getElementById('connectedFields').style.display='block';
-  document.getElementById('spUserName').textContent=spotifyUserName||'...';
-  document.getElementById('playlistNameInput2').value=`${memberName} — The Vault`;
-  document.getElementById('modalActionBtn').textContent='◎ Create Playlist →';
+
+function showConnectedState(memberName) {
+  document.getElementById('setupFields').style.display = 'none';
+  document.getElementById('connectedFields').style.display = 'block';
+  document.getElementById('spUserName').textContent = spotifyUserName || '...';
+  document.getElementById('playlistNameInput2').value = `${memberName} — The Vault`;
+  document.getElementById('modalActionBtn').textContent = '◎ Create Playlist →';
 }
-function spotifyModalAction(){if(spotifyToken)createSpotifyPlaylist();else initiateSpotifyAuth();}
-async function initiateSpotifyAuth(){
-  const clientId=document.getElementById('clientIdInput').value.trim();
-  if(!clientId){toast('Please enter your Spotify Client ID');return;}
-  localStorage.setItem('sp_client_id',clientId);
-  sessionStorage.setItem('sp_pending_member',currentModalMember);
-  sessionStorage.setItem('sp_playlist_name',document.getElementById('playlistNameInput').value.trim());
-  const verifier=generateCodeVerifier(),challenge=await generateCodeChallenge(verifier);
-  sessionStorage.setItem('sp_verifier',verifier);
-  window.location.href=`https://accounts.spotify.com/authorize?${new URLSearchParams({client_id:clientId,response_type:'code',redirect_uri:getRedirectUri(),scope:SPOTIFY_SCOPES,code_challenge_method:'S256',code_challenge:challenge})}`;
+
+// Main button action — either connect or create
+function spotifyModalAction() {
+  if (spotifyToken) {
+    createSpotifyPlaylist();
+  } else {
+    initiateSpotifyAuth();
+  }
 }
-async function handleSpotifyCallback(){
-  const params=new URLSearchParams(window.location.search),code=params.get('code'),error=params.get('error');
-  if(error){toast('Spotify auth cancelled');cleanUrl();return;}if(!code)return;
-  const clientId=localStorage.getItem('sp_client_id'),verifier=sessionStorage.getItem('sp_verifier');
-  if(!clientId||!verifier){toast('Auth error — please try again');cleanUrl();return;}
-  try{
-    const res=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:getRedirectUri(),client_id:clientId,code_verifier:verifier})});
-    const json=await res.json();if(!json.access_token)throw new Error(json.error_description||'Token exchange failed');
-    spotifyToken=json.access_token;localStorage.setItem('sp_token',spotifyToken);localStorage.setItem('sp_token_expiry',Date.now()+json.expires_in*1000);
-    const profile=await spotifyFetch('https://api.spotify.com/v1/me');spotifyUserId=profile.id;spotifyUserName=profile.display_name||profile.id;
-    cleanUrl();
-    const pending=sessionStorage.getItem('sp_pending_member');
-    if(pending&&allData[pending]){currentModalMember=pending;const sn=sessionStorage.getItem('sp_playlist_name');showConnectedState(pending);if(sn)document.getElementById('playlistNameInput2').value=sn;document.getElementById('spotifyModal').classList.remove('hidden');sessionStorage.removeItem('sp_pending_member');sessionStorage.removeItem('sp_playlist_name');}
-    else toast(`Connected as ${spotifyUserName}`);
-  }catch(e){toast('Spotify auth failed: '+e.message);cleanUrl();}
+
+// ── STEP 1: PKCE Auth via popup ──
+async function initiateSpotifyAuth() {
+  const clientId = document.getElementById('clientIdInput').value.trim();
+  if (!clientId) { toast('Please enter your Spotify Client ID'); return; }
+  localStorage.setItem('sp_client_id', clientId);
+
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+  localStorage.setItem('sp_verifier', verifier);
+
+  const redirectUri = getRedirectUri();
+  const params = new URLSearchParams({
+    client_id: clientId,
+    response_type: 'code',
+    redirect_uri: redirectUri,
+    scope: SPOTIFY_SCOPES,
+    code_challenge_method: 'S256',
+    code_challenge: challenge,
+  });
+
+  // Open in popup so main page keeps chat data
+  const popup = window.open(
+    `https://accounts.spotify.com/authorize?${params}`,
+    'spotify_auth',
+    'width=500,height=700,scrollbars=yes'
+  );
+
+  // Poll for popup to redirect back with code
+  const poll = setInterval(async () => {
+    try {
+      if (!popup || popup.closed) { clearInterval(poll); return; }
+      const url = popup.location.href;
+      if (url.startsWith(redirectUri)) {
+        clearInterval(poll);
+        const code = new URL(url).searchParams.get('code');
+        const error = new URL(url).searchParams.get('error');
+        popup.close();
+        if (error) { toast('Spotify auth cancelled'); return; }
+        if (code) await exchangeCode(code);
+      }
+    } catch(e) { /* cross-origin — still loading */ }
+  }, 500);
 }
-async function createSpotifyPlaylist(){
-  const memberName=currentModalMember,data=allData[memberName];if(!data)return;
-  const playlistName=document.getElementById('playlistNameInput2').value.trim()||`${memberName} — The Vault`;
-  const trackUris=(data.spotify||[]).map(t=>{const m=t.url.match(/track\/([a-zA-Z0-9]+)/);return m?`spotify:track:${m[1]}`:null;}).filter(Boolean);
-  if(!trackUris.length){toast('No valid Spotify track IDs found');return;}
-  const btn=document.getElementById('modalActionBtn');btn.disabled=true;
-  document.getElementById('progressWrap').classList.add('visible');
-  logProgress(`Creating playlist "${playlistName}"...`);setProgress(0,trackUris.length);
-  try{
-    const playlist=await spotifyFetch(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`,{method:'POST',body:JSON.stringify({name:playlistName,description:`Shared by ${memberName}. Generated by The Vault.`,public:false})});
-    logProgress(`Playlist created. Adding ${trackUris.length} tracks...`);
-    let added=0;
-    for(let i=0;i<trackUris.length;i+=100){
-      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,{method:'POST',body:JSON.stringify({uris:trackUris.slice(i,i+100)})});
-      added=Math.min(i+100,trackUris.length);setProgress(added,trackUris.length);logProgress(`Added ${added} / ${trackUris.length} tracks`);
-      if(i+100<trackUris.length)await sleep(300);
+
+async function exchangeCode(code) {
+  const clientId = localStorage.getItem('sp_client_id');
+  const verifier = localStorage.getItem('sp_verifier');
+  const redirectUri = getRedirectUri();
+  if (!clientId || !verifier) { toast('Auth error — please try again'); return; }
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code, redirect_uri: redirectUri,
+        client_id: clientId,
+        code_verifier: verifier,
+      })
+    });
+    const json = await res.json();
+    if (!json.access_token) throw new Error(json.error_description || 'Token exchange failed');
+    spotifyToken = json.access_token;
+    localStorage.setItem('sp_token', spotifyToken);
+    localStorage.setItem('sp_token_expiry', Date.now() + json.expires_in * 1000);
+    const profile = await spotifyFetch('https://api.spotify.com/v1/me');
+    spotifyUserId = profile.id;
+    spotifyUserName = profile.display_name || profile.id;
+    showConnectedState(currentModalMember);
+    document.getElementById('spotifyModal').classList.remove('hidden');
+    toast(`Connected as ${spotifyUserName}`);
+  } catch(e) {
+    toast('Spotify auth failed: ' + e.message);
+  }
+}
+
+// ── STEP 2: Handle redirect back (fallback for non-popup) ──
+async function handleSpotifyCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+  if (error) { toast('Spotify auth cancelled'); cleanUrl(); return; }
+  if (!code) return;
+  cleanUrl();
+  await exchangeCode(code);
+}
+
+// ── STEP 3: Create playlist ──
+async function createSpotifyPlaylist() {
+  const memberName = currentModalMember;
+  const data = allData[memberName];
+  if (!data) return;
+
+  const playlistName = document.getElementById('playlistNameInput2').value.trim() || `${memberName} — The Vault`;
+  const spotifyTracks = data.spotify || [];
+
+  if (spotifyTracks.length === 0) {
+    toast('No Spotify tracks found for this member');
+    return;
+  }
+
+  // Extract track URIs from URLs
+  const trackUris = [];
+  for (const t of spotifyTracks) {
+    const m = t.url.match(/track\/([a-zA-Z0-9]+)/);
+    if (m) trackUris.push(`spotify:track:${m[1]}`);
+  }
+
+  if (trackUris.length === 0) {
+    toast('No valid Spotify track IDs found');
+    return;
+  }
+
+  // Show progress
+  const btn = document.getElementById('modalActionBtn');
+  btn.disabled = true;
+  const progressWrap = document.getElementById('progressWrap');
+  progressWrap.classList.add('visible');
+  logProgress(`Creating playlist "${playlistName}"...`);
+  setProgress(0, trackUris.length);
+
+  try {
+    // Create playlist
+    const playlist = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: playlistName,
+        description: `Shared by ${memberName} in the music community. Generated by The Vault.`,
+        public: false
+      })
+    });
+
+    logProgress(`Playlist created. Adding ${trackUris.length} tracks in batches...`);
+
+    // Add tracks in batches of 100 (Spotify API limit)
+    const BATCH = 100;
+    let added = 0;
+    for (let i = 0; i < trackUris.length; i += BATCH) {
+      const batch = trackUris.slice(i, i + BATCH);
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+        method: 'POST',
+        body: JSON.stringify({ uris: batch })
+      });
+      added += batch.length;
+      setProgress(added, trackUris.length);
+      logProgress(`Added ${added} / ${trackUris.length} tracks`);
+      // Small pause between batches
+      if (i + BATCH < trackUris.length) await sleep(300);
     }
+
     logProgress(`✓ Done! ${trackUris.length} tracks added.`);
-    document.getElementById('progressText').textContent='✓ Playlist created!';
-    btn.textContent='↗ Open Playlist';btn.disabled=false;
-    btn.onclick=()=>window.open(`https://open.spotify.com/playlist/${playlist.id}`,'_blank');
-    toast(`Playlist created with ${trackUris.length} tracks!`);
-  }catch(e){logProgress(`✗ Error: ${e.message}`);btn.disabled=false;btn.textContent='◎ Retry';toast('Error: '+e.message);}
+    document.getElementById('progressText').textContent = '✓ Playlist created!';
+
+    btn.textContent = '↗ Open Playlist';
+    btn.disabled = false;
+    btn.onclick = () => window.open(`https://open.spotify.com/playlist/${playlist.id}`, '_blank');
+
+    toast(`Playlist "${playlistName}" created with ${trackUris.length} tracks!`);
+
+  } catch(e) {
+    logProgress(`✗ Error: ${e.message}`);
+    btn.disabled = false;
+    btn.textContent = '◎ Retry';
+    toast('Error creating playlist: ' + e.message);
+  }
 }
-async function spotifyFetch(url,options={}){
-  const res=await fetch(url,{...options,headers:{'Authorization':`Bearer ${spotifyToken}`,'Content-Type':'application/json',...(options.headers||{})}});
-  if(res.status===401){spotifyToken=null;localStorage.removeItem('sp_token');throw new Error('Session expired — please reconnect');}
-  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||`HTTP ${res.status}`);}
-  return res.status===204?{}:res.json();
+
+// ── Spotify API helper ──
+async function spotifyFetch(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${spotifyToken}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  if (res.status === 401) {
+    spotifyToken = null;
+    localStorage.removeItem('sp_token');
+    throw new Error('Spotify session expired — please reconnect');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  return res.status === 204 ? {} : res.json();
 }
-function generateCodeVerifier(){const a=new Uint8Array(64);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
-async function generateCodeChallenge(v){const d=new TextEncoder().encode(v),dg=await crypto.subtle.digest('SHA-256',d);return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
-function getRedirectUri(){return window.location.origin+window.location.pathname;}
-function cleanUrl(){window.history.replaceState({},document.title,window.location.pathname);}
-function setProgress(done,total){document.getElementById('progressFill').style.width=`${Math.round(done/total*100)}%`;document.getElementById('progressCount').textContent=`${done} / ${total}`;}
-function logProgress(msg){const l=document.getElementById('progressLog');l.innerHTML+=msg+'<br>';l.scrollTop=l.scrollHeight;}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-function extractYTId(url){try{const u=new URL(url);return u.searchParams.get('v')||u.pathname.split('/').pop()||null;}catch{return null;}}
-function shortUrl(url){try{const u=new URL(url);return u.hostname.replace('www.','')+u.pathname.slice(0,30);}catch{return url.slice(0,40);}}
-function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function escAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
-(async function initSpotify(){
-  if(window.location.search.includes('code=')){await handleSpotifyCallback();return;}
-  const saved=localStorage.getItem('sp_token'),expiry=localStorage.getItem('sp_token_expiry');
-  if(saved&&expiry&&Date.now()<parseInt(expiry)){
-    spotifyToken=saved;
-    try{const p=await spotifyFetch('https://api.spotify.com/v1/me');spotifyUserId=p.id;spotifyUserName=p.display_name||p.id;}
-    catch(e){spotifyToken=null;localStorage.removeItem('sp_token');}
+
+// ── PKCE helpers ──
+function generateCodeVerifier() {
+  const array = new Uint8Array(64);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function generateCodeChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+function getRedirectUri() {
+  return window.location.origin + window.location.pathname;
+}
+
+function cleanUrl() {
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// ── Progress helpers ──
+function setProgress(done, total) {
+  document.getElementById('progressFill').style.width = `${Math.round(done/total*100)}%`;
+  document.getElementById('progressCount').textContent = `${done} / ${total}`;
+}
+
+function logProgress(msg) {
+  const log = document.getElementById('progressLog');
+  log.innerHTML += msg + '<br>';
+  log.scrollTop = log.scrollHeight;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── On page load: check for Spotify callback or saved token ──
+// Restore chat data after Spotify redirect
+(function restoreChat(){
+  try{
+    const saved=localStorage.getItem('vault_chat');
+    if(saved){
+      allData=JSON.parse(saved);
+      const names=Object.keys(allData);
+      if(names.length){
+        let total=0,totYT=0,totSP=0,totAM=0,totBC=0;
+        for(const m of Object.values(allData)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;total+=m.youtube.length+m.spotify.length+m.applemusic.length+m.bandcamp.length;}
+        document.getElementById('statMembers').textContent=names.length;
+        document.getElementById('statLinks').textContent=total;
+        document.getElementById('statYT').textContent=totYT;
+        document.getElementById('statSP').textContent=totSP;
+        document.getElementById('statAM').textContent=totAM;
+        document.getElementById('statBC').textContent=totBC;
+        document.getElementById('statsRow').style.display='grid';
+        document.getElementById('mainArea').style.display='grid';
+        document.getElementById('uploadSection').style.marginBottom='0';
+        renderMemberList(names);selectMember(names[0]);
+      }
+    }
+  }catch(e){}
+})();
+
+(async function initSpotify() {
+  // Handle OAuth callback
+  if (window.location.search.includes('code=')) {
+    await handleSpotifyCallback();
+    return;
+  }
+  // Restore saved token if not expired
+  const saved = localStorage.getItem('sp_token');
+  const expiry = localStorage.getItem('sp_token_expiry');
+  if (saved && expiry && Date.now() < parseInt(expiry)) {
+    spotifyToken = saved;
+    try {
+      const profile = await spotifyFetch('https://api.spotify.com/v1/me');
+      spotifyUserId = profile.id;
+      spotifyUserName = profile.display_name || profile.id;
+    } catch(e) {
+      spotifyToken = null;
+      localStorage.removeItem('sp_token');
+    }
   }
 })();
+function extractYTId(url) {
+  try {
+    const u = new URL(url);
+    return u.searchParams.get('v') || u.pathname.split('/').pop() || null;
+  } catch { return null; }
+}
+
+function shortUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace('www.','') + u.pathname.slice(0,30);
+  } catch { return url.slice(0,40); }
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(s) {
+  return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 </script>
 </body>
 </html>
