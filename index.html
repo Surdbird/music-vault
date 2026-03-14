@@ -1299,6 +1299,7 @@ function renderPlatformBlock(memberName, key, cfg, tracks) {
         <div class="platform-block-title ${cfg.cls}-t">${cfg.icon} &nbsp;${cfg.name} <span class="track-count-badge">${tracks.length}</span></div>
         <div class="platform-block-acts">
           <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
+          ${key==='youtube'?`<button class="btn-sm" style="border-color:var(--yt);color:var(--yt)" onclick="openYouTubePlaylist(event,'${escAttr(memberName)}')">▶ YT Playlist</button>`:''}
           <span class="chevron-icon">▾</span>
         </div>
       </div>
@@ -1809,6 +1810,17 @@ function shortUrl(url) {
     const u = new URL(url);
     return u.hostname.replace('www.','') + u.pathname.slice(0,30);
   } catch { return url.slice(0,40); }
+}
+
+function openYouTubePlaylist(e, memberName) {
+  e.stopPropagation();
+  const tracks = allData[memberName]?.youtube || [];
+  if (!tracks.length) { toast('No YouTube links found'); return; }
+  const ids = tracks.map(t => extractYTId(t.url)).filter(Boolean);
+  if (!ids.length) { toast('No YouTube video IDs found'); return; }
+  const first50 = ids.slice(0, 50);
+  window.open(`https://www.youtube.com/watch_videos?video_ids=${first50.join(',')}`, '_blank');
+  toast(`Opened first ${first50.length} of ${ids.length} YouTube videos as playlist`);
 }
 
 function escHtml(s) {
