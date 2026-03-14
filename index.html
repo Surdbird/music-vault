@@ -22,19 +22,527 @@ input[type=search],input[type=text]{width:100%;background:var(--bg);border:1px s
 input[type=search]:focus,input[type=text]:focus{border-color:var(--accent);}
 .filter-pills{display:flex;gap:0.4rem;flex-wrap:wrap;}
 .pill{font-family:'Helvetica Neue',Arial,sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;padding:0.3rem 0.7rem;border-radius:2px;border:1.5px solid;cursor:pointer;transition:all 0.15s;background:transparent;}
-.pill.all{border-color:var(--ink);color:var(--ink);}
-.pill.all.active,.pill.all:hover{background:var(--ink);color:var(--bg);}
-.pill.yt{border-color:var(--yt);color:var(--yt);}
-.pill.yt.active,.pill.yt:hover{background:var(--yt);color:white;}
-.pill.sp{border-color:var(--sp);color:var(--sp);}
-.pill.sp.active,.pill.sp:hover{background:var(--sp);color:white;}
-.pill.am{border-color:var(--am);color:var(--am);}
-.pill.am.active,.pill.am:hover{background:var(--am);color:white;}
-.pill.bc{border-color:var(--bc);color:var(--bc);}
-.pill.bc.active,.pill.bc:hover{background:var(--bc);color:white;}
+.pill.all{border-color:var(--ink);color:var(--ink);}.pill.all.active,.pill.all:hover{background:var(--ink);color:var(--bg);}
+.pill.yt{border-color:var(--yt);color:var(--yt);}.pill.yt.active,.pill.yt:hover{background:var(--yt);color:white;}
+.pill.sp{border-color:var(--sp);color:var(--sp);}.pill.sp.active,.pill.sp:hover{background:var(--sp);color:white;}
+.pill.am{border-color:var(--am);color:var(--am);}.pill.am.active,.pill.am:hover{background:var(--am);color:white;}
+.pill.bc{border-color:var(--bc);color:var(--bc);}.pill.bc.active,.pill.bc:hover{background:var(--bc);color:white;}
 .upload-panel{max-width:1200px;margin:2.5rem auto;padding:0 3rem;}
 .upload-card{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--accent);padding:2rem;}
 .upload-title{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:0.05em;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem;}
+.upload-title::after{content:'';flex:1;height:1px;background:var(--rule);}
+.drop-zone{border:1.5px dashed var(--rule);padding:2rem;text-align:center;cursor:pointer;position:relative;transition:all 0.2s;background:var(--bg);margin-bottom:1rem;}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:var(--yt-light);}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-label{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.9rem;letter-spacing:0.08em;display:block;margin-bottom:0.35rem;}
+.drop-sub{font-size:0.75rem;color:var(--muted);font-family:'Courier New',monospace;}
+.or-row{display:flex;align-items:center;gap:1rem;margin:1rem 0;font-family:'Courier New',monospace;font-size:0.65rem;letter-spacing:0.15em;color:var(--muted);}
+.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:var(--rule);}
+textarea{width:100%;background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'Courier New',monospace;font-size:0.72rem;padding:1rem;resize:vertical;min-height:120px;outline:none;transition:border-color 0.15s;line-height:1.6;border-radius:2px;}
+textarea:focus{border-color:var(--accent);}textarea::placeholder{color:var(--muted);}
+.btn-primary{margin-top:1rem;width:100%;background:var(--accent);color:white;border:none;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1rem;letter-spacing:0.12em;padding:0.9rem 2rem;cursor:pointer;transition:all 0.15s;}
+.btn-primary:hover{background:#a33015;}.btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+.stats-row{max-width:1200px;margin:0 auto 2rem;padding:0 3rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);}
+.stat-box{background:var(--paper);padding:1rem 1.25rem;text-align:center;}
+.stat-n{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:2rem;line-height:1;display:block;}
+.stat-label{font-family:'Courier New',monospace;font-size:0.6rem;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;display:block;margin-top:0.25rem;}
+.main-area{max-width:1200px;margin:0 auto;padding:0 3rem 4rem;display:grid;grid-template-columns:260px 1fr;gap:2rem;align-items:start;}
+.sidebar{position:sticky;top:68px;}
+.sidebar-title{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.65rem;letter-spacing:0.18em;color:var(--muted);padding-bottom:0.5rem;border-bottom:1px solid var(--rule);margin-bottom:0.75rem;}
+.member-list{display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 160px);overflow-y:auto;}
+.member-list::-webkit-scrollbar{width:4px;}.member-list::-webkit-scrollbar-thumb{background:var(--rule);}
+.member-btn{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:transparent;border:none;border-radius:2px;cursor:pointer;text-align:left;width:100%;transition:background 0.12s;}
+.member-btn:hover{background:var(--paper);}.member-btn.active{background:var(--ink);}
+.member-avatar{width:28px;height:28px;border-radius:50%;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;}
+.member-info{min-width:0;flex:1;}
+.member-name{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;color:var(--ink);}
+.member-btn.active .member-name{color:var(--bg);}
+.member-count{font-family:'Courier New',monospace;font-size:0.6rem;color:var(--muted);display:block;}
+.member-btn.active .member-count{color:rgba(255,255,255,0.5);}
+.member-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--ink);flex-wrap:wrap;}
+.member-header-avatar{width:52px;height:52px;border-radius:50%;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;}
+.member-header-name{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.02em;line-height:1;}
+.member-header-meta{font-style:italic;font-size:0.85rem;color:var(--muted);margin-top:0.25rem;}
+.member-actions{margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;}
+.btn-sm{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.6rem;letter-spacing:0.1em;padding:0.35rem 0.75rem;border:1.5px solid;border-radius:2px;background:transparent;cursor:pointer;transition:all 0.15s;}
+.btn-sm.ink{border-color:var(--ink);color:var(--ink);}.btn-sm.ink:hover{background:var(--ink);color:var(--bg);}
+.platform-blocks{display:flex;flex-direction:column;gap:1.25rem;}
+.platform-block{background:var(--paper);border:1px solid var(--rule);overflow:hidden;}
+.platform-block-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;border-bottom:1px solid var(--rule);cursor:pointer;user-select:none;}
+.platform-block-header.yt-h{background:var(--yt-light);border-left:3px solid var(--yt);}
+.platform-block-header.sp-h{background:var(--sp-light);border-left:3px solid var(--sp);}
+.platform-block-header.am-h{background:var(--am-light);border-left:3px solid var(--am);}
+.platform-block-header.bc-h{background:var(--bc-light);border-left:3px solid var(--bc);}
+.platform-block-title{display:flex;align-items:center;gap:0.6rem;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.85rem;letter-spacing:0.08em;}
+.platform-block-title.yt-t{color:var(--yt);}.platform-block-title.sp-t{color:var(--sp);}
+.platform-block-title.am-t{color:var(--am);}.platform-block-title.bc-t{color:var(--bc);}
+.track-count-badge{font-family:'Courier New',monospace;font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:2px;background:rgba(0,0,0,0.08);color:var(--ink2);}
+.platform-block-acts{display:flex;gap:0.5rem;align-items:center;}
+.chevron-icon{font-size:0.75rem;color:var(--muted);transition:transform 0.2s;}
+.collapsed-block .chevron-icon{transform:rotate(-90deg);}
+.track-table{width:100%;border-collapse:collapse;}
+.collapsed-block .track-table-wrap{display:none;}
+.track-table td{padding:0.6rem 1.25rem;border-bottom:1px solid var(--rule);vertical-align:middle;font-size:0.78rem;}
+.track-table tr:last-child td{border-bottom:none;}
+.track-table tr:hover td{background:rgba(0,0,0,0.02);}
+.td-num{font-family:'Courier New',monospace;font-size:0.65rem;color:var(--muted);width:2.5rem;text-align:right;}
+.track-title-text{display:block;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;text-decoration:none;}
+.track-title-text:hover{color:var(--accent);}
+.track-url-text{display:block;font-family:'Courier New',monospace;font-size:0.62rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px;}
+.fetching-badge{font-family:'Courier New',monospace;font-size:0.6rem;color:var(--muted);font-style:italic;}
+.td-date{font-family:'Courier New',monospace;font-size:0.62rem;color:var(--muted);white-space:nowrap;}
+.td-actions{white-space:nowrap;text-align:right;}
+.link-btn{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.58rem;letter-spacing:0.08em;padding:0.2rem 0.5rem;border-radius:2px;text-decoration:none;border:1px solid;display:inline-block;margin-left:0.25rem;transition:all 0.12s;}
+.link-btn.yt-btn{border-color:var(--yt);color:var(--yt);}.link-btn.yt-btn:hover{background:var(--yt);color:white;}
+.link-btn.sp-btn{border-color:var(--sp);color:var(--sp);}.link-btn.sp-btn:hover{background:var(--sp);color:white;}
+.link-btn.am-btn{border-color:var(--am);color:var(--am);}.link-btn.am-btn:hover{background:var(--am);color:white;}
+.link-btn.bc-btn{border-color:var(--bc);color:var(--bc);}.link-btn.bc-btn:hover{background:var(--bc);color:white;}
+.link-btn.search-btn{border-color:var(--muted);color:var(--muted);}.link-btn.search-btn:hover{border-color:var(--ink);color:var(--ink);}
+.empty-panel{text-align:center;padding:5rem 2rem;color:var(--muted);}
+.empty-big{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1.4rem;color:var(--ink);margin-bottom:0.5rem;}
+.empty-sub{font-size:0.85rem;font-style:italic;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,16,12,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--sp);max-width:520px;width:100%;padding:2rem;}
+.modal-title{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1.2rem;letter-spacing:0.05em;margin-bottom:0.4rem;color:var(--sp);}
+.modal-sub{font-size:0.8rem;color:var(--muted);font-style:italic;margin-bottom:1.5rem;line-height:1.5;}
+.modal-field{margin-bottom:1rem;}
+.modal-label{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.65rem;letter-spacing:0.12em;color:var(--muted);display:block;margin-bottom:0.35rem;}
+.modal-input{width:100%;background:var(--bg);border:1px solid var(--rule);color:var(--ink);font-family:'Courier New',monospace;font-size:0.8rem;padding:0.6rem 0.85rem;outline:none;border-radius:2px;transition:border-color 0.15s;}
+.modal-input:focus{border-color:var(--sp);}
+.modal-hint{font-family:'Courier New',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.3rem;display:block;}
+.modal-hint a{color:var(--sp);}
+.modal-actions{display:flex;gap:0.75rem;margin-top:1.5rem;}
+.btn-sp{background:var(--sp);color:white;border:none;font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:0.8rem;letter-spacing:0.1em;padding:0.65rem 1.25rem;cursor:pointer;border-radius:2px;transition:all 0.15s;flex:1;}
+.btn-sp:hover{background:#155f30;}.btn-sp:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-cancel{background:transparent;border:1px solid var(--rule);color:var(--muted);font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:0.1em;padding:0.65rem 1.25rem;cursor:pointer;border-radius:2px;transition:all 0.15s;}
+.btn-cancel:hover{border-color:var(--muted);color:var(--ink);}
+.progress-wrap{margin-top:1.25rem;display:none;}.progress-wrap.visible{display:block;}
+.progress-label{font-family:'Courier New',monospace;font-size:0.65rem;color:var(--muted);margin-bottom:0.4rem;display:flex;justify-content:space-between;}
+.progress-bar-track{height:4px;background:var(--rule);border-radius:2px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:var(--sp);border-radius:2px;width:0%;transition:width 0.3s;}
+.progress-log{margin-top:0.75rem;font-family:'Courier New',monospace;font-size:0.62rem;color:var(--muted);max-height:80px;overflow-y:auto;line-height:1.8;}
+.sp-connected{display:inline-flex;align-items:center;gap:0.4rem;font-family:'Courier New',monospace;font-size:0.65rem;color:var(--sp);padding:0.25rem 0.6rem;border:1px solid #1a3d22;border-radius:2px;background:var(--sp-light);}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--bg);padding:0.75rem 1.25rem;font-family:'Courier New',monospace;font-size:0.72rem;letter-spacing:0.05em;transform:translateY(4rem);opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;}
+.toast.show{transform:translateY(0);opacity:1;}
+@media(max-width:768px){.masthead,.upload-panel,.stats-row,.main-area{padding-left:1rem;padding-right:1rem;}.toolbar{padding-left:1rem;padding-right:1rem;}.main-area{grid-template-columns:1fr;}.sidebar{position:static;}.member-list{max-height:200px;}}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="pub-name">THE <span>VAULT</span></div>
+      <div class="pub-sub">A complete archive of your music community's shared links</div>
+    </div>
+    <div class="pub-meta">
+      <div>WHATSAPP MUSIC EXTRACTOR</div>
+      <div>PERSON × PLATFORM VIEW</div>
+      <div id="todayDate"></div>
+    </div>
+  </div>
+</header>
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="search-wrap"><input type="search" id="memberSearch" placeholder="Search member..." oninput="filterMembers()"></div>
+    <div class="filter-pills">
+      <button class="pill all active" onclick="setPlatformFilter('all',this)">ALL</button>
+      <button class="pill yt" onclick="setPlatformFilter('youtube',this)">YOUTUBE</button>
+      <button class="pill sp" onclick="setPlatformFilter('spotify',this)">SPOTIFY</button>
+      <button class="pill am" onclick="setPlatformFilter('applemusic',this)">APPLE</button>
+      <button class="pill bc" onclick="setPlatformFilter('bandcamp',this)">BANDCAMP</button>
+    </div>
+  </div>
+</div>
+<div class="upload-panel" id="uploadSection">
+  <div class="upload-card">
+    <div class="upload-title">IMPORT CHAT</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".txt">
+      <span class="drop-label">DROP WHATSAPP .TXT EXPORT HERE</span>
+      <span class="drop-sub">WhatsApp → Group → Export Chat → Without Media</span>
+    </div>
+    <div class="or-row">OR PASTE DIRECTLY</div>
+    <textarea id="chatInput" placeholder="Paste your WhatsApp chat text here..."></textarea>
+    <button class="btn-primary" id="extractBtn" onclick="runExtraction()">◼ BUILD PLAYLISTS</button>
+  </div>
+</div>
+<div class="stats-row" id="statsRow" style="display:none">
+  <div class="stat-box"><span class="stat-n" id="statMembers">0</span><span class="stat-label">Members</span></div>
+  <div class="stat-box"><span class="stat-n" id="statLinks">0</span><span class="stat-label">Total Links</span></div>
+  <div class="stat-box"><span class="stat-n" style="color:var(--yt)" id="statYT">0</span><span class="stat-label">YouTube</span></div>
+  <div class="stat-box"><span class="stat-n" style="color:var(--sp)" id="statSP">0</span><span class="stat-label">Spotify</span></div>
+  <div class="stat-box"><span class="stat-n" style="color:var(--am)" id="statAM">0</span><span class="stat-label">Apple Music</span></div>
+  <div class="stat-box"><span class="stat-n" style="color:var(--bc)" id="statBC">0</span><span class="stat-label">Bandcamp</span></div>
+</div>
+<div class="main-area" id="mainArea" style="display:none">
+  <aside class="sidebar">
+    <div class="sidebar-title">MEMBERS — <span id="memberCountLabel">0</span></div>
+    <div class="member-list" id="memberList"></div>
+  </aside>
+  <div class="content-panel" id="contentPanel">
+    <div class="empty-panel"><div class="empty-big">Select a member</div><div class="empty-sub">Choose someone from the list to see their shared music</div></div>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="spotifyModal">
+  <div class="modal-box">
+    <div class="modal-title">◎ Create Spotify Playlist</div>
+    <div class="modal-sub" id="modalSub">Connect your Spotify account to automatically create a playlist.</div>
+    <div id="setupFields">
+      <div class="modal-field">
+        <label class="modal-label">SPOTIFY CLIENT ID</label>
+        <input class="modal-input" id="clientIdInput" type="text" placeholder="e.g. a1b2c3d4e5f6...">
+        <span class="modal-hint">Get this free at <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> → Create App</span>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">PLAYLIST NAME</label>
+        <input class="modal-input" id="playlistNameInput" type="text">
+      </div>
+    </div>
+    <div id="connectedFields" style="display:none">
+      <div class="sp-connected">◎ Connected as <strong id="spUserName">...</strong></div>
+      <div class="modal-field" style="margin-top:1rem">
+        <label class="modal-label">PLAYLIST NAME</label>
+        <input class="modal-input" id="playlistNameInput2" type="text">
+      </div>
+      <div style="margin-top:0.75rem">
+        <button class="btn-cancel" onclick="disconnectSpotify()" style="font-size:0.65rem;padding:0.3rem 0.75rem">✕ Disconnect &amp; reconnect</button>
+      </div>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-label"><span id="progressText">Adding tracks...</span><span id="progressCount">0 / 0</span></div>
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+      <div class="progress-log" id="progressLog"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSpotifyModal()">Cancel</button>
+      <button class="btn-sp" id="modalActionBtn" onclick="spotifyModalAction()">Connect Spotify →</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let allData={},activeMember=null,platformFilter='all',titleCache={},fetchQueue=[],isFetching=false;
+let spotifyToken=null,spotifyUserId=null,spotifyUserName=null,currentModalMember=null;
+const SPOTIFY_SCOPES='playlist-modify-public playlist-modify-private';
+const AVATAR_COLORS=['#c8401a','#1a6bc8','#1a7a3c','#7a1a6b','#c8961a','#1a4a7a','#7a4a1a','#1a7a6b','#6b1a1a','#3a6b1a','#1a3a6b','#6b3a1a','#3a1a6b','#1a6b3a','#6b1a3a'];
+document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+function safeId(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return'id'+(h>>>0).toString(36);}
+function avatarColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))&0xffffffff;return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];}
+function initials(n){return n.split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
+const dropZone=document.getElementById('dropZone'),fileInput=document.getElementById('fileInput');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('over'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('over');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener('change',e=>{if(e.target.files[0])readFile(e.target.files[0]);});
+function readFile(file){const r=new FileReader();r.onload=e=>{document.getElementById('chatInput').value=e.target.result;toast('Loaded: '+file.name);};r.readAsText(file,'UTF-8');}
+const PLATFORMS={
+  youtube:{name:'YouTube',icon:'▶',cls:'yt',patterns:[/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^\s<>"'\])]*/gi,/https?:\/\/youtu\.be\/[^\s<>"'\])]*/gi,/https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\s<>"'\])]*/gi,/https?:\/\/music\.youtube\.com\/[^\s<>"'\])]*/gi]},
+  spotify:{name:'Spotify',icon:'◎',cls:'sp',patterns:[/https?:\/\/open\.spotify\.com\/[^\s<>"'\])]*/gi,/https?:\/\/spotify\.link\/[^\s<>"'\])]*/gi]},
+  applemusic:{name:'Apple Music',icon:'♪',cls:'am',patterns:[/https?:\/\/music\.apple\.com\/[^\s<>"'\])]*/gi,/https?:\/\/itunes\.apple\.com\/[^\s<>"'\])]*/gi]},
+  bandcamp:{name:'Bandcamp',icon:'◈',cls:'bc',patterns:[/https?:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/[^\s<>"'\])]*/gi]}
+};
+function runExtraction(){
+  const text=document.getElementById('chatInput').value.trim();
+  if(!text){toast('Please paste or upload a WhatsApp chat first');return;}
+  const btn=document.getElementById('extractBtn');
+  btn.disabled=true;btn.textContent='⟳ PROCESSING...';
+  setTimeout(()=>{
+    try{
+      const result=parseChat(text);
+      allData=result.members;
+      try{localStorage.setItem('vault_chat',JSON.stringify(allData));}catch(e){}
+      renderAll(result);
+    }catch(e){toast('Error: '+e.message);console.error(e);}
+    btn.disabled=false;btn.textContent='◼ BUILD PLAYLISTS';
+  },50);
+}
+function parseChat(text){
+  const lines=text.split('\n'),members={};let totalLinks=0;
+  const lineRe=[
+    /^\[(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}),\s*(\d{1,2}:\d{2}:\d{2}\s*[AP]M|\d{1,2}:\d{2}:\d{2}|\d{1,2}:\d{2}\s*[AP]M|\d{1,2}:\d{2})\]\s*(~?\s*[^:]+?):\s*([\s\S]*)/i,
+    /^(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4})[,\s]+(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)\s*[-–]\s*(~?\s*[^:]+?):\s*([\s\S]*)/i
+  ];
+  let currentSender=null,currentDate='',currentTime='',messageBuffer=[];
+  const processBuffer=()=>{
+    if(!currentSender||!messageBuffer.length)return;
+    const msgText=messageBuffer.join(' ');
+    for(const[platform,cfg]of Object.entries(PLATFORMS)){
+      for(const pat of cfg.patterns){
+        const matches=[...msgText.matchAll(new RegExp(pat.source,'gi'))];
+        for(const m of matches){
+          let url=m[0].replace(/[).,;'">\]\[]+$/,'');
+          if(!members[currentSender])members[currentSender]={youtube:[],spotify:[],applemusic:[],bandcamp:[]};
+          const existing=members[currentSender][platform];
+          if(!existing.find(e=>e.url===url)){existing.push({url,date:currentDate,time:currentTime});totalLinks++;}
+        }
+      }
+    }
+    messageBuffer=[];
+  };
+  for(const line of lines){
+    let matched=false;
+    for(const re of lineRe){
+      const m=line.match(re);
+      if(m){
+        processBuffer();
+        currentDate=m[1];currentTime=m[2];
+        currentSender=m[3].trim().replace(/^~\s*/,'').trim();
+        const msgBody=m[4]||'';
+        const isSystem=line.includes('\u200e')||/end-to-end encrypted/i.test(msgBody)||/created this group/i.test(msgBody)||/Messages to this group/i.test(msgBody)||currentSender.includes('changed')||currentSender.includes('added')||currentSender.includes('left');
+        if(isSystem)currentSender=null;
+        else messageBuffer=[msgBody];
+        matched=true;break;
+      }
+    }
+    if(!matched&&currentSender)messageBuffer.push(line);
+  }
+  processBuffer();
+  const sorted={};
+  Object.entries(members).sort(([,a],[,b])=>(b.youtube.length+b.spotify.length+b.applemusic.length+b.bandcamp.length)-(a.youtube.length+a.spotify.length+a.applemusic.length+a.bandcamp.length)).forEach(([k,v])=>sorted[k]=v);
+  return{members:sorted,totalLinks};
+}
+function renderAll(result){
+  const names=Object.keys(result.members);
+  if(!names.length){toast('No music links found');return;}
+  let totYT=0,totSP=0,totAM=0,totBC=0;
+  for(const m of Object.values(result.members)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;}
+  document.getElementById('statMembers').textContent=names.length;
+  document.getElementById('statLinks').textContent=result.totalLinks;
+  document.getElementById('statYT').textContent=totYT;
+  document.getElementById('statSP').textContent=totSP;
+  document.getElementById('statAM').textContent=totAM;
+  document.getElementById('statBC').textContent=totBC;
+  document.getElementById('statsRow').style.display='grid';
+  document.getElementById('mainArea').style.display='grid';
+  document.getElementById('uploadSection').style.marginBottom='0';
+  renderMemberList(names);selectMember(names[0]);
+  for(const[,pd]of Object.entries(result.members))for(const t of pd.youtube)if(!titleCache[t.url])fetchQueue.push(t.url);
+  processFetchQueue();
+}
+function renderMemberList(names){
+  const list=document.getElementById('memberList'),query=document.getElementById('memberSearch').value.toLowerCase();
+  list.innerHTML='';document.getElementById('memberCountLabel').textContent=Object.keys(allData).length;
+  for(const name of names.filter(n=>n.toLowerCase().includes(query))){
+    const data=allData[name],count=data.youtube.length+data.spotify.length+data.applemusic.length+data.bandcamp.length;
+    const btn=document.createElement('button');
+    btn.className='member-btn'+(name===activeMember?' active':'');
+    btn.innerHTML=`<div class="member-avatar" style="background:${avatarColor(name)}">${initials(name)}</div><div class="member-info"><span class="member-name">${escHtml(name)}</span><span class="member-count">${count} link${count!==1?'s':''}</span></div>`;
+    btn.onclick=()=>selectMember(name);list.appendChild(btn);
+  }
+}
+function filterMembers(){renderMemberList(Object.keys(allData));}
+function selectMember(name){
+  activeMember=name;
+  document.querySelectorAll('.member-btn').forEach(b=>b.classList.toggle('active',b.querySelector('.member-name')?.textContent===name));
+  renderMemberContent(name);
+}
+function renderMemberContent(name){
+  const data=allData[name];if(!data)return;
+  const panel=document.getElementById('contentPanel');
+  const totalLinks=data.youtube.length+data.spotify.length+data.applemusic.length+data.bandcamp.length;
+  let platformsHtml='';
+  for(const[key,cfg]of Object.entries(PLATFORMS)){
+    if(platformFilter!=='all'&&platformFilter!==key)continue;
+    const tracks=data[key];if(!tracks.length)continue;
+    platformsHtml+=renderPlatformBlock(name,key,cfg,tracks);
+  }
+  if(!platformsHtml)platformsHtml=`<div style="padding:2rem;text-align:center;color:var(--muted);font-style:italic">No links for this filter</div>`;
+  panel.innerHTML=`
+    <div class="member-header">
+      <div class="member-header-avatar" style="background:${avatarColor(name)}">${initials(name)}</div>
+      <div><div class="member-header-name">${escHtml(name)}</div>
+      <div class="member-header-meta">${totalLinks} links · ${data.youtube.length} YT · ${data.spotify.length} Spotify · ${data.applemusic.length} Apple · ${data.bandcamp.length} Bandcamp</div></div>
+      <div class="member-actions">
+        <button class="btn-sm ink" onclick="exportCSV('${escAttr(name)}')">↓ CSV</button>
+        <button class="btn-sm ink" onclick="copyAllLinks('${escAttr(name)}')">⎘ Copy All</button>
+        <button class="btn-sm" style="border-color:var(--sp);color:var(--sp)" onclick="openSpotifyModal('${escAttr(name)}')">◎ Spotify Playlist</button>
+      </div>
+    </div>
+    <div class="platform-blocks">${platformsHtml}</div>`;
+}
+function renderPlatformBlock(memberName,key,cfg,tracks){
+  const blockId=`blk-${safeId(memberName+key)}`;
+  const rows=tracks.map((t,i)=>renderTrackRow(i,t,key,cfg)).join('');
+  return `<div class="platform-block" id="${blockId}">
+    <div class="platform-block-header ${cfg.cls}-h" onclick="toggleBlock('${blockId}')">
+      <div class="platform-block-title ${cfg.cls}-t">${cfg.icon} &nbsp;${cfg.name} <span class="track-count-badge">${tracks.length}</span></div>
+      <div class="platform-block-acts">
+        <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
+        <span class="chevron-icon">▾</span>
+      </div>
+    </div>
+    <div class="track-table-wrap"><table class="track-table"><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function renderTrackRow(i,track,platform,cfg){
+  const tid=safeId(track.url);
+  const cachedTitle=titleCache[track.url];
+  let titleHtml;
+  if(cachedTitle)titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(cachedTitle)}</a>`;
+  else if(platform==='youtube')titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener" id="${tid}-title"><span class="fetching-badge">fetching title…</span></a>`;
+  else titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(shortUrl(track.url))}</a>`;
+  let ab=`<a class="link-btn ${cfg.cls}-btn" href="${escHtml(track.url)}" target="_blank" rel="noopener">↗ OPEN</a>`;
+  if(platform==='spotify'){const m=track.url.match(/track\/([a-zA-Z0-9]+)/);if(m)ab+=`<a class="link-btn sp-btn" href="https://open.spotify.com/track/${m[1]}" target="_blank">+ ADD</a>`;}
+  if(platform==='youtube'){const q=encodeURIComponent(cachedTitle||extractYTId(track.url)||'');if(q)ab+=`<a class="link-btn search-btn" href="https://open.spotify.com/search/${q}" target="_blank">SP ⌕</a>`;}
+  return `<tr><td class="td-num">${String(i+1).padStart(2,'0')}</td><td>${titleHtml}<span class="track-url-text">${escHtml(track.url)}</span></td><td class="td-date">${escHtml([track.date,track.time].filter(Boolean).join(' '))}</td><td class="td-actions">${ab}</td></tr>`;
+}
+function toggleBlock(id){document.getElementById(id)?.classList.toggle('collapsed-block');}
+function setPlatformFilter(key,btn){platformFilter=key;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');if(activeMember)renderMemberContent(activeMember);}
+async function processFetchQueue(){
+  if(isFetching||!fetchQueue.length)return;isFetching=true;
+  const unique=[...new Set(fetchQueue)].filter(u=>!titleCache[u]);fetchQueue=[];
+  for(const url of unique){
+    try{const res=await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+      if(res.ok){const j=await res.json();titleCache[url]=j.title||null;
+        const el=document.getElementById(`${safeId(url)}-title`);
+        if(el&&j.title){el.innerHTML=escHtml(j.title);const sb=el.closest('tr')?.querySelector('.search-btn');if(sb)sb.href=`https://open.spotify.com/search/${encodeURIComponent(j.title)}`;}}
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,80));
+  }
+  isFetching=false;if(fetchQueue.length)processFetchQueue();
+}
+function exportCSV(name){
+  const data=allData[name];if(!data)return;
+  const rows=[['Platform','Title','URL','Date','Time']];
+  for(const[p,tracks]of Object.entries(data))for(const t of tracks)rows.push([p,titleCache[t.url]||shortUrl(t.url),t.url,t.date||'',t.time||'']);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}));
+  a.download=`${name.replace(/\s+/g,'_')}_music.csv`;a.click();toast(`Downloaded CSV for ${name}`);
+}
+function copyAllLinks(name){navigator.clipboard.writeText(Object.values(allData[name]||{}).flat().map(t=>t.url).join('\n')).then(()=>toast(`Copied all links for ${name}`));}
+function copyPlatformLinks(e,name,platform){e.stopPropagation();navigator.clipboard.writeText((allData[name]?.[platform]||[]).map(t=>t.url).join('\n')).then(()=>toast(`Copied ${platform} links`));}
+function openSpotifyModal(memberName){
+  currentModalMember=memberName;
+  const spCount=allData[memberName]?.spotify?.length||0;
+  document.getElementById('modalSub').textContent=`${memberName} shared ${spCount} Spotify track${spCount!==1?'s':''}. Connect your Spotify account to create a playlist automatically.`;
+  document.getElementById('playlistNameInput').value=`${memberName} — The Vault`;
+  const saved=localStorage.getItem('sp_client_id');if(saved)document.getElementById('clientIdInput').value=saved;
+  if(spotifyToken)showConnectedState(memberName);
+  else{document.getElementById('setupFields').style.display='block';document.getElementById('connectedFields').style.display='none';document.getElementById('modalActionBtn').textContent='Connect Spotify →';document.getElementById('progressWrap').classList.remove('visible');}
+  document.getElementById('spotifyModal').classList.remove('hidden');
+}
+function closeSpotifyModal(){document.getElementById('spotifyModal').classList.add('hidden');}
+function disconnectSpotify(){
+  localStorage.removeItem('sp_token');localStorage.removeItem('sp_token_expiry');
+  spotifyToken=null;spotifyUserId=null;spotifyUserName=null;
+  document.getElementById('setupFields').style.display='block';
+  document.getElementById('connectedFields').style.display='none';
+  document.getElementById('modalActionBtn').textContent='Connect Spotify →';
+  document.getElementById('progressWrap').classList.remove('visible');
+  document.getElementById('progressLog').innerHTML='';
+  toast('Disconnected — reconnect for fresh permissions');
+}
+function showConnectedState(memberName){
+  document.getElementById('setupFields').style.display='none';document.getElementById('connectedFields').style.display='block';
+  document.getElementById('spUserName').textContent=spotifyUserName||'...';
+  document.getElementById('playlistNameInput2').value=`${memberName} — The Vault`;
+  document.getElementById('modalActionBtn').textContent='◎ Create Playlist →';
+}
+function spotifyModalAction(){if(spotifyToken)createSpotifyPlaylist();else initiateSpotifyAuth();}
+async function initiateSpotifyAuth(){
+  const clientId=document.getElementById('clientIdInput').value.trim();
+  if(!clientId){toast('Please enter your Spotify Client ID');return;}
+  localStorage.setItem('sp_client_id',clientId);
+  sessionStorage.setItem('sp_pending_member',currentModalMember);
+  sessionStorage.setItem('sp_playlist_name',document.getElementById('playlistNameInput').value.trim());
+  const verifier=generateCodeVerifier(),challenge=await generateCodeChallenge(verifier);
+  sessionStorage.setItem('sp_verifier',verifier);
+  window.location.href=`https://accounts.spotify.com/authorize?${new URLSearchParams({client_id:clientId,response_type:'code',redirect_uri:getRedirectUri(),scope:SPOTIFY_SCOPES,code_challenge_method:'S256',code_challenge:challenge})}`;
+}
+async function handleSpotifyCallback(){
+  const params=new URLSearchParams(window.location.search),code=params.get('code'),error=params.get('error');
+  if(error){toast('Spotify auth cancelled');cleanUrl();return;}if(!code)return;
+  const clientId=localStorage.getItem('sp_client_id'),verifier=sessionStorage.getItem('sp_verifier');
+  if(!clientId||!verifier){toast('Auth error — please try again');cleanUrl();return;}
+  try{
+    const res=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:getRedirectUri(),client_id:clientId,code_verifier:verifier})});
+    const json=await res.json();if(!json.access_token)throw new Error(json.error_description||'Token exchange failed');
+    spotifyToken=json.access_token;localStorage.setItem('sp_token',spotifyToken);localStorage.setItem('sp_token_expiry',Date.now()+json.expires_in*1000);
+    const profile=await spotifyFetch('https://api.spotify.com/v1/me');spotifyUserId=profile.id;spotifyUserName=profile.display_name||profile.id;
+    cleanUrl();
+    const pending=sessionStorage.getItem('sp_pending_member');
+    if(pending&&allData[pending]){currentModalMember=pending;const sn=sessionStorage.getItem('sp_playlist_name');showConnectedState(pending);if(sn)document.getElementById('playlistNameInput2').value=sn;document.getElementById('spotifyModal').classList.remove('hidden');sessionStorage.removeItem('sp_pending_member');sessionStorage.removeItem('sp_playlist_name');}
+    else toast(`Connected as ${spotifyUserName}`);
+  }catch(e){toast('Spotify auth failed: '+e.message);cleanUrl();}
+}
+async function createSpotifyPlaylist(){
+  const memberName=currentModalMember,data=allData[memberName];if(!data)return;
+  const playlistName=document.getElementById('playlistNameInput2').value.trim()||`${memberName} — The Vault`;
+  const trackUris=(data.spotify||[]).map(t=>{const m=t.url.match(/track\/([a-zA-Z0-9]+)/);return m?`spotify:track:${m[1]}`:null;}).filter(Boolean);
+  if(!trackUris.length){toast('No valid Spotify track IDs found');return;}
+  const btn=document.getElementById('modalActionBtn');btn.disabled=true;
+  document.getElementById('progressWrap').classList.add('visible');
+  logProgress(`Creating playlist "${playlistName}"...`);setProgress(0,trackUris.length);
+  try{
+    const playlist=await spotifyFetch('https://api.spotify.com/v1/me/playlists',{method:'POST',body:JSON.stringify({name:playlistName,description:`Shared by ${memberName}. Generated by The Vault.`,public:false})});
+    logProgress(`Playlist created. Adding ${trackUris.length} tracks...`);
+    let added=0;
+    for(let i=0;i<trackUris.length;i+=100){
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,{method:'POST',body:JSON.stringify({uris:trackUris.slice(i,i+100)})});
+      added=Math.min(i+100,trackUris.length);setProgress(added,trackUris.length);logProgress(`Added ${added} / ${trackUris.length} tracks`);
+      if(i+100<trackUris.length)await sleep(300);
+    }
+    logProgress(`✓ Done! ${trackUris.length} tracks added.`);
+    document.getElementById('progressText').textContent='✓ Playlist created!';
+    btn.textContent='↗ Open Playlist';btn.disabled=false;
+    btn.onclick=()=>window.open(`https://open.spotify.com/playlist/${playlist.id}`,'_blank');
+    toast(`Playlist created with ${trackUris.length} tracks!`);
+  }catch(e){logProgress(`✗ Error: ${e.message}`);btn.disabled=false;btn.textContent='◎ Retry';toast('Error: '+e.message);}
+}
+async function spotifyFetch(url,options={}){
+  const res=await fetch(url,{...options,headers:{'Authorization':`Bearer ${spotifyToken}`,'Content-Type':'application/json',...(options.headers||{})}});
+  if(res.status===401){spotifyToken=null;localStorage.removeItem('sp_token');throw new Error('Session expired — please reconnect');}
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||`HTTP ${res.status}`);}
+  return res.status===204?{}:res.json();
+}
+function generateCodeVerifier(){const a=new Uint8Array(64);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+async function generateCodeChallenge(v){const d=new TextEncoder().encode(v),dg=await crypto.subtle.digest('SHA-256',d);return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+function getRedirectUri(){return window.location.origin+window.location.pathname;}
+function cleanUrl(){window.history.replaceState({},document.title,window.location.pathname);}
+function setProgress(done,total){document.getElementById('progressFill').style.width=`${Math.round(done/total*100)}%`;document.getElementById('progressCount').textContent=`${done} / ${total}`;}
+function logProgress(msg){const l=document.getElementById('progressLog');l.innerHTML+=msg+'<br>';l.scrollTop=l.scrollHeight;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function extractYTId(url){try{const u=new URL(url);return u.searchParams.get('v')||u.pathname.split('/').pop()||null;}catch{return null;}}
+function shortUrl(url){try{const u=new URL(url);return u.hostname.replace('www.','')+u.pathname.slice(0,30);}catch{return url.slice(0,40);}}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+(function restoreChat(){
+  try{
+    const saved=localStorage.getItem('vault_chat');
+    if(saved){
+      allData=JSON.parse(saved);
+      const names=Object.keys(allData);
+      if(names.length){
+        let total=0,totYT=0,totSP=0,totAM=0,totBC=0;
+        for(const m of Object.values(allData)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;total+=m.youtube.length+m.spotify.length+m.applemusic.length+m.bandcamp.length;}
+        document.getElementById('statMembers').textContent=names.length;
+        document.getElementById('statLinks').textContent=total;
+        document.getElementById('statYT').textContent=totYT;
+        document.getElementById('statSP').textContent=totSP;
+        document.getElementById('statAM').textContent=totAM;
+        document.getElementById('statBC').textContent=totBC;
+        document.getElementById('statsRow').style.display='grid';
+        document.getElementById('mainArea').style.display='grid';
+        document.getElementById('uploadSection').style.marginBottom='0';
+        renderMemberList(names);selectMember(names[0]);
+      }
+    }
+  }catch(e){}
+})();
+(async function initSpotify(){
+  if(window.location.search.includes('code=')){await handleSpotifyCallback();return;}
+  const saved=localStorage.getItem('sp_token'),expiry=localStorage.getItem('sp_token_expiry');
+  if(saved&&expiry&&Date.now()<parseInt(expiry)){
+    spotifyToken=saved;
+    try{const p=await spotifyFetch('https://api.spotify.com/v1/me');spotifyUserId=p.id;spotifyUserName=p.display_name||p.id;}
+    catch(e){spotifyToken=null;localStorage.removeItem('sp_token');}
+  }
+})();
+</script>
+</body>
+</html>.upload-title{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:0.05em;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem;}
 .upload-title::after{content:'';flex:1;height:1px;background:var(--rule);}
 .drop-zone{border:1.5px dashed var(--rule);padding:2rem;text-align:center;cursor:pointer;position:relative;transition:all 0.2s;background:var(--bg);margin-bottom:1rem;}
 .drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:var(--yt-light);}
