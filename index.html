@@ -1299,7 +1299,7 @@ function renderPlatformBlock(memberName, key, cfg, tracks) {
         <div class="platform-block-title ${cfg.cls}-t">${cfg.icon} &nbsp;${cfg.name} <span class="track-count-badge">${tracks.length}</span></div>
         <div class="platform-block-acts">
           <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
-          ${key==='youtube'?`<button class="btn-sm" style="border-color:var(--yt);color:var(--yt)" onclick="openYouTubePlaylist(event,'${escAttr(memberName)}')">▶ YT Playlist</button>`:''}
+          ${key==='youtube'?'<button class="btn-sm" style="border-color:var(--yt);color:var(--yt)" onclick="openYouTubePlaylist(event,\''+escAttr(memberName)+'\')">▶ YT Playlist</button>':''}
           <span class="chevron-icon">▾</span>
         </div>
       </div>
