@@ -391,7 +391,7 @@ function renderMemberContent(name){
       <div class="member-actions">
         <button class="btn-sm ink" onclick="exportCSV('${escAttr(name)}')">↓ CSV</button>
         <button class="btn-sm ink" onclick="copyAllLinks('${escAttr(name)}')">⎘ Copy All</button>
-        <button class="btn-sm" style="border-color:var(--sp);color:var(--sp)" onclick="openSpotifyModal('${escAttr(name)}')">◎ Spotify Playlist</button>
+        <button class="btn-sm" style="border-color:var(--sp);color:var(--sp)" onclick="openSpotifyModal('${escAttr(name)}')">◎ Spotify Playlist</button><button class="btn-sm" style="border-color:var(--muted);color:var(--muted)" onclick="disconnectSpotify()">✕ Disconnect</button>
       </div>
     </div>
     <div class="platform-blocks">${platformsHtml}</div>`;
@@ -529,7 +529,7 @@ function logProgress(msg){const l=document.getElementById('progressLog');l.inner
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function extractYTId(url){try{const u=new URL(url);return u.searchParams.get('v')||u.pathname.split('/').pop()||null;}catch{return null;}}
 function shortUrl(url){try{const u=new URL(url);return u.hostname.replace('www.','')+u.pathname.slice(0,30);}catch{return url.slice(0,40);}}
-function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function disconnectSpotify(){localStorage.removeItem('sp_token');localStorage.removeItem('sp_token_expiry');spotifyToken=null;spotifyUserId=null;spotifyUserName=null;toast('Spotify disconnected — reconnect for fresh permissions');}function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escAttr(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 (async function initSpotify(){
