@@ -7,22 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f5f0e8;
-  --paper: #faf7f2;
-  --ink: #1a1612;
-  --ink2: #3d3530;
-  --muted: #9e8e7e;
-  --rule: #ddd5c8;
-  --accent: #c8401a;
-  --accent2: #1a6bc8;
-  --yt: #c8401a;
-  --yt-light: #fdf0ec;
-  --sp: #1a7a3c;
-  --sp-light: #edf7f1;
-  --am: #b5254a;
-  --am-light: #fceef2;
-  --bc: #1a5a8a;
-  --bc-light: #ecf3fa;
+  --bg: #f5f0e8; --paper: #faf7f2; --ink: #1a1612; --ink2: #3d3530;
+  --muted: #9e8e7e; --rule: #ddd5c8; --accent: #c8401a; --accent2: #1a6bc8;
+  --yt: #c8401a; --yt-light: #fdf0ec; --sp: #1a7a3c; --sp-light: #edf7f1;
+  --am: #b5254a; --am-light: #fceef2; --bc: #1a5a8a; --bc-light: #ecf3fa;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--ink); font-family: 'Lora', serif; min-height: 100vh; }
@@ -87,11 +75,11 @@ textarea::placeholder { color: var(--muted); }
 .member-count { font-family: 'Syne Mono', monospace; font-size: 0.6rem; color: var(--muted); display: block; }
 .member-btn.active .member-count { color: rgba(255,255,255,0.5); }
 .content-panel {}
-.member-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--ink); }
+.member-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--ink); flex-wrap: wrap; }
 .member-header-avatar { width: 52px; height: 52px; border-radius: 50%; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
 .member-header-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.02em; line-height: 1; }
 .member-header-meta { font-family: 'Lora', serif; font-style: italic; font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
-.member-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+.member-actions { margin-left: auto; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .btn-sm { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.6rem; letter-spacing: 0.1em; padding: 0.35rem 0.75rem; border: 1.5px solid; border-radius: 2px; background: transparent; cursor: pointer; transition: all 0.15s; }
 .btn-sm.ink { border-color: var(--ink); color: var(--ink); }
 .btn-sm.ink:hover { background: var(--ink); color: var(--bg); }
@@ -138,7 +126,6 @@ textarea::placeholder { color: var(--muted); }
 .empty-panel { text-align: center; padding: 5rem 2rem; color: var(--muted); grid-column: 1 / -1; }
 .empty-big { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; letter-spacing: 0.05em; color: var(--ink); margin-bottom: 0.5rem; }
 .empty-sub { font-size: 0.85rem; font-style: italic; }
-.spinner { width: 32px; height: 32px; border: 2px solid var(--rule); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .modal-overlay { position: fixed; inset: 0; background: rgba(20,16,12,0.7); backdrop-filter: blur(4px); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 1rem; }
 .modal-overlay.hidden { display: none; }
@@ -192,14 +179,14 @@ textarea::placeholder { color: var(--muted); }
 <div class="toolbar">
   <div class="toolbar-inner">
     <div class="search-wrap">
-      <input type="search" id="memberSearch" placeholder="Search member..." oninput="filterMembers(this.value)">
+      <input type="search" id="memberSearch" placeholder="Search member..." oninput="filterMembers()">
     </div>
     <div class="filter-pills">
-      <button class="pill all active" onclick="setPlatformFilter('all', this)">ALL</button>
-      <button class="pill yt" onclick="setPlatformFilter('youtube', this)">YOUTUBE</button>
-      <button class="pill sp" onclick="setPlatformFilter('spotify', this)">SPOTIFY</button>
-      <button class="pill am" onclick="setPlatformFilter('applemusic', this)">APPLE</button>
-      <button class="pill bc" onclick="setPlatformFilter('bandcamp', this)">BANDCAMP</button>
+      <button class="pill all active" onclick="setPlatformFilter('all',this)">ALL</button>
+      <button class="pill yt" onclick="setPlatformFilter('youtube',this)">YOUTUBE</button>
+      <button class="pill sp" onclick="setPlatformFilter('spotify',this)">SPOTIFY</button>
+      <button class="pill am" onclick="setPlatformFilter('applemusic',this)">APPLE</button>
+      <button class="pill bc" onclick="setPlatformFilter('bandcamp',this)">BANDCAMP</button>
     </div>
   </div>
 </div>
@@ -207,7 +194,7 @@ textarea::placeholder { color: var(--muted); }
   <div class="upload-card">
     <div class="upload-title">IMPORT CHAT</div>
     <div class="drop-zone" id="dropZone">
-      <input type="file" id="fileInput" accept=".txt,.zip">
+      <input type="file" id="fileInput" accept=".txt">
       <span class="drop-label">DROP WHATSAPP .TXT EXPORT HERE</span>
       <span class="drop-sub">WhatsApp → Group → Export Chat → Without Media</span>
     </div>
@@ -281,6 +268,7 @@ const AVATAR_COLORS=['#c8401a','#1a6bc8','#1a7a3c','#7a1a6b','#c8961a','#1a4a7a'
 document.getElementById('todayDate').textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
 function avatarColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))&0xffffffff;return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];}
 function initials(n){return n.split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
+function safeId(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h)^s.charCodeAt(i);return'id'+(h>>>0).toString(36);}
 const dropZone=document.getElementById('dropZone'),fileInput=document.getElementById('fileInput');
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('over'));
@@ -288,10 +276,10 @@ dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remov
 fileInput.addEventListener('change',e=>{if(e.target.files[0])readFile(e.target.files[0]);});
 function readFile(file){const r=new FileReader();r.onload=e=>{document.getElementById('chatInput').value=e.target.result;toast('Loaded: '+file.name);};r.readAsText(file,'UTF-8');}
 const PLATFORMS={
-  youtube:{name:'YouTube',icon:'▶',cls:'yt',patterns:[/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^\s<>"'\]))]*/gi,/https?:\/\/youtu\.be\/[^\s<>"'\]))]*/gi,/https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\s<>"'\]))]*/gi,/https?:\/\/music\.youtube\.com\/[^\s<>"'\]))]*/gi]},
-  spotify:{name:'Spotify',icon:'◎',cls:'sp',patterns:[/https?:\/\/open\.spotify\.com\/[^\s<>"'\]))]*/gi,/https?:\/\/spotify\.link\/[^\s<>"'\]))]*/gi]},
-  applemusic:{name:'Apple Music',icon:'♪',cls:'am',patterns:[/https?:\/\/music\.apple\.com\/[^\s<>"'\]))]*/gi,/https?:\/\/itunes\.apple\.com\/[^\s<>"'\]))]*/gi]},
-  bandcamp:{name:'Bandcamp',icon:'◈',cls:'bc',patterns:[/https?:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/[^\s<>"'\]))]*/gi]}
+  youtube:{name:'YouTube',icon:'▶',cls:'yt',patterns:[/https?:\/\/(?:www\.)?youtube\.com\/watch\?[^\s<>"'\])]*/gi,/https?:\/\/youtu\.be\/[^\s<>"'\])]*/gi,/https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\s<>"'\])]*/gi,/https?:\/\/music\.youtube\.com\/[^\s<>"'\])]*/gi]},
+  spotify:{name:'Spotify',icon:'◎',cls:'sp',patterns:[/https?:\/\/open\.spotify\.com\/[^\s<>"'\])]*/gi,/https?:\/\/spotify\.link\/[^\s<>"'\])]*/gi]},
+  applemusic:{name:'Apple Music',icon:'♪',cls:'am',patterns:[/https?:\/\/music\.apple\.com\/[^\s<>"'\])]*/gi,/https?:\/\/itunes\.apple\.com\/[^\s<>"'\])]*/gi]},
+  bandcamp:{name:'Bandcamp',icon:'◈',cls:'bc',patterns:[/https?:\/\/[a-zA-Z0-9-]+\.bandcamp\.com\/[^\s<>"'\])]*/gi]}
 };
 function runExtraction(){
   const text=document.getElementById('chatInput').value.trim();
@@ -321,7 +309,7 @@ function parseChat(text){
           let url=m[0].replace(/[).,;'">\]\[]+$/,'');
           if(!members[currentSender])members[currentSender]={youtube:[],spotify:[],applemusic:[],bandcamp:[]};
           const existing=members[currentSender][platform];
-          if(!existing.find(e=>e.url===url)){existing.push({url,date:currentDate,time:currentTime,title:null});totalLinks++;}
+          if(!existing.find(e=>e.url===url)){existing.push({url,date:currentDate,time:currentTime});totalLinks++;}
         }
       }
     }
@@ -337,7 +325,8 @@ function parseChat(text){
         currentSender=m[3].trim().replace(/^~\s*/,'').trim();
         const msgBody=m[4]||'';
         const isSystem=line.includes('\u200e')||/end-to-end encrypted/i.test(msgBody)||/created this group/i.test(msgBody)||/Messages to this group/i.test(msgBody)||currentSender.includes('changed')||currentSender.includes('added')||currentSender.includes('left');
-        if(isSystem){currentSender=null;}else{messageBuffer=[msgBody];}
+        if(isSystem)currentSender=null;
+        else messageBuffer=[msgBody];
         matched=true;break;
       }
     }
@@ -349,10 +338,10 @@ function parseChat(text){
   return{members:sorted,totalLinks};
 }
 function renderAll(result){
-  const members=result.members,names=Object.keys(members);
-  if(names.length===0){toast('No music links found');return;}
+  const names=Object.keys(result.members);
+  if(!names.length){toast('No music links found');return;}
   let totYT=0,totSP=0,totAM=0,totBC=0;
-  for(const m of Object.values(members)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;}
+  for(const m of Object.values(result.members)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;}
   document.getElementById('statMembers').textContent=names.length;
   document.getElementById('statLinks').textContent=result.totalLinks;
   document.getElementById('statYT').textContent=totYT;
@@ -363,12 +352,12 @@ function renderAll(result){
   document.getElementById('mainArea').style.display='grid';
   document.getElementById('uploadSection').style.marginBottom='0';
   renderMemberList(names);selectMember(names[0]);
-  for(const[,pd]of Object.entries(members))for(const t of pd.youtube)if(!titleCache[t.url])fetchQueue.push(t.url);
+  for(const[,pd]of Object.entries(result.members))for(const t of pd.youtube)if(!titleCache[t.url])fetchQueue.push(t.url);
   processFetchQueue();
 }
 function renderMemberList(names){
   const list=document.getElementById('memberList'),query=document.getElementById('memberSearch').value.toLowerCase();
-  list.innerHTML='';document.getElementById('memberCountLabel').textContent=names.length;
+  list.innerHTML='';document.getElementById('memberCountLabel').textContent=Object.keys(allData).length;
   for(const name of names.filter(n=>n.toLowerCase().includes(query))){
     const data=allData[name],count=data.youtube.length+data.spotify.length+data.applemusic.length+data.bandcamp.length;
     const btn=document.createElement('button');
@@ -390,7 +379,7 @@ function renderMemberContent(name){
   let platformsHtml='';
   for(const[key,cfg]of Object.entries(PLATFORMS)){
     if(platformFilter!=='all'&&platformFilter!==key)continue;
-    const tracks=data[key];if(tracks.length===0)continue;
+    const tracks=data[key];if(!tracks.length)continue;
     platformsHtml+=renderPlatformBlock(name,key,cfg,tracks);
   }
   if(!platformsHtml)platformsHtml=`<div style="padding:2rem;text-align:center;color:var(--muted);font-style:italic">No links for this filter</div>`;
@@ -408,10 +397,10 @@ function renderMemberContent(name){
     <div class="platform-blocks">${platformsHtml}</div>`;
 }
 function renderPlatformBlock(memberName,key,cfg,tracks){
-  const blockId=`block-${memberName.replace(/\s+/g,'-')}-${key}`;
+  const blockId=`block-${safeId(memberName+key)}`;
   const rows=tracks.map((t,i)=>renderTrackRow(i,t,key,cfg)).join('');
-  return `<div class="platform-block" id="${escAttr(blockId)}">
-    <div class="platform-block-header ${cfg.cls}-h" onclick="toggleBlock('${escAttr(blockId)}')">
+  return `<div class="platform-block" id="${blockId}">
+    <div class="platform-block-header ${cfg.cls}-h" onclick="toggleBlock('${blockId}')">
       <div class="platform-block-title ${cfg.cls}-t">${cfg.icon} &nbsp;${cfg.name} <span class="track-count-badge">${tracks.length}</span></div>
       <div class="platform-block-acts">
         <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
@@ -422,44 +411,41 @@ function renderPlatformBlock(memberName,key,cfg,tracks){
   </div>`;
 }
 function renderTrackRow(i,track,platform,cfg){
-  const trackId=`tr-${btoa(track.url).replace(/[^a-zA-Z0-9]/g,'')}`;
+  const tid=safeId(track.url);
   const cachedTitle=titleCache[track.url];
   let titleHtml;
   if(cachedTitle)titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(cachedTitle)}</a>`;
-  else if(platform==='youtube')titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener" id="${trackId}-title"><span class="fetching-badge">fetching title…</span></a>`;
+  else if(platform==='youtube')titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener" id="${tid}-title"><span class="fetching-badge">fetching title…</span></a>`;
   else titleHtml=`<a class="track-title-text" href="${escHtml(track.url)}" target="_blank" rel="noopener">${escHtml(shortUrl(track.url))}</a>`;
   let actionBtns=`<a class="link-btn ${cfg.cls}-btn" href="${escHtml(track.url)}" target="_blank" rel="noopener">↗ OPEN</a>`;
-  if(platform==='spotify'){const m=track.url.match(/track\/([a-zA-Z0-9]+)/);if(m)actionBtns+=`<a class="link-btn sp-btn" href="https://open.spotify.com/track/${m[1]}" target="_blank" rel="noopener">+ ADD</a>`;}
-  if(platform==='youtube'){const q=encodeURIComponent(cachedTitle||extractYTId(track.url)||'');if(q)actionBtns+=`<a class="link-btn search-btn" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">SP ⌕</a>`;}
-  const dateStr=[track.date,track.time].filter(Boolean).join(' ');
-  return `<tr><td class="td-num">${String(i+1).padStart(2,'0')}</td><td class="td-title">${titleHtml}<span class="track-url-text">${escHtml(track.url)}</span></td><td class="td-date">${escHtml(dateStr)}</td><td class="td-actions">${actionBtns}</td></tr>`;
+  if(platform==='spotify'){const m=track.url.match(/track\/([a-zA-Z0-9]+)/);if(m)actionBtns+=`<a class="link-btn sp-btn" href="https://open.spotify.com/track/${m[1]}" target="_blank">+ ADD</a>`;}
+  if(platform==='youtube'){const q=encodeURIComponent(cachedTitle||extractYTId(track.url)||'');if(q)actionBtns+=`<a class="link-btn search-btn" href="https://open.spotify.com/search/${q}" target="_blank">SP ⌕</a>`;}
+  return `<tr><td class="td-num">${String(i+1).padStart(2,'0')}</td><td class="td-title">${titleHtml}<span class="track-url-text">${escHtml(track.url)}</span></td><td class="td-date">${escHtml([track.date,track.time].filter(Boolean).join(' '))}</td><td class="td-actions">${actionBtns}</td></tr>`;
 }
 function toggleBlock(id){document.getElementById(id)?.classList.toggle('collapsed-block');}
 function setPlatformFilter(key,btn){platformFilter=key;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');if(activeMember)renderMemberContent(activeMember);}
 async function processFetchQueue(){
-  if(isFetching||fetchQueue.length===0)return;isFetching=true;
+  if(isFetching||!fetchQueue.length)return;isFetching=true;
   const unique=[...new Set(fetchQueue)].filter(u=>!titleCache[u]);fetchQueue=[];
   for(const url of unique){
-    try{
-      const res=await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-      if(res.ok){const json=await res.json();titleCache[url]=json.title||null;
-        const el=document.getElementById(`tr-${btoa(url).replace(/[^a-zA-Z0-9]/g,'')}-title`);
-        if(el&&json.title){el.innerHTML=escHtml(json.title);const sb=el.closest('tr')?.querySelector('.search-btn');if(sb)sb.href=`https://open.spotify.com/search/${encodeURIComponent(json.title)}`;}
-      }
+    try{const res=await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+      if(res.ok){const j=await res.json();titleCache[url]=j.title||null;
+        const el=document.getElementById(`${safeId(url)}-title`);
+        if(el&&j.title){el.innerHTML=escHtml(j.title);const sb=el.closest('tr')?.querySelector('.search-btn');if(sb)sb.href=`https://open.spotify.com/search/${encodeURIComponent(j.title)}`;}}
     }catch(e){}
     await new Promise(r=>setTimeout(r,80));
   }
-  isFetching=false;if(fetchQueue.length>0)processFetchQueue();
+  isFetching=false;if(fetchQueue.length)processFetchQueue();
 }
 function exportCSV(name){
   const data=allData[name];if(!data)return;
   const rows=[['Platform','Title','URL','Date','Time']];
-  for(const[platform,tracks]of Object.entries(data))for(const t of tracks)rows.push([platform,titleCache[t.url]||shortUrl(t.url),t.url,t.date,t.time]);
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`${name.replace(/\s+/g,'_')}_music.csv`;a.click();toast(`Downloaded CSV for ${name}`);
+  for(const[p,tracks]of Object.entries(data))for(const t of tracks)rows.push([p,titleCache[t.url]||shortUrl(t.url),t.url,t.date||'',t.time||'']);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}));
+  a.download=`${name.replace(/\s+/g,'_')}_music.csv`;a.click();toast(`Downloaded CSV for ${name}`);
 }
-function copyAllLinks(name){const links=Object.values(allData[name]||{}).flat().map(t=>t.url).join('\n');navigator.clipboard.writeText(links).then(()=>toast(`Copied all links for ${name}`));}
-function copyPlatformLinks(e,name,platform){e.stopPropagation();const links=(allData[name]?.[platform]||[]).map(t=>t.url).join('\n');navigator.clipboard.writeText(links).then(()=>toast(`Copied ${platform} links`));}
+function copyAllLinks(name){navigator.clipboard.writeText(Object.values(allData[name]||{}).flat().map(t=>t.url).join('\n')).then(()=>toast(`Copied all links for ${name}`));}
+function copyPlatformLinks(e,name,platform){e.stopPropagation();navigator.clipboard.writeText((allData[name]?.[platform]||[]).map(t=>t.url).join('\n')).then(()=>toast(`Copied ${platform} links`));}
 function openSpotifyModal(memberName){
   currentModalMember=memberName;
   const spCount=allData[memberName]?.spotify?.length||0;
@@ -470,7 +456,7 @@ function openSpotifyModal(memberName){
   else{document.getElementById('setupFields').style.display='block';document.getElementById('connectedFields').style.display='none';document.getElementById('modalActionBtn').textContent='Connect Spotify →';document.getElementById('progressWrap').classList.remove('visible');}
   document.getElementById('spotifyModal').classList.remove('hidden');
 }
-function closeSpotifyModal(){document.getElementById('spotifyModal').classList.add('hidden');document.getElementById('progressWrap').classList.remove('visible');}
+function closeSpotifyModal(){document.getElementById('spotifyModal').classList.add('hidden');}
 function showConnectedState(memberName){
   document.getElementById('setupFields').style.display='none';document.getElementById('connectedFields').style.display='block';
   document.getElementById('spUserName').textContent=spotifyUserName||'...';
@@ -486,8 +472,7 @@ async function initiateSpotifyAuth(){
   sessionStorage.setItem('sp_playlist_name',document.getElementById('playlistNameInput').value.trim());
   const verifier=generateCodeVerifier(),challenge=await generateCodeChallenge(verifier);
   sessionStorage.setItem('sp_verifier',verifier);
-  const params=new URLSearchParams({client_id:clientId,response_type:'code',redirect_uri:getRedirectUri(),scope:SPOTIFY_SCOPES,code_challenge_method:'S256',code_challenge:challenge});
-  window.location.href=`https://accounts.spotify.com/authorize?${params}`;
+  window.location.href=`https://accounts.spotify.com/authorize?${new URLSearchParams({client_id:clientId,response_type:'code',redirect_uri:getRedirectUri(),scope:SPOTIFY_SCOPES,code_challenge_method:'S256',code_challenge:challenge})}`;
 }
 async function handleSpotifyCallback(){
   const params=new URLSearchParams(window.location.search),code=params.get('code'),error=params.get('error');
@@ -500,13 +485,9 @@ async function handleSpotifyCallback(){
     spotifyToken=json.access_token;localStorage.setItem('sp_token',spotifyToken);localStorage.setItem('sp_token_expiry',Date.now()+json.expires_in*1000);
     const profile=await spotifyFetch('https://api.spotify.com/v1/me');spotifyUserId=profile.id;spotifyUserName=profile.display_name||profile.id;
     cleanUrl();
-    const pendingMember=sessionStorage.getItem('sp_pending_member');
-    if(pendingMember&&allData[pendingMember]){
-      currentModalMember=pendingMember;const savedName=sessionStorage.getItem('sp_playlist_name');
-      showConnectedState(pendingMember);if(savedName)document.getElementById('playlistNameInput2').value=savedName;
-      document.getElementById('spotifyModal').classList.remove('hidden');
-      sessionStorage.removeItem('sp_pending_member');sessionStorage.removeItem('sp_playlist_name');
-    }else toast(`Connected as ${spotifyUserName}`);
+    const pending=sessionStorage.getItem('sp_pending_member');
+    if(pending&&allData[pending]){currentModalMember=pending;const sn=sessionStorage.getItem('sp_playlist_name');showConnectedState(pending);if(sn)document.getElementById('playlistNameInput2').value=sn;document.getElementById('spotifyModal').classList.remove('hidden');sessionStorage.removeItem('sp_pending_member');sessionStorage.removeItem('sp_playlist_name');}
+    else toast(`Connected as ${spotifyUserName}`);
   }catch(e){toast('Spotify auth failed: '+e.message);cleanUrl();}
 }
 async function createSpotifyPlaylist(){
@@ -518,7 +499,7 @@ async function createSpotifyPlaylist(){
   document.getElementById('progressWrap').classList.add('visible');
   logProgress(`Creating playlist "${playlistName}"...`);setProgress(0,trackUris.length);
   try{
-    const playlist=await spotifyFetch(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`,{method:'POST',body:JSON.stringify({name:playlistName,description:`Shared by ${memberName} in the music community. Generated by The Vault.`,public:false})});
+    const playlist=await spotifyFetch(`https://api.spotify.com/v1/users/${spotifyUserId}/playlists`,{method:'POST',body:JSON.stringify({name:playlistName,description:`Shared by ${memberName}. Generated by The Vault.`,public:false})});
     logProgress(`Playlist created. Adding ${trackUris.length} tracks...`);
     let added=0;
     for(let i=0;i<trackUris.length;i+=100){
