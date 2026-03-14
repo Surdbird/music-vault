@@ -1251,6 +1251,7 @@ function selectMember(name) {
     b.classList.toggle('active', b.querySelector('.member-name')?.textContent === name);
   });
   renderMemberContent(name);
+  maybeLoadSpotifyTitles(name);
 }
 
 function renderMemberContent(name) {
@@ -1593,6 +1594,8 @@ async function exchangeCode(code) {
     showConnectedState(currentModalMember);
     document.getElementById('spotifyModal').classList.remove('hidden');
     toast(`Connected as ${spotifyUserName}`);
+    // Fetch titles for currently selected member
+    if (activeMember) maybeLoadSpotifyTitles(activeMember);
   } catch(e) {
     toast('Spotify auth failed: ' + e.message);
   }
@@ -1810,6 +1813,88 @@ function shortUrl(url) {
     const u = new URL(url);
     return u.hostname.replace('www.','') + u.pathname.slice(0,30);
   } catch { return url.slice(0,40); }
+}
+
+// Spotify track title cache
+let spotifyTitleCache = {};
+
+async function fetchSpotifyTitles(urls) {
+  if (!spotifyToken) return;
+  // Extract track IDs not yet cached
+  const toFetch = urls.filter(u => {
+    const m = u.match(/track\/([a-zA-Z0-9]+)/);
+    return m && !spotifyTitleCache[m[1]];
+  });
+  if (!toFetch.length) return;
+  
+  // Batch in groups of 50 (Spotify API limit)
+  const ids = toFetch.map(u => u.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
+  const BATCH = 50;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    try {
+      const batch = ids.slice(i, i + BATCH);
+      const data = await spotifyFetch(`https://api.spotify.com/v1/tracks?ids=${batch.join(',')}`);
+      for (const track of (data.tracks || [])) {
+        if (track) {
+          spotifyTitleCache[track.id] = `${track.artists.map(a=>a.name).join(', ')} — ${track.name}`;
+        }
+      }
+      // Update visible cells
+      updateSpotifyTitleCells();
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) { break; }
+  }
+}
+
+function updateSpotifyTitleCells() {
+  document.querySelectorAll('.sp-title-cell').forEach(el => {
+    const trackId = el.dataset.trackId;
+    if (trackId && spotifyTitleCache[trackId]) {
+      el.textContent = spotifyTitleCache[trackId];
+      el.classList.remove('fetching-badge');
+    }
+  });
+}
+
+// Spotify track title cache
+let spotifyTitleCache = {};
+
+async function fetchSpotifyTitles(urls) {
+  if (!spotifyToken) return;
+  // Extract track IDs not yet cached
+  const toFetch = urls.filter(u => {
+    const m = u.match(/track\/([a-zA-Z0-9]+)/);
+    return m && !spotifyTitleCache[m[1]];
+  });
+  if (!toFetch.length) return;
+  
+  // Batch in groups of 50 (Spotify API limit)
+  const ids = toFetch.map(u => u.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
+  const BATCH = 50;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    try {
+      const batch = ids.slice(i, i + BATCH);
+      const data = await spotifyFetch(`https://api.spotify.com/v1/tracks?ids=${batch.join(',')}`);
+      for (const track of (data.tracks || [])) {
+        if (track) {
+          spotifyTitleCache[track.id] = `${track.artists.map(a=>a.name).join(', ')} — ${track.name}`;
+        }
+      }
+      // Update visible cells
+      updateSpotifyTitleCells();
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) { break; }
+  }
+}
+
+function updateSpotifyTitleCells() {
+  document.querySelectorAll('.sp-title-cell').forEach(el => {
+    const trackId = el.dataset.trackId;
+    if (trackId && spotifyTitleCache[trackId]) {
+      el.textContent = spotifyTitleCache[trackId];
+      el.classList.remove('fetching-badge');
+    }
+  });
 }
 
 function openYouTubePlaylist(e, memberName) {
