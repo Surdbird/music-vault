@@ -1518,6 +1518,8 @@ async function initiateSpotifyAuth() {
 
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
+  // Clear any old verifier first
+  localStorage.removeItem('sp_verifier');
   localStorage.setItem('sp_verifier', verifier);
 
   const redirectUri = getRedirectUri();
