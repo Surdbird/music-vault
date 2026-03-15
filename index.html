@@ -655,6 +655,88 @@ textarea::placeholder { color: var(--muted); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── GENRE VIEW ── */
+.genre-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.genre-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid #6b4a8a;
+  background: #f5f0fc;
+}
+.genre-header:hover { background: #ede5f5; }
+.genre-title {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  color: #6b4a8a;
+}
+.genre-count {
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  padding: 0.15rem 0.4rem;
+  background: rgba(0,0,0,0.06);
+  border-radius: 2px;
+}
+.subgenre-list {
+  padding: 0.75rem 1.25rem;
+  display: none;
+  border-top: 1px solid var(--rule);
+}
+.genre-card.expanded .subgenre-list { display: block; }
+.genre-card.expanded .genre-chevron { transform: rotate(-180deg); }
+.genre-chevron { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; }
+.subgenre-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.8rem;
+}
+.subgenre-item:last-child { border-bottom: none; }
+.subgenre-name {
+  font-family: 'Georgia', serif;
+  color: var(--ink);
+}
+.subgenre-members {
+  font-family: 'Courier New', monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.genre-loading {
+  text-align: center;
+  padding: 3rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+.genre-progress {
+  margin: 1rem 0;
+  height: 3px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.genre-progress-fill {
+  height: 100%;
+  background: #6b4a8a;
+  border-radius: 2px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
 /* ── SPOTIFY MODAL ── */
 .modal-overlay {
   position: fixed; inset: 0;
@@ -874,6 +956,7 @@ textarea::placeholder { color: var(--muted); }
       <button class="pill sp" onclick="setPlatformFilter('spotify', this)">SPOTIFY</button>
       <button class="pill am" onclick="setPlatformFilter('applemusic', this)">APPLE</button>
       <button class="pill bc" onclick="setPlatformFilter('bandcamp', this)">BANDCAMP</button>
+      <button class="pill" id="genresPill" style="border-color:#6b4a8a;color:#6b4a8a" onclick="toggleGenreView(this)">GENRES</button>
     </div>
   </div>
 </div>
@@ -916,6 +999,11 @@ textarea::placeholder { color: var(--muted); }
       <div class="empty-sub">Choose someone from the list to see their shared music</div>
     </div>
   </div>
+</div>
+
+<!-- GENRE VIEW -->
+<div class="genre-view" id="genreView" style="display:none;max-width:1200px;margin:0 auto;padding:0 3rem 4rem;">
+  <div id="genreContent"></div>
 </div>
 
 <!-- SPOTIFY MODAL -->
@@ -1932,6 +2020,195 @@ function openYouTubePlaylist(e, memberName) {
   window.open(`https://www.youtube.com/watch_videos?video_ids=${first50.join(',')}`, '_blank');
   toast(`Opened first ${first50.length} of ${ids.length} YouTube videos as playlist`);
 }
+
+
+// ──────────────────────────────────────────────
+// GENRE VIEW
+// ──────────────────────────────────────────────
+
+// Broad genre categories and their Spotify keyword matches
+const GENRE_MAP = {
+  'Jazz': ['jazz', 'bebop', 'swing', 'bossa nova', 'fusion', 'soul jazz', 'cool jazz', 'free jazz'],
+  'Classical': ['classical', 'orchestral', 'chamber', 'opera', 'symphony', 'baroque', 'contemporary classical', 'piano'],
+  'Electronic': ['electronic', 'techno', 'house', 'ambient', 'edm', 'trance', 'drum and bass', 'dnb', 'idm', 'electronica', 'dubstep', 'garage', 'synth'],
+  'Rock': ['rock', 'indie rock', 'alternative', 'punk', 'metal', 'grunge', 'post-rock', 'shoegaze', 'prog rock', 'hard rock', 'classic rock'],
+  'Folk & Acoustic': ['folk', 'acoustic', 'singer-songwriter', 'americana', 'bluegrass', 'country', 'roots'],
+  'Hip Hop & R&B': ['hip hop', 'rap', 'r&b', 'soul', 'funk', 'neo soul', 'trap', 'grime'],
+  'World': ['world', 'afrobeat', 'latin', 'reggae', 'salsa', 'cumbia', 'flamenco', 'indian', 'african', 'arabic', 'celtic', 'caribbean', 'bossa'],
+  'Blues': ['blues', 'delta blues', 'chicago blues', 'electric blues'],
+  'Pop': ['pop', 'indie pop', 'dream pop', 'synth-pop', 'baroque pop', 'art pop'],
+  'Experimental': ['experimental', 'avant-garde', 'noise', 'drone', 'post-punk', 'art rock', 'psychedelic'],
+  'Other': []
+};
+
+let genreData = {};  // { broadGenre: { subGenre: { memberName: [trackUrls] } } }
+let genreFetchDone = false;
+let isGenreView = false;
+
+function toggleGenreView(btn) {
+  isGenreView = !isGenreView;
+  const genreView = document.getElementById('genreView');
+  const mainArea = document.getElementById('mainArea');
+  
+  if (isGenreView) {
+    btn.style.background = '#6b4a8a';
+    btn.style.color = 'white';
+    genreView.style.display = 'block';
+    mainArea.style.display = 'none';
+    loadGenreView();
+  } else {
+    btn.style.background = 'transparent';
+    btn.style.color = '#6b4a8a';
+    genreView.style.display = 'none';
+    mainArea.style.display = 'grid';
+  }
+}
+
+async function loadGenreView() {
+  const content = document.getElementById('genreContent');
+  
+  if (!spotifyToken) {
+    content.innerHTML = `<div class="genre-loading">Connect Spotify to see genre organisation.<br><br>
+      <button class="btn-sp" style="max-width:300px;margin:0 auto;display:block" onclick="document.getElementById('genresPill').click();document.querySelector('.member-btn')?.click();setTimeout(()=>document.querySelector('.btn-sm[onclick*=Spotify]')?.click(),100)">Connect Spotify first</button>
+    </div>`;
+    return;
+  }
+
+  if (genreFetchDone && Object.keys(genreData).length > 0) {
+    renderGenreView();
+    return;
+  }
+  genreFetchDone = false;
+
+  // Start fetching genres
+  content.innerHTML = `<div class="genre-loading">
+    Fetching genre data from Spotify...<br>
+    <div class="genre-progress"><div class="genre-progress-fill" id="genreProgressFill"></div></div>
+    <span id="genreProgressText">Starting...</span>
+  </div>`;
+
+  await buildGenreData();
+  renderGenreView();
+}
+
+async function buildGenreData() {
+  genreData = {};
+  
+  const members = Object.keys(allData).filter(m => allData[m].spotify?.length > 0);
+  let processed = 0;
+
+  for (const memberName of members) {
+    const tracks = allData[memberName].spotify || [];
+    // Sample up to 5 tracks per member to get genre profile
+    const sample = tracks.slice(0, 5);
+    const trackIds = sample.map(t => t.url.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
+    
+    for (const id of trackIds) {
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          const track = await spotifyFetch(`https://api.spotify.com/v1/tracks/${id}`);
+          if (track?.artists?.[0]) {
+            const artist = await spotifyFetch(`https://api.spotify.com/v1/artists/${track.artists[0].id}`);
+            const genres = artist?.genres || [];
+            const broadGenre = getBroadGenre(genres);
+            const subGenre = genres[0] || 'unclassified';
+            if (!genreData[broadGenre]) genreData[broadGenre] = {};
+            if (!genreData[broadGenre][subGenre]) genreData[broadGenre][subGenre] = {};
+            if (!genreData[broadGenre][subGenre][memberName]) genreData[broadGenre][subGenre][memberName] = 0;
+            genreData[broadGenre][subGenre][memberName]++;
+          }
+          await new Promise(r => setTimeout(r, 500));
+          break;
+        } catch(e) {
+          retries--;
+          if (retries > 0) await new Promise(r => setTimeout(r, 2000)); // wait 2s before retry
+        }
+      }
+    }
+
+    processed++;
+    const pct = Math.round(processed / members.length * 100);
+    const fill = document.getElementById('genreProgressFill');
+    const txt = document.getElementById('genreProgressText');
+    if (fill) fill.style.width = pct + '%';
+    if (txt) txt.textContent = `${memberName} (${processed}/${members.length} members)`;
+  }
+  
+  try { localStorage.setItem('vault_genres', JSON.stringify(genreData)); } catch(e) {}
+  genreFetchDone = true;
+}
+
+function getBroadGenre(genres) {
+  for (const [broad, keywords] of Object.entries(GENRE_MAP)) {
+    if (broad === 'Other') continue;
+    for (const kw of keywords) {
+      if (genres.some(g => g.toLowerCase().includes(kw))) return broad;
+    }
+  }
+  return 'Other';
+}
+
+function renderGenreView() {
+  const content = document.getElementById('genreContent');
+  
+  // Sort broad genres by track count
+  const sorted = Object.entries(genreData).sort(([,a],[,b]) => {
+    const countA = Object.values(a).reduce((s, members) => s + Object.values(members).reduce((ms, t) => ms + (typeof t === 'number' ? t : t.length), 0), 0);
+    const countB = Object.values(b).reduce((s, members) => s + Object.values(members).reduce((ms, t) => ms + (typeof t === 'number' ? t : t.length), 0), 0);
+    return countB - countA;
+  });
+
+  if (!sorted.length) {
+    content.innerHTML = '<div class="genre-loading">No genre data collected — Spotify rate limits may have blocked requests.<br><br>Try clicking GENRES again to retry.</div>';
+    genreFetchDone = false;
+    return;
+  }
+
+  content.innerHTML = sorted.map(([broad, subGenres]) => {
+    const totalTracks = Object.values(subGenres).reduce((s, members) => 
+      s + Object.values(members).reduce((ms, t) => ms + (typeof t === 'number' ? t : t.length), 0), 0);
+    
+    const subGenreItems = Object.entries(subGenres)
+      .sort(([,a],[,b]) => Object.values(b).reduce((s,t)=>s+t.length,0) - Object.values(a).reduce((s,t)=>s+t.length,0))
+      .map(([sub, members]) => {
+        const count = Object.values(members).reduce((s, t) => s + (typeof t === 'number' ? t : t.length), 0);
+        const memberList = Object.keys(members).join(', ');
+        return `<div class="subgenre-item">
+          <span class="subgenre-name">${escHtml(sub)}</span>
+          <span class="subgenre-members">${count} tracks · ${escHtml(memberList)}</span>
+        </div>`;
+      }).join('');
+
+    return `<div class="genre-card" id="genre-${safeId(broad)}">
+      <div class="genre-header" onclick="toggleGenreCard('${safeId(broad)}')">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span class="genre-title">${escHtml(broad)}</span>
+          <span class="genre-count">${totalTracks} tracks</span>
+        </div>
+        <span class="genre-chevron">▾</span>
+      </div>
+      <div class="subgenre-list">${subGenreItems}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGenreCard(id) {
+  document.getElementById('genre-' + id)?.classList.toggle('expanded');
+}
+
+// Load cached genre data on startup
+try {
+  const cached = localStorage.getItem('vault_genres');
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (Object.keys(parsed).length > 0) {
+      genreData = parsed;
+      genreFetchDone = true;
+    }
+  }
+} catch(e) {}
+
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
