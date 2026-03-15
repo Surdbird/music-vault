@@ -890,6 +890,7 @@ textarea::placeholder { color: var(--muted); }
     <div class="or-row">OR PASTE DIRECTLY</div>
     <textarea id="chatInput" placeholder="Paste your WhatsApp chat text here...&#10;&#10;Example:&#10;15/01/2024, 21:30 - Aditya Srinath: guys listen to this https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT&#10;15/01/2024, 21:45 - Priya: omg yes and this https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea>
     <button class="btn-primary" id="extractBtn" onclick="runExtraction()">◼ BUILD PLAYLISTS</button>
+    <button id="clearBtn" onclick="clearAllStorage()" style="margin-top:0.5rem;width:100%;background:transparent;border:1px solid var(--muted);color:var(--muted);font-family:Helvetica Neue,Arial,sans-serif;font-size:0.7rem;padding:0.5rem;cursor:pointer;border-radius:2px;">⚙ Clear cached data (fix loading issues)</button>
   </div>
 </div>
 
@@ -975,10 +976,40 @@ textarea::placeholder { color: var(--muted); }
 // ──────────────────────────────────────────────
 // GLOBALS
 // ──────────────────────────────────────────────
+// Restore chat from sessionStorage if available
+(function restoreChat(){
+  try{
+    // Try sessionStorage first, then localStorage compact backup
+    const saved=sessionStorage.getItem('vault_chat') || localStorage.getItem('vault_chat_compact');
+    if(saved){
+      allData=JSON.parse(saved);
+      const names=Object.keys(allData);
+      if(names.length){
+        let total=0,totYT=0,totSP=0,totAM=0,totBC=0;
+        for(const m of Object.values(allData)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;total+=m.youtube.length+m.spotify.length+m.applemusic.length+m.bandcamp.length;}
+        document.getElementById('statMembers').textContent=names.length;
+        document.getElementById('statLinks').textContent=total;
+        document.getElementById('statYT').textContent=totYT;
+        document.getElementById('statSP').textContent=totSP;
+        document.getElementById('statAM').textContent=totAM;
+        document.getElementById('statBC').textContent=totBC;
+        document.getElementById('statsRow').style.display='grid';
+        document.getElementById('mainArea').style.display='grid';
+        document.getElementById('uploadSection').style.marginBottom='0';
+        renderMemberList(names);selectMember(names[0]);
+      }
+    }
+  }catch(e){}
+})();
+
 let allData = {};          // { memberName: { youtube: [], spotify: [], applemusic: [], bandcamp: [] } }
 let activeMember = null;
 let platformFilter = 'all';
 let titleCache = {};       // url → title string
+try {
+  const savedYT = localStorage.getItem('yt_title_cache');
+  if (savedYT) titleCache = JSON.parse(savedYT);
+} catch(e) {}
 let fetchQueue = [];
 let isFetching = false;
 
@@ -1073,7 +1104,21 @@ function runExtraction() {
     try {
       const result = parseChat(text);
       allData = result.members;
-      try{localStorage.setItem('vault_chat',JSON.stringify(allData));}catch(e){}
+      try{
+        // Save full data to sessionStorage
+        sessionStorage.setItem('vault_chat',JSON.stringify(allData));
+        // Save compact version to localStorage (just URLs, no message text) for redirect recovery
+        const compact = {};
+        for(const [name, data] of Object.entries(allData)){
+          compact[name] = {
+            youtube: data.youtube.map(t=>({url:t.url,date:t.date,time:t.time})),
+            spotify: data.spotify.map(t=>({url:t.url,date:t.date,time:t.time})),
+            applemusic: data.applemusic.map(t=>({url:t.url,date:t.date,time:t.time})),
+            bandcamp: data.bandcamp.map(t=>({url:t.url,date:t.date,time:t.time}))
+          };
+        }
+        try{localStorage.setItem('vault_chat_compact',JSON.stringify(compact));}catch(e){}
+      }catch(e){}
       renderAll(result);
     } catch(e) {
       toast('Error parsing chat — ' + e.message);
@@ -1084,7 +1129,28 @@ function runExtraction() {
 }
 
 function parseChat(text) {
-  const lines = text.split('\n');
+  // Privacy filter: only keep lines containing music links
+  const MUSIC_DOMAINS = ['youtube.com', 'youtu.be', 'spotify.com', 'spotify.link', 
+    'music.apple.com', 'itunes.apple.com', 'bandcamp.com', 'music.youtube.com'];
+  const allLines = text.split('\n');
+  
+  // We need to keep date/sender lines that precede music link lines
+  // Strategy: keep a line if it OR the next few lines contain a music link
+  const lines = [];
+  for (let i = 0; i < allLines.length; i++) {
+    const line = allLines[i];
+    // Check if this line or continuation lines have a music link
+    const windowEnd = Math.min(i + 3, allLines.length);
+    let hasMusic = false;
+    for (let j = i; j < windowEnd; j++) {
+      if (MUSIC_DOMAINS.some(d => allLines[j].includes(d))) {
+        hasMusic = true;
+        break;
+      }
+    }
+    if (hasMusic) lines.push(line);
+  }
+  
   const members = {};
   let totalLinks = 0;
 
@@ -1251,6 +1317,7 @@ function selectMember(name) {
     b.classList.toggle('active', b.querySelector('.member-name')?.textContent === name);
   });
   renderMemberContent(name);
+  maybeLoadSpotifyTitles(name);
 }
 
 function renderMemberContent(name) {
@@ -1358,6 +1425,13 @@ function toggleBlock(id) {
   document.getElementById(id)?.classList.toggle('collapsed-block');
 }
 
+function maybeLoadSpotifyTitles(name) {
+  // Disabled - causes 429 Too Many Requests
+  // if (!spotifyToken) return;
+  // const tracks = allData[name]?.spotify || [];
+  // if (tracks.length) fetchSpotifyTitles(tracks.map(t=>t.url));
+}
+
 function setPlatformFilter(key, btn) {
   platformFilter = key;
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
@@ -1383,6 +1457,7 @@ async function processFetchQueue() {
       if (res.ok) {
         const json = await res.json();
         titleCache[url] = json.title || null;
+        try { const s=JSON.stringify(titleCache); if(s.length<2000000) localStorage.setItem('yt_title_cache',s); } catch(e) {}
         // Update any visible cells
         const id = `${safeId(url)}-title`;
         const el = document.getElementById(id);
@@ -1458,6 +1533,8 @@ const SPOTIFY_SCOPES = 'playlist-modify-public';
 // Called when user clicks "◎ Spotify Playlist" button
 function openSpotifyModal(memberName) {
   currentModalMember = memberName;
+  // Clear any stale pending member from sessionStorage
+  sessionStorage.removeItem('sp_pending_member');
   const data = allData[memberName];
   const spCount = data?.spotify?.length || 0;
 
@@ -1504,7 +1581,11 @@ function showConnectedState(memberName) {
   document.getElementById('connectedFields').style.display = 'block';
   document.getElementById('spUserName').textContent = spotifyUserName || '...';
   document.getElementById('playlistNameInput2').value = `${memberName} — The Vault`;
-  document.getElementById('modalActionBtn').textContent = '◎ Create Playlist →';
+  const modalBtn = document.getElementById('modalActionBtn');
+  modalBtn.textContent = '◎ Create Playlist →';
+  modalBtn.dataset.member = memberName;
+  modalBtn.onclick = spotifyModalAction;  // Reset in case it was changed to "Open Playlist"
+  modalBtn.disabled = false;
 }
 
 // Main button action — either connect or create
@@ -1516,105 +1597,93 @@ function spotifyModalAction() {
   }
 }
 
-// ── STEP 1: PKCE Auth via popup ──
+// ── STEP 1: PKCE Auth via page redirect ──
 async function initiateSpotifyAuth() {
   const clientId = document.getElementById('clientIdInput').value.trim();
   if (!clientId) { toast('Please enter your Spotify Client ID'); return; }
-  localStorage.setItem('sp_client_id', clientId);
-
+  
   const verifier = generateCodeVerifier();
   const challenge = await generateCodeChallenge(verifier);
-  // Clear any old verifier first
-  localStorage.removeItem('sp_verifier');
-  localStorage.setItem('sp_verifier', verifier);
+  
+  // Store in sessionStorage — survives page redirect
+  sessionStorage.setItem('sp_client_id', clientId);
+  sessionStorage.setItem('sp_verifier', verifier);
+  sessionStorage.setItem('sp_pending_member', currentModalMember || '');
+  sessionStorage.setItem('sp_playlist_name', document.getElementById('playlistNameInput').value.trim());
+  localStorage.setItem('sp_client_id', clientId);
 
-  const redirectUri = getRedirectUri();
-  const params = new URLSearchParams({
+  window.location.href = `https://accounts.spotify.com/authorize?${new URLSearchParams({
     client_id: clientId,
     response_type: 'code',
-    redirect_uri: redirectUri,
+    redirect_uri: getRedirectUri(),
     scope: SPOTIFY_SCOPES,
     code_challenge_method: 'S256',
     code_challenge: challenge,
-  });
-
-  // Open in popup so main page keeps chat data
-  const popup = window.open(
-    `https://accounts.spotify.com/authorize?${params}`,
-    'spotify_auth',
-    'width=500,height=700,scrollbars=yes'
-  );
-
-  // Poll for popup to redirect back with code
-  const poll = setInterval(async () => {
-    try {
-      if (!popup || popup.closed) { clearInterval(poll); return; }
-      let url;
-      try { url = popup.location.href; } catch(e) { return; }
-      if (url && url.startsWith(redirectUri) && url.includes('code=')) {
-        clearInterval(poll);
-        const urlParams = new URL(url).searchParams;
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
-        try { popup.close(); } catch(e) {}
-        if (error) { toast('Spotify auth cancelled'); return; }
-        if (code) await exchangeCode(code);
-      }
-    } catch(e) { /* cross-origin — still loading, ignore */ }
-  }, 300);
-  // Timeout after 3 minutes
-  setTimeout(() => clearInterval(poll), 180000);
+  })}`;
 }
 
-async function exchangeCode(code) {
-  const clientId = localStorage.getItem('sp_client_id');
-  const verifier = localStorage.getItem('sp_verifier');
-  const redirectUri = getRedirectUri();
-  if (!clientId || !verifier) { toast('Auth error — please try again'); return; }
-  try {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code, redirect_uri: redirectUri,
-        client_id: clientId,
-        code_verifier: verifier,
-      })
-    });
-    const json = await res.json();
-    if (!json.access_token) throw new Error(json.error_description || 'Token exchange failed');
-    spotifyToken = json.access_token;
-    localStorage.setItem('sp_token', spotifyToken);
-    localStorage.setItem('sp_token_expiry', Date.now() + json.expires_in * 1000);
-    const profile = await spotifyFetch('https://api.spotify.com/v1/me');
-    spotifyUserId = profile.id;
-    spotifyUserName = profile.display_name || profile.id;
-    showConnectedState(currentModalMember);
-    document.getElementById('spotifyModal').classList.remove('hidden');
-    toast(`Connected as ${spotifyUserName}`);
-  } catch(e) {
-    toast('Spotify auth failed: ' + e.message);
-  }
-}
-
-// ── STEP 2: Handle redirect back (fallback for non-popup) ──
+// ── STEP 2: Handle redirect back ──
 async function handleSpotifyCallback() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   const error = params.get('error');
   if (error) { toast('Spotify auth cancelled'); cleanUrl(); return; }
   if (!code) return;
-  cleanUrl();
-  await exchangeCode(code);
+
+  const clientId = sessionStorage.getItem('sp_client_id') || localStorage.getItem('sp_client_id');
+  const verifier = sessionStorage.getItem('sp_verifier');
+  
+  if (!clientId || !verifier) { toast('Auth error — please try again'); cleanUrl(); return; }
+
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code, redirect_uri: getRedirectUri(),
+        client_id: clientId, code_verifier: verifier,
+      })
+    });
+    const json = await res.json();
+    if (!json.access_token) throw new Error(json.error_description || 'Token exchange failed');
+    
+    spotifyToken = json.access_token;
+    localStorage.setItem('sp_token', spotifyToken);
+    localStorage.setItem('sp_token_expiry', Date.now() + json.expires_in * 1000);
+    
+    const profile = await spotifyFetch('https://api.spotify.com/v1/me');
+    spotifyUserId = profile.id;
+    spotifyUserName = profile.display_name || profile.id;
+    cleanUrl();
+    sessionStorage.removeItem('sp_verifier');
+    
+    const pending = sessionStorage.getItem('sp_pending_member');
+    const playlistName = sessionStorage.getItem('sp_playlist_name');
+    
+    if (pending && allData[pending]) {
+      currentModalMember = pending;
+      showConnectedState(pending);
+      if (playlistName) document.getElementById('playlistNameInput2').value = playlistName;
+      document.getElementById('spotifyModal').classList.remove('hidden');
+    } else {
+      toast(`Connected as ${spotifyUserName}`);
+    }
+    if (activeMember) maybeLoadSpotifyTitles(activeMember);
+  } catch(e) {
+    toast('Spotify auth failed: ' + e.message);
+    cleanUrl();
+  }
 }
+
 
 // ── STEP 3: Create playlist ──
 async function createSpotifyPlaylist() {
-  const memberName = currentModalMember;
+  // Get member from button data attribute (most reliable source)
+  const createBtn = document.getElementById('modalActionBtn');
+  const memberName = createBtn.dataset.member || currentModalMember;
   const data = allData[memberName];
-  if (!data) return;
-
+  if (!data) { toast('Member not found — please close and reopen the modal'); return; }
   const playlistName = document.getElementById('playlistNameInput2').value.trim() || `${memberName} — The Vault`;
   const spotifyTracks = data.spotify || [];
 
@@ -1636,8 +1705,8 @@ async function createSpotifyPlaylist() {
   }
 
   // Show progress
-  const btn = document.getElementById('modalActionBtn');
-  btn.disabled = true;
+  const actionBtn = document.getElementById('modalActionBtn');
+  actionBtn.disabled = true;
   const progressWrap = document.getElementById('progressWrap');
   progressWrap.classList.add('visible');
   logProgress(`Creating playlist "${playlistName}"...`);
@@ -1666,7 +1735,7 @@ async function createSpotifyPlaylist() {
     let added = 0;
     for (let i = 0; i < trackUris.length; i += BATCH) {
       const batch = trackUris.slice(i, i + BATCH);
-      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/items`, {
         method: 'POST',
         body: JSON.stringify({ uris: batch })
       });
@@ -1680,16 +1749,16 @@ async function createSpotifyPlaylist() {
     logProgress(`✓ Done! ${trackUris.length} tracks added.`);
     document.getElementById('progressText').textContent = '✓ Playlist created!';
 
-    btn.textContent = '↗ Open Playlist';
-    btn.disabled = false;
-    btn.onclick = () => window.open(`https://open.spotify.com/playlist/${playlist.id}`, '_blank');
+    actionBtn.textContent = '↗ Open Playlist';
+    actionBtn.disabled = false;
+    actionBtn.onclick = () => window.open(`https://open.spotify.com/playlist/${playlist.id}`, '_blank');
 
     toast(`Playlist "${playlistName}" created with ${trackUris.length} tracks!`);
 
   } catch(e) {
     logProgress(`✗ Error: ${e.message}`);
-    btn.disabled = false;
-    btn.textContent = '◎ Retry';
+    actionBtn.disabled = false;
+    actionBtn.textContent = '◎ Retry';
     toast('Error creating playlist: ' + e.message);
   }
 }
@@ -1753,29 +1822,8 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── On page load: check for Spotify callback or saved token ──
 // Restore chat data after Spotify redirect
-(function restoreChat(){
-  try{
-    const saved=localStorage.getItem('vault_chat');
-    if(saved){
-      allData=JSON.parse(saved);
-      const names=Object.keys(allData);
-      if(names.length){
-        let total=0,totYT=0,totSP=0,totAM=0,totBC=0;
-        for(const m of Object.values(allData)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;total+=m.youtube.length+m.spotify.length+m.applemusic.length+m.bandcamp.length;}
-        document.getElementById('statMembers').textContent=names.length;
-        document.getElementById('statLinks').textContent=total;
-        document.getElementById('statYT').textContent=totYT;
-        document.getElementById('statSP').textContent=totSP;
-        document.getElementById('statAM').textContent=totAM;
-        document.getElementById('statBC').textContent=totBC;
-        document.getElementById('statsRow').style.display='grid';
-        document.getElementById('mainArea').style.display='grid';
-        document.getElementById('uploadSection').style.marginBottom='0';
-        renderMemberList(names);selectMember(names[0]);
-      }
-    }
-  }catch(e){}
-})();
+// Clear old vault_chat from localStorage to free space
+try { localStorage.removeItem('vault_chat'); } catch(e) {}
 
 (async function initSpotify() {
   // Handle OAuth callback
@@ -1810,6 +1858,68 @@ function shortUrl(url) {
     const u = new URL(url);
     return u.hostname.replace('www.','') + u.pathname.slice(0,30);
   } catch { return url.slice(0,40); }
+}
+
+// Spotify track title cache — persisted to localStorage
+let spotifyTitleCache = {};
+try {
+  const saved = localStorage.getItem('sp_title_cache');
+  if (saved) spotifyTitleCache = JSON.parse(saved);
+} catch(e) {}
+
+async function fetchSpotifyTitles(urls) {
+  if (!spotifyToken) return;
+  // Extract track IDs not yet cached
+  const toFetch = urls.filter(u => {
+    const m = u.match(/track\/([a-zA-Z0-9]+)/);
+    return m && !spotifyTitleCache[m[1]];
+  });
+  if (!toFetch.length) return;
+  
+  // Batch in groups of 50 (Spotify API limit)
+  const ids = toFetch.map(u => u.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
+  const BATCH = 50;
+  for (let i = 0; i < ids.length; i += BATCH) {
+    try {
+      const batch = ids.slice(i, i + BATCH);
+      // Fetch tracks one by one since batch endpoint is removed in Feb 2026
+      for (const id of batch) {
+        try {
+          const track = await spotifyFetch(`https://api.spotify.com/v1/tracks/${id}`);
+          if (track) {
+            spotifyTitleCache[track.id] = `${track.artists.map(a=>a.name).join(', ')} — ${track.name}`;
+          }
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 100));
+      }
+      // Save to localStorage
+      try { const s=JSON.stringify(spotifyTitleCache); if(s.length<2000000) localStorage.setItem('sp_title_cache',s); } catch(e) {}
+      // Update visible cells
+      updateSpotifyTitleCells();
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) { break; }
+  }
+}
+
+function updateSpotifyTitleCells() {
+  document.querySelectorAll('.sp-title-cell').forEach(el => {
+    const trackId = el.dataset.trackId;
+    if (trackId && spotifyTitleCache[trackId]) {
+      el.textContent = spotifyTitleCache[trackId];
+      el.classList.remove('fetching-badge');
+    }
+  });
+}
+
+// Spotify track title cache — persisted to localStorage
+function updateSpotifyTitleCells() {
+  document.querySelectorAll('.sp-title-cell').forEach(el => {
+    const trackId = el.dataset.trackId;
+    if (trackId && spotifyTitleCache[trackId]) {
+      el.textContent = spotifyTitleCache[trackId];
+      el.classList.remove('fetching-badge');
+    }
+  });
 }
 
 function openYouTubePlaylist(e, memberName) {
