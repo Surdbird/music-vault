@@ -890,7 +890,6 @@ textarea::placeholder { color: var(--muted); }
     <div class="or-row">OR PASTE DIRECTLY</div>
     <textarea id="chatInput" placeholder="Paste your WhatsApp chat text here...&#10;&#10;Example:&#10;15/01/2024, 21:30 - Aditya Srinath: guys listen to this https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT&#10;15/01/2024, 21:45 - Priya: omg yes and this https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea>
     <button class="btn-primary" id="extractBtn" onclick="runExtraction()">◼ BUILD PLAYLISTS</button>
-    <button id="clearBtn" onclick="clearAllStorage()" style="margin-top:0.5rem;width:100%;background:transparent;border:1px solid var(--muted);color:var(--muted);font-family:Helvetica Neue,Arial,sans-serif;font-size:0.7rem;padding:0.5rem;cursor:pointer;border-radius:2px;">⚙ Clear cached data (fix loading issues)</button>
   </div>
 </div>
 
@@ -976,17 +975,10 @@ textarea::placeholder { color: var(--muted); }
 // ──────────────────────────────────────────────
 // GLOBALS
 // ──────────────────────────────────────────────
-// Auto-clear localStorage to fix corruption
-try{localStorage.clear();sessionStorage.clear();}catch(e){}
-
 let allData = {};          // { memberName: { youtube: [], spotify: [], applemusic: [], bandcamp: [] } }
 let activeMember = null;
 let platformFilter = 'all';
 let titleCache = {};       // url → title string
-try {
-  const savedYT = localStorage.getItem('yt_title_cache');
-  if (savedYT) titleCache = JSON.parse(savedYT);
-} catch(e) {}
 let fetchQueue = [];
 let isFetching = false;
 
@@ -1081,6 +1073,7 @@ function runExtraction() {
     try {
       const result = parseChat(text);
       allData = result.members;
+      try{localStorage.setItem('vault_chat',JSON.stringify(allData));}catch(e){}
       renderAll(result);
     } catch(e) {
       toast('Error parsing chat — ' + e.message);
@@ -1258,7 +1251,6 @@ function selectMember(name) {
     b.classList.toggle('active', b.querySelector('.member-name')?.textContent === name);
   });
   renderMemberContent(name);
-  maybeLoadSpotifyTitles(name);
 }
 
 function renderMemberContent(name) {
@@ -1391,7 +1383,6 @@ async function processFetchQueue() {
       if (res.ok) {
         const json = await res.json();
         titleCache[url] = json.title || null;
-        try { const s=JSON.stringify(titleCache); if(s.length<2000000) localStorage.setItem('yt_title_cache',s); } catch(e) {}
         // Update any visible cells
         const id = `${safeId(url)}-title`;
         const el = document.getElementById(id);
@@ -1602,8 +1593,6 @@ async function exchangeCode(code) {
     showConnectedState(currentModalMember);
     document.getElementById('spotifyModal').classList.remove('hidden');
     toast(`Connected as ${spotifyUserName}`);
-    // Fetch titles for currently selected member
-    if (activeMember) maybeLoadSpotifyTitles(activeMember);
   } catch(e) {
     toast('Spotify auth failed: ' + e.message);
   }
@@ -1764,8 +1753,29 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── On page load: check for Spotify callback or saved token ──
 // Restore chat data after Spotify redirect
-// Clear old vault_chat from localStorage to free space
-try { localStorage.removeItem('vault_chat'); } catch(e) {}
+(function restoreChat(){
+  try{
+    const saved=localStorage.getItem('vault_chat');
+    if(saved){
+      allData=JSON.parse(saved);
+      const names=Object.keys(allData);
+      if(names.length){
+        let total=0,totYT=0,totSP=0,totAM=0,totBC=0;
+        for(const m of Object.values(allData)){totYT+=m.youtube.length;totSP+=m.spotify.length;totAM+=m.applemusic.length;totBC+=m.bandcamp.length;total+=m.youtube.length+m.spotify.length+m.applemusic.length+m.bandcamp.length;}
+        document.getElementById('statMembers').textContent=names.length;
+        document.getElementById('statLinks').textContent=total;
+        document.getElementById('statYT').textContent=totYT;
+        document.getElementById('statSP').textContent=totSP;
+        document.getElementById('statAM').textContent=totAM;
+        document.getElementById('statBC').textContent=totBC;
+        document.getElementById('statsRow').style.display='grid';
+        document.getElementById('mainArea').style.display='grid';
+        document.getElementById('uploadSection').style.marginBottom='0';
+        renderMemberList(names);selectMember(names[0]);
+      }
+    }
+  }catch(e){}
+})();
 
 (async function initSpotify() {
   // Handle OAuth callback
@@ -1800,100 +1810,6 @@ function shortUrl(url) {
     const u = new URL(url);
     return u.hostname.replace('www.','') + u.pathname.slice(0,30);
   } catch { return url.slice(0,40); }
-}
-
-// Spotify track title cache — persisted to localStorage
-let spotifyTitleCache = {};
-try {
-  const saved = localStorage.getItem('sp_title_cache');
-  if (saved) spotifyTitleCache = JSON.parse(saved);
-} catch(e) {}
-
-async function fetchSpotifyTitles(urls) {
-  if (!spotifyToken) return;
-  // Extract track IDs not yet cached
-  const toFetch = urls.filter(u => {
-    const m = u.match(/track\/([a-zA-Z0-9]+)/);
-    return m && !spotifyTitleCache[m[1]];
-  });
-  if (!toFetch.length) return;
-  
-  // Batch in groups of 50 (Spotify API limit)
-  const ids = toFetch.map(u => u.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
-  const BATCH = 50;
-  for (let i = 0; i < ids.length; i += BATCH) {
-    try {
-      const batch = ids.slice(i, i + BATCH);
-      const data = await spotifyFetch(`https://api.spotify.com/v1/tracks?ids=${batch.join(',')}`);
-      for (const track of (data.tracks || [])) {
-        if (track) {
-          spotifyTitleCache[track.id] = `${track.artists.map(a=>a.name).join(', ')} — ${track.name}`;
-        }
-      }
-      // Save to localStorage
-      try { const s=JSON.stringify(spotifyTitleCache); if(s.length<2000000) localStorage.setItem('sp_title_cache',s); } catch(e) {}
-      // Update visible cells
-      updateSpotifyTitleCells();
-      await new Promise(r => setTimeout(r, 200));
-    } catch(e) { break; }
-  }
-}
-
-function updateSpotifyTitleCells() {
-  document.querySelectorAll('.sp-title-cell').forEach(el => {
-    const trackId = el.dataset.trackId;
-    if (trackId && spotifyTitleCache[trackId]) {
-      el.textContent = spotifyTitleCache[trackId];
-      el.classList.remove('fetching-badge');
-    }
-  });
-}
-
-// Spotify track title cache — persisted to localStorage
-let spotifyTitleCache = {};
-try {
-  const saved = localStorage.getItem('sp_title_cache');
-  if (saved) spotifyTitleCache = JSON.parse(saved);
-} catch(e) {}
-
-async function fetchSpotifyTitles(urls) {
-  if (!spotifyToken) return;
-  // Extract track IDs not yet cached
-  const toFetch = urls.filter(u => {
-    const m = u.match(/track\/([a-zA-Z0-9]+)/);
-    return m && !spotifyTitleCache[m[1]];
-  });
-  if (!toFetch.length) return;
-  
-  // Batch in groups of 50 (Spotify API limit)
-  const ids = toFetch.map(u => u.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
-  const BATCH = 50;
-  for (let i = 0; i < ids.length; i += BATCH) {
-    try {
-      const batch = ids.slice(i, i + BATCH);
-      const data = await spotifyFetch(`https://api.spotify.com/v1/tracks?ids=${batch.join(',')}`);
-      for (const track of (data.tracks || [])) {
-        if (track) {
-          spotifyTitleCache[track.id] = `${track.artists.map(a=>a.name).join(', ')} — ${track.name}`;
-        }
-      }
-      // Save to localStorage
-      try { const s=JSON.stringify(spotifyTitleCache); if(s.length<2000000) localStorage.setItem('sp_title_cache',s); } catch(e) {}
-      // Update visible cells
-      updateSpotifyTitleCells();
-      await new Promise(r => setTimeout(r, 200));
-    } catch(e) { break; }
-  }
-}
-
-function updateSpotifyTitleCells() {
-  document.querySelectorAll('.sp-title-cell').forEach(el => {
-    const trackId = el.dataset.trackId;
-    if (trackId && spotifyTitleCache[trackId]) {
-      el.textContent = spotifyTitleCache[trackId];
-      el.classList.remove('fetching-badge');
-    }
-  });
 }
 
 function openYouTubePlaylist(e, memberName) {
