@@ -1183,7 +1183,7 @@ textarea::placeholder { color: var(--muted); }
       </div>
       <div class="modal-field" style="margin-top:0.75rem">
         <label class="modal-label">EXISTING PLAYLIST ID (optional — skip create step)</label>
-        <input class="modal-input" id="existingPlaylistId" type="text" placeholder="paste playlist ID e.g. 0EI8xY3s9rxjkNiJ50grq8">
+        <input class="modal-input" id="existingPlaylistId" type="text" placeholder="paste playlist ID or full URL" oninput="onExistingIdInput(this.value)">
         <span class="modal-hint">Paste from Spotify URL: open.spotify.com/playlist/<strong>THIS_PART</strong></span>
       </div>
       <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
@@ -1612,6 +1612,7 @@ function renderPlatformBlock(memberName, key, cfg, tracks) {
         <div class="platform-block-acts">
           <button class="btn-sm" style="border-color:var(--${cfg.cls});color:var(--${cfg.cls})" onclick="copyPlatformLinks(event,'${escAttr(memberName)}','${key}')">⎘ copy links</button>
           ${key==='youtube'?'<button class="btn-sm" style="border-color:var(--yt);color:var(--yt)" onclick="openYouTubePlaylist(event,\''+escAttr(memberName)+'\')">▶ YT Playlist</button>':''}
+          ${key==='applemusic'?'<button class="btn-sm" style="border-color:var(--am);color:var(--am)" onclick="openAllAppleMusic(event,\''+escAttr(memberName)+'\')">♪ open all</button>':''}
           <span class="chevron-icon">▾</span>
         </div>
       </div>
@@ -1823,13 +1824,15 @@ async function updateSpotifyPlaylist(memberName) {
   if (!data) { toast('Member data not found'); return; }
 
   const lastUpdated = new Date(rec.updatedAt);
+  // Strip time — compare date only so tracks posted on the same day aren't missed
+  const lastUpdatedDateOnly = new Date(lastUpdated.getFullYear(), lastUpdated.getMonth(), lastUpdated.getDate());
   const playlistId = rec.playlistId;
 
-  // Find Spotify tracks shared AFTER last update
+  // Find Spotify tracks shared ON OR AFTER last update date
   const allSpotify = data.spotify || [];
   const newTracks = allSpotify.filter(t => {
     const d = parseWADate(t.date);
-    return d && d > lastUpdated;
+    return d && d >= lastUpdatedDateOnly;
   });
 
   if (newTracks.length === 0) {
@@ -1871,13 +1874,14 @@ async function updateSpotifyPlaylist(memberName) {
     // Fetch existing tracks in playlist to avoid duplicates
     logProgress(`Checking ${newUris.length} tracks against existing playlist...`);
     const existingUris = new Set();
-    let next = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=100&fields=next,items(track(uri))`;
+    let next = `https://api.spotify.com/v1/playlists/${playlistId}/items?limit=100`;
     while (next) {
       const page = await spotifyFetch(next);
-      for (const item of (page.items || [])) {
-        if (item.track?.uri) existingUris.add(item.track.uri);
+      const items = Array.isArray(page?.items) ? page.items : [];
+      for (const item of items) {
+        if (item?.track?.uri) existingUris.add(item.track.uri);
       }
-      next = page.next || null;
+      next = page?.next || null;
       if (next) await sleep(150);
     }
 
@@ -1975,13 +1979,25 @@ function disconnectSpotify() {
   toast('Disconnected — reconnect for fresh permissions');
 }
 
+function onExistingIdInput(val) {
+  const btn = document.getElementById('modalActionBtn');
+  if (!btn) return;
+  const hasId = val.trim().length > 0;
+  if (hasId) {
+    btn.textContent = '↑ Update Playlist →';
+  } else {
+    btn.textContent = '◎ Create Playlist →';
+  }
+}
+
 function linkExistingPlaylist() {
   const memberName = document.getElementById('modalActionBtn').dataset.member || currentModalMember;
-  const existingId = (document.getElementById('existingPlaylistId')?.value || '').trim();
-  if (!existingId) {
-    toast('Paste the playlist ID first');
-    return;
-  }
+  const raw = (document.getElementById('existingPlaylistId')?.value || '').trim();
+  if (!raw) { toast('Paste the playlist ID or URL first'); return; }
+  // Accept full URL or just the ID
+  const urlMatch = raw.match(/playlist\/([a-zA-Z0-9]+)/);
+  const existingId = urlMatch ? urlMatch[1] : raw;
+  if (!existingId) { toast('Could not find playlist ID'); return; }
   saveMemberPlaylist(memberName, existingId);
   renderMemberContent(memberName);
   closeSpotifyModal();
@@ -2109,6 +2125,19 @@ async function createSpotifyPlaylist() {
   actionBtn.disabled = true;
   const progressWrap = document.getElementById('progressWrap');
   progressWrap.classList.add('visible');
+  // If an existing playlist ID is provided, route to update flow
+  const rawExistingId = (document.getElementById('existingPlaylistId')?.value||'').trim();
+  const existingIdMatch = rawExistingId.match(/playlist\/([a-zA-Z0-9]+)/);
+  const existingId = existingIdMatch ? existingIdMatch[1] : rawExistingId;
+
+  if (existingId) {
+    // Save the link and run update flow instead of full create
+    saveMemberPlaylist(memberName, existingId);
+    closeSpotifyModal();
+    await updateSpotifyPlaylist(memberName);
+    return;
+  }
+
   logProgress(`Resolving ${spotifyTracks.length} Spotify links (expanding albums & playlists)...`);
   setProgress(0, spotifyTracks.length);
 
@@ -2128,12 +2157,9 @@ async function createSpotifyPlaylist() {
   setProgress(0, trackUris.length);
 
   try {
-    const existingId = (document.getElementById('existingPlaylistId')?.value||'').trim();
     let playlist;
-    if (existingId) {
-      playlist = {id: existingId};
-      saveMemberPlaylist(memberName, existingId); // Link this ID to the member
-      logProgress(`Using existing playlist ${existingId}. Adding ${trackUris.length} tracks...`);
+    if (false) {
+      // existingId path now handled before this point
     } else {
       playlist = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
         method: 'POST',
@@ -2383,6 +2409,33 @@ function openYouTubePlaylist(e, memberName) {
   toast(`Opened first ${first50.length} of ${ids.length} YouTube videos as playlist`);
 }
 
+function openAllAppleMusic(e, memberName) {
+  e.stopPropagation();
+  const tracks = allData[memberName]?.applemusic || [];
+  if (!tracks.length) { toast('No Apple Music links found'); return; }
+  // Open first 10 in tabs (browsers block mass tab opening beyond ~10)
+  const first10 = tracks.slice(0, 10);
+  first10.forEach(t => window.open(t.url, '_blank'));
+  if (tracks.length > 10) {
+    toast(`Opened first 10 of ${tracks.length} Apple Music links — copy links to get all`);
+  } else {
+    toast(`Opened ${tracks.length} Apple Music link${tracks.length !== 1 ? 's' : ''}`);
+  }
+}
+
+function copyDigestLinks(weekKey, platform) {
+  const weekMap = buildWeekMap();
+  const weekData = weekMap[weekKey];
+  if (!weekData) return;
+  const tracks = weekData.tracks.filter(t => t.platform === platform);
+  if (!tracks.length) { toast('No links found'); return; }
+  const links = tracks.map(t => t.url).join('\n');
+  navigator.clipboard.writeText(links).then(() => {
+    const name = platform === 'applemusic' ? 'Apple Music' : 'Bandcamp';
+    toast(`⎘ Copied ${tracks.length} ${name} links`);
+  });
+}
+
 
 // ──────────────────────────────────────────────
 // DIGESTS VIEW
@@ -2532,9 +2585,11 @@ function renderDigests() {
       </div>`;
     }).join('');
 
-    // Spotify tracks from this week
+    // Platform tracks for this week
     const spotifyTracks = sorted.filter(t => t.platform === 'spotify');
     const ytTracks = sorted.filter(t => t.platform === 'youtube');
+    const appleTracks = sorted.filter(t => t.platform === 'applemusic');
+    const bandcampTracks = sorted.filter(t => t.platform === 'bandcamp');
 
     html += `
     <div class="digest-week" id="dw-${key}">
@@ -2545,6 +2600,8 @@ function renderDigests() {
         <div class="digest-week-actions">
           ${ytTracks.length > 0 ? `<button class="btn-sm" style="border-color:var(--yt);color:var(--yt)" onclick="event.stopPropagation();openDigestYouTubePlaylist('${key}')" title="Open YouTube playlist for this week">▶ YT</button>` : ''}
           ${spotifyTracks.length > 0 ? `<button class="btn-sm btn-sp" onclick="event.stopPropagation();createDigestSpotifyPlaylist('${key}')" title="Create Spotify playlist for this week">SP ＋</button>` : ''}
+          ${appleTracks.length > 0 ? `<button class="btn-sm" style="border-color:var(--am);color:var(--am)" onclick="event.stopPropagation();copyDigestLinks('${key}','applemusic')" title="Copy Apple Music links for this week">♪ copy</button>` : ''}
+          ${bandcampTracks.length > 0 ? `<button class="btn-sm" style="border-color:var(--bc);color:var(--bc)" onclick="event.stopPropagation();copyDigestLinks('${key}','bandcamp')" title="Copy Bandcamp links for this week">◈ copy</button>` : ''}
         </div>
         <span class="digest-toggle">▼</span>
       </div>
@@ -2822,7 +2879,15 @@ const GENRE_MAP = {
   'Other': []
 };
 
-let genreData = {};  // { broadGenre: { subGenre: { memberName: [trackUrls] } } }
+let genreData = {};  // { broadGenre: { subGenre: { memberName: count } } }
+// Restore cached genre data on load
+try {
+  const cached = localStorage.getItem('vault_genres');
+  if (cached) {
+    genreData = JSON.parse(cached);
+    genreFetchDone = Object.keys(genreData).length > 0;
+  }
+} catch(e) {}
 let genreFetchDone = false;
 let isGenreView = false;
 
@@ -2880,50 +2945,99 @@ async function loadGenreView() {
 
 async function buildGenreData() {
   genreData = {};
-  
-  const members = Object.keys(allData).filter(m => allData[m].spotify?.length > 0);
-  let processed = 0;
 
+  const members = Object.keys(allData).filter(m => allData[m].spotify?.length > 0);
+
+  // Step 1: Collect up to 3 track IDs per member
+  const memberTrackIds = {}; // memberName -> [trackId, ...]
   for (const memberName of members) {
     const tracks = allData[memberName].spotify || [];
-    // Sample up to 5 tracks per member to get genre profile
-    const sample = tracks.slice(0, 5);
-    const trackIds = sample.map(t => t.url.match(/track\/([a-zA-Z0-9]+)/)?.[1]).filter(Boolean);
-    
-    for (const id of trackIds) {
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          const track = await spotifyFetch(`https://api.spotify.com/v1/tracks/${id}`);
-          if (track?.artists?.[0]) {
-            const artist = await spotifyFetch(`https://api.spotify.com/v1/artists/${track.artists[0].id}`);
-            const genres = artist?.genres || [];
-            const broadGenre = getBroadGenre(genres);
-            const subGenre = genres[0] || 'unclassified';
-            if (!genreData[broadGenre]) genreData[broadGenre] = {};
-            if (!genreData[broadGenre][subGenre]) genreData[broadGenre][subGenre] = {};
-            if (!genreData[broadGenre][subGenre][memberName]) genreData[broadGenre][subGenre][memberName] = 0;
-            genreData[broadGenre][subGenre][memberName]++;
-          }
-          await new Promise(r => setTimeout(r, 500));
-          break;
-        } catch(e) {
-          retries--;
-          if (retries > 0) await new Promise(r => setTimeout(r, 2000)); // wait 2s before retry
-        }
-      }
-    }
+    const ids = tracks
+      .map(t => t.url.match(/\/track\/([a-zA-Z0-9]+)/)?.[1])
+      .filter(Boolean)
+      .slice(0, 3);
+    if (ids.length) memberTrackIds[memberName] = ids;
+  }
 
-    processed++;
-    const pct = Math.round(processed / members.length * 100);
+  // Flatten all track IDs (deduplicated)
+  const allTrackIds = [...new Set(Object.values(memberTrackIds).flat())];
+  const totalTracks = allTrackIds.length;
+
+  const updateProgress = (msg, pct) => {
     const fill = document.getElementById('genreProgressFill');
     const txt = document.getElementById('genreProgressText');
     if (fill) fill.style.width = pct + '%';
-    if (txt) txt.textContent = `${memberName} (${processed}/${members.length} members)`;
+    if (txt) txt.textContent = msg;
+  };
+
+  updateProgress(`Fetching ${totalTracks} tracks in batches...`, 5);
+
+  // Step 2: Batch fetch tracks (50 at a time) to get artist IDs
+  const trackArtistMap = {}; // trackId -> artistId
+  for (let i = 0; i < allTrackIds.length; i += 50) {
+    const batch = allTrackIds.slice(i, i + 50);
+    try {
+      const data = await spotifyFetch(
+        `https://api.spotify.com/v1/tracks?ids=${batch.join(',')}`
+      );
+      for (const track of (data.tracks || [])) {
+        if (track?.id && track?.artists?.[0]?.id) {
+          trackArtistMap[track.id] = track.artists[0].id;
+        }
+      }
+    } catch(e) {
+      console.warn('Track batch error:', e.message);
+      if (e.message?.includes('429')) await sleep(3000);
+    }
+    updateProgress(`Fetched tracks ${Math.min(i+50, allTrackIds.length)}/${totalTracks}...`, 
+      5 + Math.round(i / allTrackIds.length * 35));
+    await sleep(500);
   }
-  
-  try { localStorage.setItem('vault_genres', JSON.stringify(genreData)); } catch(e) {}
-  genreFetchDone = true;
+
+  // Step 3: Batch fetch artists (50 at a time) to get genres
+  const allArtistIds = [...new Set(Object.values(trackArtistMap))];
+  const artistGenreMap = {}; // artistId -> genres[]
+  updateProgress(`Fetching genres for ${allArtistIds.length} artists...`, 40);
+
+  for (let i = 0; i < allArtistIds.length; i += 50) {
+    const batch = allArtistIds.slice(i, i + 50);
+    try {
+      const data = await spotifyFetch(
+        `https://api.spotify.com/v1/artists?ids=${batch.join(',')}`
+      );
+      for (const artist of (data.artists || [])) {
+        if (artist?.id) artistGenreMap[artist.id] = artist.genres || [];
+      }
+    } catch(e) {
+      console.warn('Artist batch error:', e.message);
+      if (e.message?.includes('429')) await sleep(3000);
+    }
+    updateProgress(`Fetched artists ${Math.min(i+50, allArtistIds.length)}/${allArtistIds.length}...`,
+      40 + Math.round(i / allArtistIds.length * 50));
+    await sleep(500);
+  }
+
+  // Step 4: Build genreData from member -> trackIds -> artistId -> genres
+  for (const [memberName, trackIds] of Object.entries(memberTrackIds)) {
+    for (const trackId of trackIds) {
+      const artistId = trackArtistMap[trackId];
+      if (!artistId) continue;
+      const genres = artistGenreMap[artistId] || [];
+      const broadGenre = getBroadGenre(genres);
+      const subGenre = genres[0] || 'unclassified';
+      if (!genreData[broadGenre]) genreData[broadGenre] = {};
+      if (!genreData[broadGenre][subGenre]) genreData[broadGenre][subGenre] = {};
+      if (!genreData[broadGenre][subGenre][memberName]) genreData[broadGenre][subGenre][memberName] = 0;
+      genreData[broadGenre][subGenre][memberName]++;
+    }
+  }
+
+  updateProgress('Done!', 100);
+  // Save even partial results
+  if (Object.keys(genreData).length > 0) {
+    try { localStorage.setItem('vault_genres', JSON.stringify(genreData)); } catch(e) {}
+    genreFetchDone = true;
+  }
 }
 
 function getBroadGenre(genres) {
@@ -2947,7 +3061,9 @@ function renderGenreView() {
   });
 
   if (!sorted.length) {
-    content.innerHTML = '<div class="genre-loading">No genre data collected — Spotify rate limits may have blocked requests.<br><br>Try clicking GENRES again to retry.</div>';
+    content.innerHTML = '<div class="genre-loading">No genre data collected — Spotify rate limits may have blocked requests.<br><br>' +
+      (Object.keys(genreData).length > 0 ? 'Showing cached data from previous run.' : 'Try clicking GENRES again to retry.') +
+      '</div>';
     genreFetchDone = false;
     return;
   }
