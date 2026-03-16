@@ -2948,21 +2948,6 @@ async function buildGenreData() {
 
   const members = Object.keys(allData).filter(m => allData[m].spotify?.length > 0);
 
-  // Step 1: Collect up to 3 track IDs per member
-  const memberTrackIds = {}; // memberName -> [trackId, ...]
-  for (const memberName of members) {
-    const tracks = allData[memberName].spotify || [];
-    const ids = tracks
-      .map(t => t.url.match(/\/track\/([a-zA-Z0-9]+)/)?.[1])
-      .filter(Boolean)
-      .slice(0, 3);
-    if (ids.length) memberTrackIds[memberName] = ids;
-  }
-
-  // Flatten all track IDs (deduplicated)
-  const allTrackIds = [...new Set(Object.values(memberTrackIds).flat())];
-  const totalTracks = allTrackIds.length;
-
   const updateProgress = (msg, pct) => {
     const fill = document.getElementById('genreProgressFill');
     const txt = document.getElementById('genreProgressText');
@@ -2970,7 +2955,27 @@ async function buildGenreData() {
     if (txt) txt.textContent = msg;
   };
 
-  updateProgress(`Fetching ${totalTracks} tracks in batches...`, 5);
+  // Step 1: Collect 1 track ID per member (minimise API calls)
+  // Pick a track from the middle of their list for variety
+  const memberTrackIds = {};
+  for (const memberName of members) {
+    const tracks = allData[memberName].spotify || [];
+    const trackUrls = tracks.map(t => t.url).filter(u => u.includes('/track/'));
+    if (!trackUrls.length) continue;
+    // Pick one from middle
+    const pick = trackUrls[Math.floor(trackUrls.length / 2)];
+    const id = pick.match(/\/track\/([a-zA-Z0-9]+)/)?.[1];
+    if (id) memberTrackIds[memberName] = [id];
+  }
+
+  // Flatten all track IDs (deduplicated)
+  const allTrackIds = [...new Set(Object.values(memberTrackIds).flat())];
+  const totalTracks = allTrackIds.length;
+
+  updateProgress(`Waiting for Spotify rate limit to clear...`, 2);
+  await sleep(2000); // Initial pause to avoid rate limits from recent operations
+
+  updateProgress(`Fetching genres for ${members.length} members (${totalTracks} tracks)...`, 5);
 
   // Step 2: Batch fetch tracks (50 at a time) to get artist IDs
   const trackArtistMap = {}; // trackId -> artistId
