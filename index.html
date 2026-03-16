@@ -655,6 +655,149 @@ textarea::placeholder { color: var(--muted); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.btn-sp-update {
+  border-color: var(--sp);
+  color: white;
+  background: var(--sp);
+  font-size: 0.72rem;
+}
+.btn-sp-update:hover { opacity: 0.85; }
+
+/* ── DIGESTS VIEW ── */
+.digest-week {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.digest-week-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+}
+.digest-week-header:hover { background: #ede8df; }
+.digest-week-label {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  min-width: 4rem;
+}
+.digest-week-dates {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  flex: 1;
+}
+.digest-week-count {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.digest-week-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.digest-toggle {
+  font-size: 0.75rem;
+  color: var(--muted);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.digest-week.open .digest-toggle { transform: rotate(180deg); }
+.digest-tracks {
+  display: none;
+  padding: 0.5rem 0;
+}
+.digest-week.open .digest-tracks { display: block; }
+.digest-track-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.78rem;
+}
+.digest-track-row:last-child { border-bottom: none; }
+.digest-track-row:hover { background: rgba(0,0,0,0.02); }
+.digest-platform-badge {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.62rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 2px;
+  min-width: 2.8rem;
+  text-align: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.badge-youtube  { background: var(--yt-light); color: var(--yt); }
+.badge-spotify  { background: var(--sp-light); color: var(--sp); }
+.badge-applemusic { background: var(--am-light); color: var(--am); }
+.badge-bandcamp { background: var(--bc-light); color: var(--bc); }
+.digest-track-url {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink2);
+  text-decoration: none;
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.7rem;
+}
+.digest-track-url:hover { color: var(--accent); text-decoration: underline; }
+.digest-track-sender {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  flex-shrink: 0;
+  max-width: 10rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+.digest-track-title {
+  flex: 1.5;
+  font-size: 0.75rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.digests-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.digest-header-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--ink);
+}
+.digest-header-title {
+  font-family: 'Syne', 'Helvetica Neue', sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+}
+.digest-header-sub {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 /* ── GENRE VIEW ── */
 .genre-card {
   background: var(--paper);
@@ -957,6 +1100,7 @@ textarea::placeholder { color: var(--muted); }
       <button class="pill am" onclick="setPlatformFilter('applemusic', this)">APPLE</button>
       <button class="pill bc" onclick="setPlatformFilter('bandcamp', this)">BANDCAMP</button>
       <button class="pill" id="genresPill" style="border-color:#6b4a8a;color:#6b4a8a" onclick="toggleGenreView(this)">GENRES</button>
+      <button class="pill" id="digestsPill" style="border-color:#c8401a;color:#c8401a" onclick="toggleDigestsView(this)">DIGESTS</button>
     </div>
   </div>
 </div>
@@ -1006,6 +1150,11 @@ textarea::placeholder { color: var(--muted); }
   <div id="genreContent"></div>
 </div>
 
+<!-- DIGESTS VIEW -->
+<div class="digests-view" id="digestsView" style="display:none;max-width:1200px;margin:0 auto;padding:0 3rem 4rem;">
+  <div id="digestsContent"></div>
+</div>
+
 <!-- SPOTIFY MODAL -->
 <div class="modal-overlay hidden" id="spotifyModal">
   <div class="modal-box">
@@ -1037,8 +1186,9 @@ textarea::placeholder { color: var(--muted); }
         <input class="modal-input" id="existingPlaylistId" type="text" placeholder="paste playlist ID e.g. 0EI8xY3s9rxjkNiJ50grq8">
         <span class="modal-hint">Paste from Spotify URL: open.spotify.com/playlist/<strong>THIS_PART</strong></span>
       </div>
-      <div style="margin-top:0.75rem">
+      <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
         <button class="btn-cancel" onclick="disconnectSpotify()" style="font-size:0.65rem;padding:0.3rem 0.75rem">✕ Disconnect &amp; reconnect</button>
+        <button class="btn-sp" onclick="linkExistingPlaylist()" style="font-size:0.65rem;padding:0.3rem 0.75rem;background:transparent;color:var(--sp)">⇒ Link existing playlist only</button>
       </div>
     </div>
 
@@ -1400,6 +1550,13 @@ function filterMembers(q) {
 
 function selectMember(name) {
   activeMember = name;
+  // Hide digests view if open
+  if (digestsVisible) {
+    digestsVisible = false;
+    document.getElementById('digestsView').style.display = 'none';
+    document.getElementById('digestsPill').classList.remove('active');
+    document.getElementById('mainArea').style.display = 'grid';
+  }
   // Update sidebar
   document.querySelectorAll('.member-btn').forEach(b => {
     b.classList.toggle('active', b.querySelector('.member-name')?.textContent === name);
@@ -1437,7 +1594,7 @@ function renderMemberContent(name) {
       <div class="member-actions">
         <button class="btn-sm ink" onclick="exportCSV('${escAttr(name)}')">↓ CSV</button>
         <button class="btn-sm ink" onclick="copyAllLinks('${escAttr(name)}')">⎘ Copy All</button>
-        <button class="btn-sm" style="border-color:var(--sp);color:var(--sp)" onclick="openSpotifyModal('${escAttr(name)}')">◎ Spotify Playlist</button>
+        ${memberPlaylistState(name)}
       </div>
     </div>
     <div class="platform-blocks">${platformsHtml}</div>
@@ -1618,6 +1775,160 @@ let spotifyUserName = null;
 let currentModalMember = null;
 const SPOTIFY_SCOPES = 'playlist-modify-public';
 
+// ──────────────────────────────────────────────
+// MEMBER PLAYLIST STORAGE
+// Key: vault_pl_{memberName} → { playlistId, updatedAt (ISO string) }
+// ──────────────────────────────────────────────
+
+function memberPlaylistKey(memberName) {
+  return 'vault_pl_' + btoa(unescape(encodeURIComponent(memberName))).replace(/=/g,'');
+}
+
+function saveMemberPlaylist(memberName, playlistId) {
+  const rec = { playlistId, updatedAt: new Date().toISOString() };
+  try { localStorage.setItem(memberPlaylistKey(memberName), JSON.stringify(rec)); } catch(e) {}
+}
+
+function loadMemberPlaylist(memberName) {
+  try {
+    const raw = localStorage.getItem(memberPlaylistKey(memberName));
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+// Returns the right button HTML for a member — Create or Update
+function memberPlaylistState(name) {
+  const rec = loadMemberPlaylist(name);
+  if (rec) {
+    const since = new Date(rec.updatedAt);
+    const sinceStr = since.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    return `<button class="btn-sm btn-sp-update" onclick="updateSpotifyPlaylist('${escAttr(name)}')" title="Last updated ${sinceStr}">↑ Update Playlist</button>`;
+  }
+  return `<button class="btn-sm" style="border-color:var(--sp);color:var(--sp)" onclick="openSpotifyModal('${escAttr(name)}')">◎ Spotify Playlist</button>`;
+}
+
+// ── Update an existing member playlist with new tracks ──
+async function updateSpotifyPlaylist(memberName) {
+  if (!spotifyToken) {
+    // Need to auth first — open modal in a special update mode
+    currentModalMember = memberName;
+    openSpotifyModal(memberName, true);
+    return;
+  }
+
+  const rec = loadMemberPlaylist(memberName);
+  if (!rec) { openSpotifyModal(memberName); return; }
+
+  const data = allData[memberName];
+  if (!data) { toast('Member data not found'); return; }
+
+  const lastUpdated = new Date(rec.updatedAt);
+  const playlistId = rec.playlistId;
+
+  // Find Spotify tracks shared AFTER last update
+  const allSpotify = data.spotify || [];
+  const newTracks = allSpotify.filter(t => {
+    const d = parseWADate(t.date);
+    return d && d > lastUpdated;
+  });
+
+  if (newTracks.length === 0) {
+    toast(`No new Spotify tracks since ${lastUpdated.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}`);
+    return;
+  }
+
+  // Open modal to show progress
+  currentModalMember = memberName;
+  document.getElementById('modalSub').textContent =
+    `Adding ${newTracks.length} new track${newTracks.length !== 1 ? 's' : ''} shared since ${lastUpdated.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}.`;
+  document.getElementById('spotifyModal').classList.remove('hidden');
+  document.getElementById('setupFields').style.display = 'none';
+  document.getElementById('connectedFields').style.display = 'block';
+  document.getElementById('spUserName').textContent = spotifyUserName || '...';
+  document.getElementById('playlistNameInput2').value = `${memberName} — The Vault`;
+
+  const actionBtn = document.getElementById('modalActionBtn');
+  actionBtn.disabled = true;
+  actionBtn.textContent = 'Updating…';
+  const progressWrap = document.getElementById('progressWrap');
+  progressWrap.classList.add('visible');
+  logProgress(`Resolving ${newTracks.length} new Spotify links...`);
+  setProgress(0, newTracks.length);
+
+  try {
+    // Resolve new tracks to URIs (expands albums/playlists)
+    const newUris = await resolveSpotifyUris(newTracks.map(t => t.url), (done, total) => {
+      setProgress(done, total);
+    });
+
+    if (newUris.length === 0) {
+      toast('No valid new track URIs found');
+      actionBtn.disabled = false;
+      actionBtn.textContent = '◎ Create Playlist →';
+      return;
+    }
+
+    // Fetch existing tracks in playlist to avoid duplicates
+    logProgress(`Checking ${newUris.length} tracks against existing playlist...`);
+    const existingUris = new Set();
+    let next = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=100&fields=next,items(track(uri))`;
+    while (next) {
+      const page = await spotifyFetch(next);
+      for (const item of (page.items || [])) {
+        if (item.track?.uri) existingUris.add(item.track.uri);
+      }
+      next = page.next || null;
+      if (next) await sleep(150);
+    }
+
+    const toAdd = newUris.filter(u => !existingUris.has(u));
+    if (toAdd.length === 0) {
+      toast('All new tracks are already in the playlist');
+      saveMemberPlaylist(memberName, playlistId); // update timestamp
+      closeSpotifyModal();
+      renderMemberContent(memberName);
+      return;
+    }
+
+    logProgress(`Adding ${toAdd.length} new tracks (${newUris.length - toAdd.length} already present)...`);
+    setProgress(0, toAdd.length);
+
+    // Add in batches of 100
+    const BATCH = 100;
+    let added = 0;
+    for (let i = 0; i < toAdd.length; i += BATCH) {
+      const batch = toAdd.slice(i, i + BATCH);
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlistId}/items`, {
+        method: 'POST',
+        body: JSON.stringify({ uris: batch })
+      });
+      added += batch.length;
+      setProgress(added, toAdd.length);
+      logProgress(`Added ${added} / ${toAdd.length} tracks`);
+      if (i + BATCH < toAdd.length) await sleep(300);
+    }
+
+    logProgress(`✓ Done! ${toAdd.length} tracks added.`);
+    document.getElementById('progressText').textContent = '✓ Playlist updated!';
+
+    // Save updated timestamp
+    saveMemberPlaylist(memberName, playlistId);
+
+    actionBtn.textContent = '↗ Open Playlist';
+    actionBtn.disabled = false;
+    actionBtn.onclick = () => window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank');
+
+    renderMemberContent(memberName);
+    toast(`✓ Updated playlist with ${toAdd.length} new tracks`);
+
+  } catch(e) {
+    logProgress(`✗ Error: ${e.message}`);
+    actionBtn.disabled = false;
+    actionBtn.textContent = 'Retry';
+    toast('Update failed: ' + e.message);
+  }
+}
+
 // Called when user clicks "◎ Spotify Playlist" button
 function openSpotifyModal(memberName) {
   currentModalMember = memberName;
@@ -1662,6 +1973,19 @@ function disconnectSpotify() {
   document.getElementById('progressWrap').classList.remove('visible');
   document.getElementById('progressLog').innerHTML='';
   toast('Disconnected — reconnect for fresh permissions');
+}
+
+function linkExistingPlaylist() {
+  const memberName = document.getElementById('modalActionBtn').dataset.member || currentModalMember;
+  const existingId = (document.getElementById('existingPlaylistId')?.value || '').trim();
+  if (!existingId) {
+    toast('Paste the playlist ID first');
+    return;
+  }
+  saveMemberPlaylist(memberName, existingId);
+  renderMemberContent(memberName);
+  closeSpotifyModal();
+  toast(`✓ Linked playlist to ${memberName} — use Update Playlist to add new tracks`);
 }
 
 function showConnectedState(memberName) {
@@ -1780,24 +2104,27 @@ async function createSpotifyPlaylist() {
     return;
   }
 
-  // Extract track URIs from URLs
-  const trackUris = [];
-  for (const t of spotifyTracks) {
-    const m = t.url.match(/track\/([a-zA-Z0-9]+)/);
-    if (m) trackUris.push(`spotify:track:${m[1]}`);
-  }
-
-  if (trackUris.length === 0) {
-    toast('No valid Spotify track IDs found');
-    return;
-  }
-
-  // Show progress
+  // Show progress early — resolving albums/playlists may take time
   const actionBtn = document.getElementById('modalActionBtn');
   actionBtn.disabled = true;
   const progressWrap = document.getElementById('progressWrap');
   progressWrap.classList.add('visible');
-  logProgress(`Creating playlist "${playlistName}"...`);
+  logProgress(`Resolving ${spotifyTracks.length} Spotify links (expanding albums & playlists)...`);
+  setProgress(0, spotifyTracks.length);
+
+  // Resolve all URLs to track URIs (expands albums, playlists, episodes)
+  const trackUris = await resolveSpotifyUris(spotifyTracks.map(t => t.url), (done, total) => {
+    setProgress(done, total);
+    logProgress(`Resolved ${done} / ${total} links...`);
+  });
+
+  if (trackUris.length === 0) {
+    toast('No valid Spotify track IDs found');
+    actionBtn.disabled = false;
+    progressWrap.classList.remove('visible');
+    return;
+  }
+  logProgress(`Found ${trackUris.length} tracks total. Creating playlist...`);
   setProgress(0, trackUris.length);
 
   try {
@@ -1805,6 +2132,7 @@ async function createSpotifyPlaylist() {
     let playlist;
     if (existingId) {
       playlist = {id: existingId};
+      saveMemberPlaylist(memberName, existingId); // Link this ID to the member
       logProgress(`Using existing playlist ${existingId}. Adding ${trackUris.length} tracks...`);
     } else {
       playlist = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
@@ -1818,28 +2146,56 @@ async function createSpotifyPlaylist() {
       logProgress(`Playlist created. Adding ${trackUris.length} tracks in batches...`);
     }
 
-    // Add tracks in batches of 100 (Spotify API limit)
+    // Add tracks in batches of 100, with retry + backoff for large playlists
     const BATCH = 100;
     let added = 0;
     for (let i = 0; i < trackUris.length; i += BATCH) {
       const batch = trackUris.slice(i, i + BATCH);
-      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/items`, {
-        method: 'POST',
-        body: JSON.stringify({ uris: batch })
-      });
+      let attempts = 0, success = false;
+      while (!success && attempts < 5) {
+        try {
+          await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/items`, {
+            method: 'POST',
+            body: JSON.stringify({ uris: batch })
+          });
+          success = true;
+        } catch(batchErr) {
+          attempts++;
+          const wait = attempts * 2000; // 2s, 4s, 6s, 8s, 10s
+          logProgress(`⚠ Batch error (attempt ${attempts}/5), retrying in ${wait/1000}s... ${batchErr.message}`);
+          await sleep(wait);
+        }
+      }
+      if (!success) throw new Error(`Failed to add batch at position ${i} after 5 attempts`);
       added += batch.length;
       setProgress(added, trackUris.length);
       logProgress(`Added ${added} / ${trackUris.length} tracks`);
-      // Small pause between batches
-      if (i + BATCH < trackUris.length) await sleep(300);
+      // Progressive pause — longer for bigger playlists to avoid rate limits
+      if (i + BATCH < trackUris.length) {
+        const pause = trackUris.length > 1000 ? 800 : trackUris.length > 500 ? 500 : 300;
+        await sleep(pause);
+      }
     }
 
     logProgress(`✓ Done! ${trackUris.length} tracks added.`);
+
+    // Follow the playlist so it appears in Spotify library
+    try {
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${playlist.id}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) });
+      logProgress(`✓ Added to your Spotify library.`);
+    } catch(e) { /* non-fatal */ }
+
     document.getElementById('progressText').textContent = '✓ Playlist created!';
+
+    // Save playlist ID + timestamp so we can update later
+    saveMemberPlaylist(memberName, playlist.id);
 
     actionBtn.textContent = '↗ Open Playlist';
     actionBtn.disabled = false;
     actionBtn.onclick = () => window.open(`https://open.spotify.com/playlist/${playlist.id}`, '_blank');
+
+    // Refresh the button in the member header
+    renderMemberContent(memberName);
 
     toast(`Playlist "${playlistName}" created with ${trackUris.length} tracks!`);
 
@@ -1852,7 +2208,7 @@ async function createSpotifyPlaylist() {
 }
 
 // ── Spotify API helper ──
-async function spotifyFetch(url, options = {}) {
+async function spotifyFetch(url, options = {}, _retried = false) {
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -1865,6 +2221,12 @@ async function spotifyFetch(url, options = {}) {
     spotifyToken = null;
     localStorage.removeItem('sp_token');
     throw new Error('Spotify session expired — please reconnect');
+  }
+  if (res.status === 429 && !_retried) {
+    const retryAfter = parseInt(res.headers.get('Retry-After') || '5', 10);
+    try { logProgress(`⏳ Rate limited — waiting ${retryAfter}s...`); } catch(e) {}
+    await sleep((retryAfter + 1) * 1000);
+    return spotifyFetch(url, options, true);
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -2023,6 +2385,425 @@ function openYouTubePlaylist(e, memberName) {
 
 
 // ──────────────────────────────────────────────
+// DIGESTS VIEW
+// ──────────────────────────────────────────────
+
+let digestsVisible = false;
+
+function toggleDigestsView(btn) {
+  const digestsView = document.getElementById('digestsView');
+  const mainArea = document.getElementById('mainArea');
+  const genreView = document.getElementById('genreView');
+  const genresPill = document.getElementById('genresPill');
+
+  digestsVisible = !digestsVisible;
+
+  if (digestsVisible) {
+    // Hide other views
+    mainArea.style.display = 'none';
+    genreView.style.display = 'none';
+    genresPill.classList.remove('active');
+
+    digestsView.style.display = 'block';
+    btn.classList.add('active');
+    renderDigests();
+  } else {
+    digestsView.style.display = 'none';
+    btn.classList.remove('active');
+    mainArea.style.display = 'grid';
+  }
+}
+
+// Parse a WhatsApp date string like "1/3/19", "12/03/2025", "03/12/25"
+// into a JS Date. WhatsApp uses D/M/YY or D/M/YYYY.
+function parseWADate(dateStr) {
+  if (!dateStr) return null;
+  const parts = dateStr.split(/[\/\.\-]/);
+  if (parts.length < 3) return null;
+  let day = parseInt(parts[0], 10);
+  let month = parseInt(parts[1], 10) - 1; // 0-indexed
+  let year = parseInt(parts[2], 10);
+  if (year < 100) year += 2000;
+  return new Date(year, month, day);
+}
+
+// Get ISO week number and year from a Date
+function getISOWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return { week: weekNo, year: d.getUTCFullYear() };
+}
+
+// Get Monday and Sunday dates for a given ISO week/year
+function getWeekRange(isoYear, isoWeek) {
+  // Jan 4 is always in week 1
+  const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+  const dayOfWeek = jan4.getUTCDay() || 7;
+  const monday = new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate() - (dayOfWeek - 1) + (isoWeek - 1) * 7);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  return { monday, sunday };
+}
+
+function formatDateShort(date) {
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function renderDigests() {
+  const container = document.getElementById('digestsContent');
+
+  if (!allData || Object.keys(allData).length === 0) {
+    container.innerHTML = '<div class="digests-empty">Load a WhatsApp chat first to see weekly digests.</div>';
+    return;
+  }
+
+  // Collect ALL links across all members, keyed by ISO week
+  // weekKey = "YYYY-WXX" e.g. "2024-W12"
+  const weekMap = {}; // weekKey -> { year, week, tracks: [{url, platform, sender, date, title}] }
+
+  for (const [memberName, platformData] of Object.entries(allData)) {
+    for (const [platform, tracks] of Object.entries(platformData)) {
+      for (const track of tracks) {
+        const date = parseWADate(track.date);
+        if (!date) continue;
+        const { week, year } = getISOWeek(date);
+        const key = `${year}-W${String(week).padStart(2, '0')}`;
+        if (!weekMap[key]) {
+          weekMap[key] = { year, week, tracks: [] };
+        }
+        weekMap[key].tracks.push({
+          url: track.url,
+          platform,
+          sender: memberName,
+          date: track.date,
+          time: track.time || '',
+          title: track.title || null,
+          sortDate: date
+        });
+      }
+    }
+  }
+
+  // Sort weeks newest first
+  const sortedWeeks = Object.entries(weekMap)
+    .sort(([a], [b]) => b.localeCompare(a));
+
+  if (sortedWeeks.length === 0) {
+    container.innerHTML = '<div class="digests-empty">No dated links found — make sure your chat has timestamps.</div>';
+    return;
+  }
+
+  const totalWeeks = sortedWeeks.length;
+  let html = `
+    <div class="digest-header-bar">
+      <div class="digest-header-title">WEEKLY DIGESTS</div>
+      <div class="digest-header-sub">${totalWeeks} week${totalWeeks !== 1 ? 's' : ''} of shared music</div>
+    </div>`;
+
+  for (const [key, data] of sortedWeeks) {
+    const { monday, sunday } = getWeekRange(data.year, data.week);
+    const dateRange = `${formatDateShort(monday)} – ${formatDateShort(sunday)}`;
+    const label = `W${data.week}`;
+    const count = data.tracks.length;
+
+    // Sort tracks within week chronologically
+    const sorted = [...data.tracks].sort((a, b) => a.sortDate - b.sortDate);
+
+    // Platform summary counts
+    const plats = { youtube: 0, spotify: 0, applemusic: 0, bandcamp: 0 };
+    for (const t of sorted) plats[t.platform]++;
+    const platSummary = Object.entries(plats)
+      .filter(([, n]) => n > 0)
+      .map(([p, n]) => `${n} ${p === 'applemusic' ? 'Apple' : p === 'youtube' ? 'YT' : p === 'spotify' ? 'SP' : 'BC'}`)
+      .join(' · ');
+
+    const trackRows = sorted.map(t => {
+      const shortUrl = t.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 55) + (t.url.length > 60 ? '…' : '');
+      const titleCell = t.title ? `<span class="digest-track-title">${escHtml(t.title)}</span>` : `<a class="digest-track-url" href="${escHtml(t.url)}" target="_blank" rel="noopener">${escHtml(shortUrl)}</a>`;
+      return `<div class="digest-track-row">
+        <span class="digest-platform-badge badge-${t.platform}">${t.platform === 'applemusic' ? 'APPLE' : t.platform.toUpperCase().slice(0,2)}</span>
+        ${titleCell}
+        <a class="digest-track-url" href="${escHtml(t.url)}" target="_blank" rel="noopener" style="max-width:180px;flex-shrink:0">${escHtml(shortUrl)}</a>
+        <span class="digest-track-sender">${escHtml(t.sender)}</span>
+      </div>`;
+    }).join('');
+
+    // Spotify tracks from this week
+    const spotifyTracks = sorted.filter(t => t.platform === 'spotify');
+    const ytTracks = sorted.filter(t => t.platform === 'youtube');
+
+    html += `
+    <div class="digest-week" id="dw-${key}">
+      <div class="digest-week-header" onclick="toggleDigestWeek('${key}')">
+        <span class="digest-week-label">${label}</span>
+        <span class="digest-week-dates">${dateRange}</span>
+        <span class="digest-week-count">${count} link${count !== 1 ? 's' : ''} · ${platSummary}</span>
+        <div class="digest-week-actions">
+          ${ytTracks.length > 0 ? `<button class="btn-sm" style="border-color:var(--yt);color:var(--yt)" onclick="event.stopPropagation();openDigestYouTubePlaylist('${key}')" title="Open YouTube playlist for this week">▶ YT</button>` : ''}
+          ${spotifyTracks.length > 0 ? `<button class="btn-sm btn-sp" onclick="event.stopPropagation();createDigestSpotifyPlaylist('${key}')" title="Create Spotify playlist for this week">SP ＋</button>` : ''}
+        </div>
+        <span class="digest-toggle">▼</span>
+      </div>
+      <div class="digest-tracks">
+        ${trackRows}
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Auto-open the most recent week
+  if (sortedWeeks.length > 0) {
+    const firstKey = sortedWeeks[0][0];
+    document.getElementById(`dw-${firstKey}`)?.classList.add('open');
+  }
+}
+
+function toggleDigestWeek(key) {
+  document.getElementById(`dw-${key}`)?.classList.toggle('open');
+}
+
+async function createDigestSpotifyPlaylist(weekKey) {
+  const { weekLabel, dateRange } = digestWeekMeta(weekKey);
+  if (!spotifyToken) {
+    openSpotifyModal('__digest__', weekKey, weekLabel, dateRange);
+    return;
+  }
+  await _buildDigestPlaylist(weekKey, weekLabel, dateRange);
+}
+
+function digestWeekMeta(weekKey) {
+  const m = weekKey.match(/(\d{4})-W(\d+)/);
+  if (!m) return { weekLabel: weekKey, dateRange: '' };
+  const year = parseInt(m[1]), week = parseInt(m[2]);
+  const { monday, sunday } = getWeekRange(year, week);
+  return {
+    weekLabel: 'W' + week,
+    dateRange: formatDateShort(monday) + ' – ' + formatDateShort(sunday)
+  };
+}
+
+async function _buildDigestPlaylist(weekKey, weekLabel, dateRange) {
+  const weekMap = buildWeekMap();
+  const weekData = weekMap[weekKey];
+  if (!weekData) return;
+
+  const spotifyTracks = weekData.tracks.filter(t => t.platform === 'spotify');
+
+  if (!spotifyTracks.length) { toast('No Spotify tracks this week'); return; }
+
+  const playlistName = `The Vault — ${weekLabel} (${dateRange})`;
+
+  const btn = document.querySelector(`#dw-${weekKey} .btn-sp`);
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '…resolving'; btn.disabled = true; }
+
+  try {
+    // Step 1: Resolve all URLs first (expands albums & playlists)
+    // Log skipped URLs so we can see what's being dropped
+    const skipped = [];
+    const urls = spotifyTracks.map(t => t.url);
+    const uris = await resolveSpotifyUris(urls, null, skipped);
+
+    if (uris.length === 0) {
+      toast('No valid Spotify tracks found for this week');
+      if (btn) { btn.textContent = origText; btn.disabled = false; }
+      return;
+    }
+
+    if (btn) btn.textContent = `…creating (${uris.length} tracks)`;
+
+    // Step 2: Create playlist
+    const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+      method: 'POST',
+      body: JSON.stringify({ name: playlistName, description: `All music shared in The Vault during ${dateRange}`, public: true })
+    });
+
+    // Step 3: Add in batches of 100 with retry + backoff
+    const BATCH = 100;
+    let added = 0;
+    for (let i = 0; i < uris.length; i += BATCH) {
+      const batch = uris.slice(i, i + BATCH);
+      let attempts = 0, success = false;
+      while (!success && attempts < 5) {
+        try {
+          await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+            method: 'POST',
+            body: JSON.stringify({ uris: batch })
+          });
+          success = true;
+        } catch(batchErr) {
+          attempts++;
+          await sleep(attempts * 2000);
+        }
+      }
+      if (!success) throw new Error(`Failed to add batch at position ${i}`);
+      added += batch.length;
+      if (btn) btn.textContent = `…${added}/${uris.length}`;
+      if (i + BATCH < uris.length) await sleep(500);
+    }
+
+    // Step 4: Follow so it appears in library
+    try {
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) });
+    } catch(e) { /* non-fatal */ }
+
+    if (btn) {
+      btn.textContent = `✓ ${uris.length} tracks`;
+      btn.style.background = 'var(--sp)';
+      btn.style.color = '#fff';
+      btn.disabled = false;
+      btn.onclick = (e) => { e.stopPropagation(); window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank'); };
+    }
+    const forbidden = skipped.filter(s => s.reason?.includes('403') || s.reason?.includes('Forbidden')).length;
+    const other = skipped.length - forbidden;
+    let skippedNote = '';
+    if (forbidden > 0) skippedNote += ` · ${forbidden} private playlist${forbidden !== 1 ? 's' : ''} skipped`;
+    if (other > 0) skippedNote += ` · ${other} other skipped`;
+    toast(`✓ ${uris.length} tracks from ${spotifyTracks.length} SP links${skippedNote}`);
+
+
+  } catch (e) {
+    if (btn) { btn.textContent = origText; btn.disabled = false; }
+    toast('Error: ' + e.message);
+  }
+}
+
+// Helper: rebuild week map on demand
+function buildWeekMap() {
+  const weekMap = {};
+  for (const [memberName, platformData] of Object.entries(allData)) {
+    for (const [platform, tracks] of Object.entries(platformData)) {
+      for (const track of tracks) {
+        const date = parseWADate(track.date);
+        if (!date) continue;
+        const { week, year } = getISOWeek(date);
+        const key = `${year}-W${String(week).padStart(2, '0')}`;
+        if (!weekMap[key]) weekMap[key] = { year, week, tracks: [] };
+        weekMap[key].tracks.push({ ...track, platform, sender: memberName, sortDate: date });
+      }
+    }
+  }
+  return weekMap;
+}
+
+// ── Resolve a list of Spotify URLs into track URIs ──
+// Handles: tracks, albums (expands), playlists (expands), episodes
+async function resolveSpotifyUris(urls, onProgress, skipped) {
+  const uris = [];
+  let done = 0;
+  const total = urls.length;
+
+
+  for (let url of urls) {
+    try {
+      // Expand spotify.link short URLs using Spotify's own resolve endpoint
+      if (url.includes('spotify.link')) {
+        try {
+  
+          const resolved = await spotifyFetch(
+            `https://api.spotify.com/v1/resolve?url=${encodeURIComponent(url)}`
+          );
+
+          if (resolved?.external_urls?.spotify) {
+            url = resolved.external_urls.spotify;
+
+          } else if (resolved?.uri) {
+
+            uris.push(resolved.uri);
+            done++;
+            if (onProgress) onProgress(done, total);
+            continue;
+          }
+        } catch(e) {
+          console.warn('[Vault] Could not resolve spotify.link:', url, e.message);
+          if (skipped) skipped.push(url);
+          done++;
+          if (onProgress) onProgress(done, total);
+          continue;
+        }
+      }
+
+      // Match most specific first — album/playlist before track
+      const albumMatch = url.match(/\/album\/([a-zA-Z0-9]+)/);
+      const playlistMatch = url.match(/\/playlist\/([a-zA-Z0-9]+)/);
+      const episodeMatch = url.match(/\/episode\/([a-zA-Z0-9]+)/);
+      const trackMatch = !albumMatch && !playlistMatch && !episodeMatch && url.match(/\/track\/([a-zA-Z0-9]+)/);
+
+
+      if (albumMatch) {
+        // Fetch all album tracks
+        const albumId = albumMatch[1];
+        let offset = 0, limit = 50, total_tracks = 1;
+        while (offset < total_tracks) {
+          const data = await spotifyFetch(
+            `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=${limit}&offset=${offset}`
+          );
+          if (data.items) {
+            for (const t of data.items) uris.push(`spotify:track:${t.id}`);
+            total_tracks = data.total;
+            offset += data.items.length;
+          } else break;
+          if (offset < total_tracks) await sleep(150);
+        }
+      } else if (playlistMatch) {
+        // Fetch all playlist tracks
+        const playlistId = playlistMatch[1];
+        let next = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=100&fields=next,items(track(id,type))`;
+        while (next) {
+          const data = await spotifyFetch(next);
+          if (data.items) {
+            for (const item of data.items) {
+              if (item.track && item.track.type === 'track') {
+                uris.push(`spotify:track:${item.track.id}`);
+              }
+            }
+          }
+          next = data.next || null;
+          if (next) await sleep(150);
+        }
+      } else if (episodeMatch) {
+        uris.push(`spotify:episode:${episodeMatch[1]}`);
+      } else if (trackMatch) {
+        uris.push(`spotify:track:${trackMatch[1]}`);
+      }
+    } catch(e) {
+      // 403 = private/collaborative playlist we can't access
+      // 429 = rate limited (already handled in spotifyFetch, but just in case)
+      if (skipped) skipped.push({ url, reason: e.message });
+    }
+    done++;
+    if (onProgress) onProgress(done, total);
+  }
+
+  return uris;
+}
+
+function extractSpotifyUri(url) {
+  // Convert https://open.spotify.com/track/ID -> spotify:track:ID
+  const m = url.match(/spotify\.com\/(track|album|episode)\/([A-Za-z0-9]+)/);
+  if (m) return `spotify:${m[1]}:${m[2]}`;
+  return null;
+}
+
+function openDigestYouTubePlaylist(weekKey) {
+  const weekMap = buildWeekMap();
+  const weekData = weekMap[weekKey];
+  if (!weekData) return;
+  const ytTracks = weekData.tracks.filter(t => t.platform === 'youtube');
+  if (!ytTracks.length) { toast('No YouTube links this week'); return; }
+  const ids = ytTracks.map(t => extractYTId(t.url)).filter(Boolean);
+  if (!ids.length) { toast('No YouTube video IDs found'); return; }
+  const first50 = ids.slice(0, 50);
+  window.open(`https://www.youtube.com/watch_videos?video_ids=${first50.join(',')}`, '_blank');
+  toast(`Opened ${first50.length}${ids.length > 50 ? ' of ' + ids.length : ''} YouTube videos as playlist`);
+}
+
+// ──────────────────────────────────────────────
 // GENRE VIEW
 // ──────────────────────────────────────────────
 
@@ -2046,6 +2827,12 @@ let genreFetchDone = false;
 let isGenreView = false;
 
 function toggleGenreView(btn) {
+  // If digests are open, close them first
+  if (digestsVisible) {
+    digestsVisible = false;
+    document.getElementById('digestsView').style.display = 'none';
+    document.getElementById('digestsPill').classList.remove('active');
+  }
   isGenreView = !isGenreView;
   const genreView = document.getElementById('genreView');
   const mainArea = document.getElementById('mainArea');
@@ -2221,7 +3008,7 @@ function escAttr(s) {
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  setTimeout(() => t.classList.remove('show'), 4000);
 }
 </script>
 </body>
