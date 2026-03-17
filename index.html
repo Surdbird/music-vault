@@ -1220,9 +1220,15 @@ textarea::placeholder { color: var(--muted); }
   <div class="stat-box"><span class="stat-n" style="color:var(--am)" id="statAM">0</span><span class="stat-label">Apple Music</span></div>
   <div class="stat-box"><span class="stat-n" style="color:var(--bc)" id="statBC">0</span><span class="stat-label">Bandcamp</span></div>
 </div>
-<div id="generateBtnRow" style="display:none;text-align:center;padding:0.75rem 3rem">
+<div id="generateBtnRow" style="display:none;text-align:center;padding:0.75rem 3rem;display:none;gap:0.75rem;flex-wrap:wrap;justify-content:center">
   <button onclick="generateYTLinksPage()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--yt);color:var(--yt);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
     ▶ Generate YouTube Links Page
+  </button>
+  <button onclick="generatePlatformLinksPage('applemusic')" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--am);color:var(--am);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ♪ Generate Apple Music Links Page
+  </button>
+  <button onclick="generatePlatformLinksPage('bandcamp')" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--bc);color:var(--bc);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ◈ Generate Bandcamp Links Page
   </button>
 </div>
 
@@ -1333,7 +1339,7 @@ textarea::placeholder { color: var(--muted); }
         document.getElementById('statBC').textContent=totBC;
         document.getElementById('statsRow').style.display='grid';
         document.getElementById('mainArea').style.display='grid';
-        setTimeout(() => { document.getElementById('generateBtnRow').style.display='block'; }, 100);
+        setTimeout(() => { document.getElementById('generateBtnRow').style.display='flex'; }, 100);
         document.getElementById('uploadSection').style.marginBottom='0';
         renderMemberList(names);selectMember(names[0]);
       }
@@ -2666,6 +2672,129 @@ function generateYTLinksPage() {
   URL.revokeObjectURL(a.href);
   toast(`✓ Downloaded links-youtube.html — upload to GitHub as music-vault/links-youtube.html`);
 }
+
+function generatePlatformLinksPage(platform) {
+  if (!allData || Object.keys(allData).length === 0) {
+    toast('Load a WhatsApp chat first');
+    return;
+  }
+
+  const isApple = platform === 'applemusic';
+  const isBandcamp = platform === 'bandcamp';
+  const platformName = isApple ? 'Apple Music' : 'Bandcamp';
+  const platformIcon = isApple ? '♪' : '◈';
+  const platformColor = isApple ? '#fc3c44' : '#1da0c3';
+  const fileName = isApple ? 'links-apple.html' : 'links-bandcamp.html';
+
+  const members = Object.entries(allData)
+    .map(([name, data]) => ({
+      name,
+      tracks: data[platform] || [],
+      count: (data[platform] || []).length
+    }))
+    .filter(m => m.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  if (!members.length) {
+    toast(`No ${platformName} links found`);
+    return;
+  }
+
+  const rows = members.map((m, idx) => {
+    const links = m.tracks.map(t => t.url);
+    const linksJson = JSON.stringify(links);
+    
+    // Show first 5 links inline, rest hidden
+    const visibleLinks = m.tracks.slice(0, 5).map(t =>
+      `<div style="margin:0.2rem 0"><a href="${t.url}" target="_blank" rel="noopener" 
+        style="color:${platformColor};font-size:0.78rem;word-break:break-all">${t.url.replace(/^https?:\/\//, '').slice(0, 60)}${t.url.length > 63 ? '…' : ''}</a></div>`
+    ).join('');
+
+    const hiddenLinks = m.tracks.length > 5 ? m.tracks.slice(5).map(t =>
+      `<div style="margin:0.2rem 0"><a href="${t.url}" target="_blank" rel="noopener"
+        style="color:${platformColor};font-size:0.78rem;word-break:break-all">${t.url.replace(/^https?:\/\//, '').slice(0, 60)}${t.url.length > 63 ? '…' : ''}</a></div>`
+    ).join('') : '';
+
+    const moreSection = m.tracks.length > 5 ? `
+      <div id="more-${idx}" style="display:none">${hiddenLinks}</div>
+      <button onclick="var el=document.getElementById('more-${idx}');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'+ ${m.tracks.length - 5} more':'− less'"
+        style="background:none;border:none;color:#999;cursor:pointer;font-size:0.78rem;padding:0.2rem 0;margin-top:0.2rem">
+        + ${m.tracks.length - 5} more
+      </button>` : '';
+
+    return `
+      <tr>
+        <td style="vertical-align:top;padding-top:1rem">
+          <strong>${m.name}</strong>
+          <div style="color:#888;font-size:0.78rem">${m.count} link${m.count !== 1 ? 's' : ''}</div>
+        </td>
+        <td style="vertical-align:top;padding-top:1rem">
+          <button onclick="navigator.clipboard.writeText(this.dataset.links).then(()=>this.textContent='✓ Copied!').catch(()=>this.textContent='Failed')" data-links="${links.join('\n').replace(/"/g, '&quot;')}"
+            style="background:${platformColor};color:white;border:none;padding:0.35rem 0.9rem;border-radius:3px;cursor:pointer;font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;display:block">
+            ⎘ Copy All Links
+          </button>
+          ${visibleLinks}
+          ${moreSection}
+        </td>
+      </tr>`;
+  }).join('');
+
+  const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  const pageHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Vault — ${platformName} Links</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+  header { background: #1a1a1a; color: white; padding: 2rem 2rem 1.5rem; }
+  header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: ${platformColor}; }
+  header p { color: #999; font-size: 0.85rem; margin-top: 0.4rem; }
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+  .note { background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; padding: 0.75rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem; color: #666; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  th { background: #1a1a1a; color: white; padding: 0.75rem 1rem; text-align: left; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  td { padding: 0.7rem 1rem; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  footer { text-align: center; padding: 2rem; color: #999; font-size: 0.75rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>THE <span>VAULT</span></h1>
+  <p>${platformIcon} ${platformName} Links by Member · Generated ${now} · ${members.length} members</p>
+</header>
+<div class="container">
+  <div class="note">Click "⎘ Copy All Links" to copy a member's links to clipboard, then paste into ${platformName}.</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Member</th>
+        <th>Links</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+</div>
+<footer>Generated by The Vault · <a href="https://surdbird.github.io/music-vault/" style="color:#999">Open The Vault</a></footer>
+</body>
+</html>`;
+
+  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`✓ Downloaded ${fileName} — upload to GitHub as music-vault/${fileName}`);
+}
+
 
 
 // ──────────────────────────────────────────────
