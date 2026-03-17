@@ -663,6 +663,95 @@ textarea::placeholder { color: var(--muted); }
 }
 .btn-sp-update:hover { opacity: 0.85; }
 
+/* ── ARTISTS VIEW ── */
+.artists-header-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--ink);
+}
+.artists-header-title {
+  font-family: 'Syne', 'Helvetica Neue', sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+}
+.artists-header-sub {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.artists-search {
+  margin-bottom: 1.5rem;
+}
+.artists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.artist-card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.artist-card:hover { border-color: var(--accent); }
+.artist-card.expanded { border-color: var(--accent); }
+.artist-card-name {
+  font-family: 'Syne', 'Helvetica Neue', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.artist-card-meta {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  display: flex;
+  gap: 0.75rem;
+}
+.artist-card-members {
+  margin-top: 0.75rem;
+  display: none;
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.68rem;
+  color: var(--ink2);
+  border-top: 1px solid var(--rule);
+  padding-top: 0.6rem;
+}
+.artist-card.expanded .artist-card-members { display: block; }
+.artist-member-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.artist-member-row:last-child { border-bottom: none; }
+.artists-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.artists-note {
+  font-family: 'Syne Mono', 'Courier New', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
 /* ── DIGESTS VIEW ── */
 .digest-week {
   background: var(--paper);
@@ -1101,6 +1190,7 @@ textarea::placeholder { color: var(--muted); }
       <button class="pill bc" onclick="setPlatformFilter('bandcamp', this)">BANDCAMP</button>
       <button class="pill" id="genresPill" style="border-color:#6b4a8a;color:#6b4a8a" onclick="toggleGenreView(this)">GENRES</button>
       <button class="pill" id="digestsPill" style="border-color:#c8401a;color:#c8401a" onclick="toggleDigestsView(this)">DIGESTS</button>
+      <button class="pill" id="artistsPill" style="border-color:#8a6a1a;color:#8a6a1a" onclick="toggleArtistsView(this)">ARTISTS</button>
     </div>
   </div>
 </div>
@@ -1130,6 +1220,11 @@ textarea::placeholder { color: var(--muted); }
   <div class="stat-box"><span class="stat-n" style="color:var(--am)" id="statAM">0</span><span class="stat-label">Apple Music</span></div>
   <div class="stat-box"><span class="stat-n" style="color:var(--bc)" id="statBC">0</span><span class="stat-label">Bandcamp</span></div>
 </div>
+<div id="generateBtnRow" style="display:none;text-align:center;padding:0.75rem 3rem">
+  <button onclick="generateYTLinksPage()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--yt);color:var(--yt);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ▶ Generate YouTube Links Page
+  </button>
+</div>
 
 <!-- MAIN AREA (hidden until data loaded) -->
 <div class="main-area" id="mainArea" style="display:none">
@@ -1153,6 +1248,11 @@ textarea::placeholder { color: var(--muted); }
 <!-- DIGESTS VIEW -->
 <div class="digests-view" id="digestsView" style="display:none;max-width:1200px;margin:0 auto;padding:0 3rem 4rem;">
   <div id="digestsContent"></div>
+</div>
+
+<!-- ARTISTS VIEW -->
+<div class="artists-view" id="artistsView" style="display:none;max-width:1200px;margin:0 auto;padding:0 3rem 4rem;">
+  <div id="artistsContent"></div>
 </div>
 
 <!-- SPOTIFY MODAL -->
@@ -1233,6 +1333,7 @@ textarea::placeholder { color: var(--muted); }
         document.getElementById('statBC').textContent=totBC;
         document.getElementById('statsRow').style.display='grid';
         document.getElementById('mainArea').style.display='grid';
+        setTimeout(() => { document.getElementById('generateBtnRow').style.display='block'; }, 100);
         document.getElementById('uploadSection').style.marginBottom='0';
         renderMemberList(names);selectMember(names[0]);
       }
@@ -1502,6 +1603,7 @@ function renderAll(result) {
   document.getElementById('statAM').textContent = totAM;
   document.getElementById('statBC').textContent = totBC;
   document.getElementById('statsRow').style.display = 'grid';
+  document.getElementById('generateBtnRow').style.display = 'block';
   document.getElementById('mainArea').style.display = 'grid';
   document.getElementById('uploadSection').style.marginBottom = '0';
 
@@ -1550,11 +1652,17 @@ function filterMembers(q) {
 
 function selectMember(name) {
   activeMember = name;
-  // Hide digests view if open
+  // Hide digests/artists view if open
   if (digestsVisible) {
     digestsVisible = false;
     document.getElementById('digestsView').style.display = 'none';
     document.getElementById('digestsPill').classList.remove('active');
+    document.getElementById('mainArea').style.display = 'grid';
+  }
+  if (artistsVisible) {
+    artistsVisible = false;
+    document.getElementById('artistsView').style.display = 'none';
+    document.getElementById('artistsPill').classList.remove('active');
     document.getElementById('mainArea').style.display = 'grid';
   }
   // Update sidebar
@@ -2434,6 +2542,323 @@ function copyDigestLinks(weekKey, platform) {
     const name = platform === 'applemusic' ? 'Apple Music' : 'Bandcamp';
     toast(`⎘ Copied ${tracks.length} ${name} links`);
   });
+}
+
+
+// ──────────────────────────────────────────────
+// GENERATE YT LINKS PAGE
+// ──────────────────────────────────────────────
+
+function generateYTLinksPage() {
+  if (!allData || Object.keys(allData).length === 0) {
+    toast('Load a WhatsApp chat first');
+    return;
+  }
+
+  // Build member list sorted by YT link count desc
+  const members = Object.entries(allData)
+    .map(([name, data]) => ({
+      name,
+      ytTracks: data.youtube || [],
+      ytCount: (data.youtube || []).length
+    }))
+    .filter(m => m.ytCount > 0)
+    .sort((a, b) => b.ytCount - a.ytCount);
+
+  if (!members.length) {
+    toast('No YouTube links found');
+    return;
+  }
+
+  const rows = members.map((m, rowIdx) => {
+    const ids = m.ytTracks.map(t => extractYTId(t.url)).filter(Boolean);
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50));
+
+    const firstUrl = `https://www.youtube.com/watch_videos?video_ids=${chunks[0].join(',')}`;
+    const playBtn = `<a href="${firstUrl}" target="_blank" rel="noopener"
+      style="display:inline-block;background:#ff0000;color:white;padding:0.35rem 0.9rem;border-radius:3px;text-decoration:none;font-size:0.85rem;font-weight:600">
+      ▶ Play
+    </a>`;
+
+    let moreBtn = '';
+    if (chunks.length > 1) {
+      const moreParts = chunks.slice(1).map((chunk, idx) => {
+        const url = `https://www.youtube.com/watch_videos?video_ids=${chunk.join(',')}`;
+        return `<a href="${url}" target="_blank" rel="noopener"
+          style="display:inline-block;background:#cc0000;color:white;padding:0.3rem 0.7rem;border-radius:3px;text-decoration:none;font-size:0.78rem;font-weight:600;margin-right:0.25rem">
+          Part ${idx + 2} <span style="opacity:0.8;font-size:0.85em">${(idx+1)*50+1}–${(idx+1)*50+chunk.length}</span>
+        </a>`;
+      }).join('');
+
+      moreBtn = `
+        <button onclick="var el=document.getElementById('more-${rowIdx}');el.style.display=el.style.display==='none'?'block':'none';this.textContent=el.style.display==='none'?'+ more':'− less'"
+          style="background:none;border:1px solid #ccc;color:#666;padding:0.3rem 0.6rem;border-radius:3px;cursor:pointer;font-size:0.78rem;margin-left:0.4rem">
+          + more
+        </button>
+        <div id="more-${rowIdx}" style="display:none;margin-top:0.4rem">${moreParts}</div>`;
+    }
+
+    return `
+      <tr>
+        <td>${escHtml(m.name)}</td>
+        <td style="color:#888">${m.ytCount}</td>
+        <td>${playBtn}${moreBtn}</td>
+      </tr>`;
+  }).join('');
+
+  const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  const pageHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Vault — YouTube Playlists</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; min-height: 100vh; }
+  header { background: #1a1a1a; color: white; padding: 2rem 2rem 1.5rem; }
+  header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+  header h1 span { color: #ff0000; }
+  header p { color: #999; font-size: 0.85rem; margin-top: 0.4rem; }
+  .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+  .note { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.75rem 1rem; font-size: 0.85rem; margin-bottom: 1.5rem; color: #856404; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  th { background: #1a1a1a; color: white; padding: 0.75rem 1rem; text-align: left; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  td { padding: 0.7rem 1rem; border-bottom: 1px solid #eee; font-size: 0.9rem; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9f9f9; }
+  footer { text-align: center; padding: 2rem; color: #999; font-size: 0.75rem; }
+  @media (max-width: 600px) { .container { padding: 1rem; } td, th { padding: 0.6rem 0.75rem; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>THE <span>VAULT</span></h1>
+  <p>YouTube Playlists by Member · Generated ${now} · ${members.length} members · Click ▶ Play to open playlist</p>
+</header>
+<div class="container">
+  <div class="note">⚠ YouTube limits playlists to 50 videos per link. Members with more links are split into multiple parts.</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Member</th>
+        <th>Links</th>
+        <th>Playlist</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+</div>
+<footer>Generated by The Vault · <a href="https://surdbird.github.io/music-vault/" style="color:#999">Open The Vault</a></footer>
+</body>
+</html>`;
+
+  // Download as file
+  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'links-youtube.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`✓ Downloaded links-youtube.html — upload to GitHub as music-vault/links-youtube.html`);
+}
+
+
+// ──────────────────────────────────────────────
+// ARTISTS VIEW
+// ──────────────────────────────────────────────
+
+let artistsVisible = false;
+
+function toggleArtistsView(btn) {
+  const artistsView = document.getElementById('artistsView');
+  const mainArea = document.getElementById('mainArea');
+  const genreView = document.getElementById('genreView');
+  const digestsView = document.getElementById('digestsView');
+
+  artistsVisible = !artistsVisible;
+
+  if (artistsVisible) {
+    mainArea.style.display = 'none';
+    genreView.style.display = 'none';
+    digestsView.style.display = 'none';
+    document.getElementById('genresPill').classList.remove('active');
+    document.getElementById('digestsPill').classList.remove('active');
+    artistsView.style.display = 'block';
+    btn.classList.add('active');
+    renderArtistsView();
+  } else {
+    artistsView.style.display = 'none';
+    btn.classList.remove('active');
+    mainArea.style.display = 'grid';
+  }
+}
+
+// Extract artist name from a title string like "Artist — Song" or "Artist - Song"
+function extractArtistFromTitle(title) {
+  if (!title) return null;
+
+  // Try em dash first (most reliable)
+  let artist = null, song = null;
+  const emDashIdx = title.indexOf('—');
+  if (emDashIdx > 0) {
+    artist = title.slice(0, emDashIdx).trim();
+    song = title.slice(emDashIdx + 1).trim();
+  } else {
+    // Fall back to " - " (with spaces, to avoid hyphenated-words)
+    const hyphenIdx = title.indexOf(' - ');
+    if (hyphenIdx > 0) {
+      artist = title.slice(0, hyphenIdx).trim();
+      song = title.slice(hyphenIdx + 3).trim();
+    }
+  }
+
+  if (!artist || !song) return null;
+
+  // Filter out junk
+  if (artist.length < 2 || artist.length > 60) return null;
+  if (artist.includes('http') || artist.includes('www.')) return null;
+  // Skip if artist part looks like a year range or number
+  if (/^[\d\s]+$/.test(artist)) return null;
+  // Skip if it looks like a playlist/compilation title (starts with common words)
+  if (/^(best|top|greatest|classic|live|official|full|new|latest)\s/i.test(artist)) return null;
+
+  return artist;
+}
+
+function buildArtistMap() {
+  // artistName -> { tracks: [{url, platform, member}], members: Set }
+  const artistMap = {};
+
+  const addArtist = (artistName, url, platform, memberName) => {
+    if (!artistName || artistName.length < 2) return;
+    // Normalise: trim, collapse spaces
+    const key = artistName.trim().replace(/\s+/g, ' ');
+    if (!artistMap[key]) artistMap[key] = { tracks: [], members: new Set() };
+    artistMap[key].tracks.push({ url, platform, member: memberName });
+    artistMap[key].members.add(memberName);
+  };
+
+  for (const [memberName, platformData] of Object.entries(allData)) {
+    // YouTube — use title cache
+    for (const track of (platformData.youtube || [])) {
+      const title = titleCache[track.url];
+      const artist = extractArtistFromTitle(title);
+      if (artist) addArtist(artist, track.url, 'youtube', memberName);
+    }
+
+    // Spotify — use spotifyTitleCache (stored as "Artist — Song")
+    for (const track of (platformData.spotify || [])) {
+      const trackId = track.url.match(/\/track\/([a-zA-Z0-9]+)/)?.[1];
+      if (trackId && spotifyTitleCache[trackId]) {
+        const artist = extractArtistFromTitle(spotifyTitleCache[trackId]);
+        if (artist) addArtist(artist, track.url, 'spotify', memberName);
+      }
+    }
+
+    // Apple Music & Bandcamp — no title cache, skip for now
+  }
+
+  return artistMap;
+}
+
+let artistsSearchQuery = '';
+let artistsSortBy = 'alpha';
+
+function renderArtistsView() {
+  const container = document.getElementById('artistsContent');
+
+  if (!allData || Object.keys(allData).length === 0) {
+    container.innerHTML = '<div class="artists-empty">Load a WhatsApp chat first.</div>';
+    return;
+  }
+
+  const artistMap = buildArtistMap();
+  const total = Object.keys(artistMap).length;
+
+  if (total === 0) {
+    container.innerHTML = '<div class="artists-empty">No artist data yet — titles are still loading. Try again in a moment.</div>';
+    return;
+  }
+
+  // Sort based on user preference
+  const sorted = Object.entries(artistMap).sort(([nameA, dataA], [nameB, dataB]) => {
+    if (artistsSortBy === 'count') return dataB.tracks.length - dataA.tracks.length;
+    if (artistsSortBy === 'members') return dataB.members.size - dataA.members.size;
+    return nameA.localeCompare(nameB); // alpha default
+  });
+
+  const ytCount = Object.values(artistMap).reduce((n, a) => n + a.tracks.filter(t => t.platform === 'youtube').length, 0);
+  const spCount = Object.values(artistMap).reduce((n, a) => n + a.tracks.filter(t => t.platform === 'spotify').length, 0);
+
+  let html = `
+    <div class="artists-header-bar">
+      <button onclick="toggleArtistsView(document.getElementById('artistsPill'))" 
+        style="font-family:'Syne Mono','Courier New',monospace;font-size:0.7rem;background:none;border:1px solid var(--rule);border-radius:2px;padding:0.3rem 0.6rem;cursor:pointer;color:var(--muted);flex-shrink:0">
+        ← Members
+      </button>
+      <div class="artists-header-title">ARTISTS</div>
+      <div class="artists-header-sub">${total} artists · ${ytCount} YT · ${spCount} SP tracks identified</div>
+    </div>
+    <div class="artists-note">
+      ℹ Artists are extracted from YouTube and Spotify track titles. SP coverage grows as you browse member Spotify tracks.
+    </div>
+    <div class="artists-search" style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem">
+      <input type="search" placeholder="Search artist..." style="flex:1;min-width:200px;max-width:400px" 
+        oninput="artistsSearchQuery=this.value;renderArtistsView()" value="${escHtml(artistsSearchQuery)}">
+      <button class="pill ${artistsSortBy==='alpha'?'active':''}" onclick="artistsSortBy='alpha';renderArtistsView()" style="font-size:0.65rem">A–Z</button>
+      <button class="pill ${artistsSortBy==='count'?'active':''}" onclick="artistsSortBy='count';renderArtistsView()" style="font-size:0.65rem">Most shared</button>
+      <button class="pill ${artistsSortBy==='members'?'active':''}" onclick="artistsSortBy='members';renderArtistsView()" style="font-size:0.65rem">Most members</button>
+    </div>
+    <div class="artists-grid">`;
+
+  const filtered = artistsSearchQuery
+    ? sorted.filter(([name]) => name.toLowerCase().includes(artistsSearchQuery.toLowerCase()))
+    : sorted;
+
+  for (const [name, data] of filtered.slice(0, 200)) {
+    const trackCount = data.tracks.length;
+    const memberCount = data.members.size;
+    const platforms = [...new Set(data.tracks.map(t => t.platform))];
+    const platBadges = platforms.map(p => {
+      const colors = { youtube: 'var(--yt)', spotify: 'var(--sp)', applemusic: 'var(--am)', bandcamp: 'var(--bc)' };
+      const labels = { youtube: 'YT', spotify: 'SP', applemusic: 'AM', bandcamp: 'BC' };
+      return `<span style="color:${colors[p]}">${labels[p]}</span>`;
+    }).join(' ');
+
+    const memberRows = [...data.members].map(m => {
+      const mTracks = data.tracks.filter(t => t.member === m);
+      return `<div class="artist-member-row">
+        <span>${escHtml(m)}</span>
+        <span>${mTracks.length} track${mTracks.length !== 1 ? 's' : ''}</span>
+      </div>`;
+    }).join('');
+
+    const safeId = 'ac-' + name.replace(/[^a-zA-Z0-9]/g, '_');
+    html += `
+      <div class="artist-card" id="${safeId}" onclick="this.classList.toggle('expanded')">
+        <div class="artist-card-name" title="${escHtml(name)}">${escHtml(name)}</div>
+        <div class="artist-card-meta">
+          <span>${trackCount} track${trackCount !== 1 ? 's' : ''}</span>
+          <span>${memberCount} member${memberCount !== 1 ? 's' : ''}</span>
+          <span>${platBadges}</span>
+        </div>
+        <div class="artist-card-members">${memberRows}</div>
+      </div>`;
+  }
+
+  if (filtered.length > 200) {
+    html += `<div class="artist-card" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:monospace;font-size:0.75rem">
+      +${filtered.length - 200} more — search to filter
+    </div>`;
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 
