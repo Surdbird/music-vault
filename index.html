@@ -3409,24 +3409,86 @@ async function generateSanctorum() {
     + '</a>'
     + '</div></div>'
 
-    // Weekly
-    + '<div class="section">'
+    // Build current week's YouTube playlist
+    const nowDate = new Date();
+    const { week: currentWeek, year: currentYear } = getISOWeek(nowDate);
+    const currentWeekKey = currentYear + '-W' + String(currentWeek).padStart(2, '0');
+    const weekMapNow = buildWeekMap();
+    const currentWeekData = weekMapNow[currentWeekKey];
+    const weekYTIds = currentWeekData 
+      ? currentWeekData.tracks.filter(t => t.platform === 'youtube').map(t => extractYTId(t.url)).filter(Boolean)
+      : [];
+    const { monday: wMon, sunday: wSun } = getWeekRange(currentYear, currentWeek);
+    const weekLabel = 'W' + currentWeek + ' (' + formatDateShort(wMon) + ' – ' + formatDateShort(wSun) + ')';
+
+    // Build YouTube watch_videos URLs (50 per chunk)
+    const ytChunks = [];
+    for (let i = 0; i < weekYTIds.length; i += 50) ytChunks.push(weekYTIds.slice(i, i + 50));
+    const ytWeeklyCard = weekYTIds.length > 0
+      ? '<a class="card" href="https://www.youtube.com/watch_videos?video_ids=' + ytChunks[0].join(',') + '" target="_blank" rel="noopener">'
+        + '<div class="card-icon">▶</div>'
+        + '<div class="card-title">This Week on YouTube</div>'
+        + '<div class="card-desc">' + weekLabel + ' · ' + weekYTIds.length + ' videos'
+        + (ytChunks.length > 1 ? ' · <span style=\'color:#ff4444\'>Part 1</span>' : '') + '</div>'
+        + '<span class="card-platform yt">YouTube</span>'
+        + '</a>'
+        + (ytChunks.length > 1 ? ytChunks.slice(1).map((chunk, i) =>
+            '<a class="card" href="https://www.youtube.com/watch_videos?video_ids=' + chunk.join(',') + '" target="_blank" rel="noopener">'
+            + '<div class="card-icon">▶</div>'
+            + '<div class="card-title">This Week on YouTube · Part ' + (i+2) + '</div>'
+            + '<div class="card-desc">' + weekLabel + ' · videos ' + ((i+1)*50+1) + '–' + Math.min((i+2)*50, weekYTIds.length) + '</div>'
+            + '<span class="card-platform yt">YouTube</span>'
+            + '</a>'
+          ).join('') : '')
+      : '<div class="card" style="opacity:0.5"><div class="card-icon">▶</div><div class="card-title">This Week on YouTube</div><div class="card-desc">No YouTube links found for this week yet.</div><span class="card-platform yt">YouTube</span></div>';
+
+    // Build this week's YouTube links
+    const _now = new Date();
+    const _dow = _now.getDay();
+    const _monOffset = (_dow === 0 ? -6 : 1 - _dow);
+    const _weekStart = new Date(_now);
+    _weekStart.setDate(_now.getDate() + _monOffset);
+    _weekStart.setHours(0,0,0,0);
+
+    const _weekYTIds = [];
+    for (const [, pd] of Object.entries(allData || {})) {
+      for (const t of (pd.youtube || [])) {
+        if (!t.date) continue;
+        const td = parseWADate(t.date);
+        if (td && td >= _weekStart && td <= _now) {
+          const id = extractYTId(t.url);
+          if (id && !_weekYTIds.includes(id)) _weekYTIds.push(id);
+        }
+      }
+    }
+    const _wNum = (()=>{ const d=new Date(_now); d.setDate(d.getDate()+4-(d.getDay()||7)); const y=d.getFullYear(); return Math.ceil(((d-new Date(y,0,1))/86400000+1)/7); })();
+    const _ytChunks = [];
+    for (let i=0; i<_weekYTIds.length; i+=50) _ytChunks.push(_weekYTIds.slice(i,i+50));
+    const _ytCards = _weekYTIds.length > 0
+      ? _ytChunks.map((chunk,i) => '<a class="card" href="https://www.youtube.com/watch_videos?video_ids=' + chunk.join(',') + '" target="_blank" rel="noopener"><div class="card-icon">\u25b6</div><div class="card-title">This Week on YouTube' + (_ytChunks.length>1?' \u00b7 Part '+(i+1):'') + '</div><div class="card-desc">W' + _wNum + ' \u00b7 ' + _weekYTIds.length + ' videos</div><span class="card-platform yt">YouTube</span></a>').join('')
+      : '<div class="card" style="opacity:0.5;cursor:default"><div class="card-icon">\u25b6</div><div class="card-title">This Week on YouTube</div><div class="card-desc">No YouTube links yet this week.</div><span class="card-platform yt">YouTube</span></div>';
+
+    const weeklySection = '<div class="section">'
     + '<div class="section-title">Weekly Digest</div>'
     + '<div class="grid">'
     + '<a class="card" href="' + latestWeeklyUrl + '" target="_blank" rel="noopener">'
-    + '<div class="card-icon">📅</div>'
+    + '<div class="card-icon">\ud83d\udcc5</div>'
     + '<div class="card-title">' + (latestWeeklyName || 'Weekly Digest') + '</div>'
     + '<div class="card-desc">' + (latestWeeklyName ? 'The latest weekly digest playlist — all music shared this week in one place.' : 'A new Spotify playlist every week with all the music shared that week.') + '</div>'
     + '<span class="card-platform sp">Spotify</span>'
     + '</a>'
-    + '</div></div>'
+    + _ytCards
+    + '</div>'
+    + '<p style="font-size:0.72rem;color:#3d3530;margin-top:0.75rem">** Spotify digest is created at the end of each week — YouTube shows the current week live.</p>'
+    + '</div>';
 
+    const pageHtmlEnd = weeklySection
     + '</div>'
     + '<footer>* Genre playlists are approximate — YouTube videos shown are from members who share that genre, not exclusively that genre.<br><br>'
     + 'Built with \u2665 by Sumit &amp; Claude \u00b7 <a href="' + base + '/" style="color:#3d3530">Open The Vault</a></footer>'
     + '</body></html>';
 
-  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const blob = new Blob([pageHtml + pageHtmlEnd], { type: 'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'links.html';
