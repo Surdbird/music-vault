@@ -1233,6 +1233,16 @@ textarea::placeholder { color: var(--muted); }
   <button onclick="generateArtistsLinksPage()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid #8a6a1a;color:#8a6a1a;padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
     ♬ Generate Artists Links Page
   </button>
+  <button onclick="generateGenresLinksPage()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid #6b4a8a;color:#6b4a8a;padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ◈ Generate Genres Links Page
+  </button>
+  <button onclick="generateSanctorum()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:#1a1612;color:#d4845a;border:1px solid #d4845a;padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ✦ Generate The Vault Sanctorum
+  </button>
+
+  <button onclick="generateSpotifyByArtistPage()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--sp);color:var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ◎ Generate Spotify by Artist Page
+  </button>
 </div>
 
 <!-- MAIN AREA (hidden until data loaded) -->
@@ -2935,6 +2945,7 @@ function renderArtistsView() {
           <span>${trackCount} track${trackCount !== 1 ? 's' : ''}</span>
           <span>${memberCount} member${memberCount !== 1 ? 's' : ''}</span>
           <span>${platBadges}</span>
+          ${spotifyToken ? `<button class="btn-sm btn-sp" id="asp-${safeId}" onclick="event.stopPropagation();createArtistSpotifyPlaylist('${escAttr(name)}')" style="font-size:0.6rem;padding:0.15rem 0.4rem">SP ＋</button>` : ''}
         </div>
         <div class="artist-card-members">${memberRows}</div>
       </div>`;
@@ -3056,6 +3067,365 @@ function generateArtistsLinksPage() {
   a.click();
   URL.revokeObjectURL(a.href);
   toast('✓ Downloaded links-artists.html');
+}
+
+// ──────────────────────────────────────────────
+// GENERATE GENRES LINKS PAGE
+// ──────────────────────────────────────────────
+
+function generateGenresLinksPage() {
+  if (!genreData || Object.keys(genreData).length === 0) {
+    toast('No genre data — click GENRES first to fetch genre data');
+    return;
+  }
+  if (!allData || Object.keys(allData).length === 0) {
+    toast('Load a WhatsApp chat first');
+    return;
+  }
+
+  // For each broad genre, collect all YouTube URLs from all members in that genre
+  // genreData structure: { broadGenre: { subGenre: { memberName: count } } }
+  const genreYTMap = {}; // broadGenre -> { ytIds: [], members: Set, trackCount: number }
+
+  for (const [broad, subGenres] of Object.entries(genreData)) {
+    if (!genreYTMap[broad]) genreYTMap[broad] = { ytIds: [], members: new Set(), trackCount: 0 };
+    for (const [, members] of Object.entries(subGenres)) {
+      for (const [memberName, count] of Object.entries(members)) {
+        genreYTMap[broad].members.add(memberName);
+        genreYTMap[broad].trackCount += (typeof count === 'number' ? count : 1);
+        // Add this member's YouTube tracks
+        const ytTracks = allData[memberName]?.youtube || [];
+        for (const track of ytTracks) {
+          const id = extractYTId(track.url);
+          if (id && !genreYTMap[broad].ytIds.includes(id)) {
+            genreYTMap[broad].ytIds.push(id);
+          }
+        }
+      }
+    }
+  }
+
+  // Sort by track count desc
+  const sorted = Object.entries(genreYTMap)
+    .filter(([, data]) => data.trackCount > 0)
+    .sort(([, a], [, b]) => b.trackCount - a.trackCount);
+
+  if (!sorted.length) { toast('No genre data available'); return; }
+
+  const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  const rows = sorted.map(([genre, data], idx) => {
+    const chunks = [];
+    for (let i = 0; i < data.ytIds.length; i += 50) chunks.push(data.ytIds.slice(i, i + 50));
+
+    let ytBtns = '';
+    if (chunks.length > 0) {
+      const firstUrl = 'https://www.youtube.com/watch_videos?video_ids=' + chunks[0].join(',');
+      ytBtns = '<a href="' + firstUrl + '" target="_blank" rel="noopener" style="display:inline-block;background:#ff0000;color:white;padding:0.3rem 0.75rem;border-radius:3px;text-decoration:none;font-size:0.8rem;font-weight:600;margin-right:0.3rem">▶ YT</a>';
+      if (chunks.length > 1) {
+        const moreParts = chunks.slice(1).map((chunk, i) =>
+          '<a href="https://www.youtube.com/watch_videos?video_ids=' + chunk.join(',') + '" target="_blank" rel="noopener" style="display:inline-block;background:#cc0000;color:white;padding:0.25rem 0.5rem;border-radius:3px;text-decoration:none;font-size:0.72rem;font-weight:600;margin-right:0.2rem">P' + (i+2) + '</a>'
+        ).join('');
+        ytBtns += '<button onclick="var el=document.getElementById(\'gm' + idx + '\');el.style.display=el.style.display===\'none\'?\'inline\':\'none\'" style="background:none;border:1px solid #ccc;color:#666;padding:0.25rem 0.5rem;border-radius:3px;cursor:pointer;font-size:0.72rem;margin-right:0.3rem">+</button><span id="gm' + idx + '" style="display:none">' + moreParts + '</span>';
+      }
+    }
+
+    const memberList = [...data.members].slice(0, 8).join(', ') + (data.members.size > 8 ? ' +' + (data.members.size - 8) : '');
+    const subGenres = Object.keys(genreData[genre] || {}).slice(0, 5).join(', ');
+
+    return '<tr>'
+      + '<td style="font-weight:700;padding:0.7rem 1rem;border-bottom:1px solid #eee;vertical-align:middle;font-size:1rem">' + escHtml(genre) + '</td>'
+      + '<td style="padding:0.7rem 1rem;border-bottom:1px solid #eee;color:#888;font-size:0.8rem;vertical-align:middle">' + data.trackCount + ' matched<br>' + data.ytIds.length + ' YT</td>'
+      + '<td style="padding:0.7rem 1rem;border-bottom:1px solid #eee;vertical-align:middle">' + ytBtns + '</td>'
+      + '<td style="padding:0.7rem 1rem;border-bottom:1px solid #eee;color:#999;font-size:0.72rem;vertical-align:top">'
+      + '<div style="color:#666;font-size:0.72rem;margin-bottom:0.3rem">' + escHtml(subGenres) + (Object.keys(genreData[genre] || {}).length > 5 ? '...' : '') + '</div>'
+      + escHtml(memberList)
+      + '</td>'
+      + '</tr>';
+  }).join('');
+
+  const pageHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>The Vault \u2014 Genres</title>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f5;color:#1a1a1a}'
+    + 'header{background:#1a1a1a;color:white;padding:2rem}header h1{font-size:2rem;font-weight:800;letter-spacing:-.02em}header h1 span{color:#6b4a8a}'
+    + 'header p{color:#999;font-size:.85rem;margin-top:.4rem}.container{max-width:1000px;margin:0 auto;padding:2rem}'
+    + 'table{width:100%;border-collapse:collapse;background:white;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}'
+    + 'th{background:#1a1a1a;color:white;padding:.75rem 1rem;text-align:left;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase}'
+    + 'td{vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#f9f9f9}'
+    + 'footer{text-align:center;padding:2rem;color:#999;font-size:.75rem}</style></head><body>'
+    + '<header><h1>THE <span>VAULT</span></h1><p>\u266c Genres \u00b7 Generated ' + now + ' \u00b7 ' + sorted.length + ' genres</p></header>'
+    + '<div class="container">'
+    + '<p style="font-size:0.8rem;color:#888;margin-bottom:1.5rem;padding:0.75rem 1rem;background:white;border-radius:4px;border:1px solid #eee">* YouTube playlists show all videos shared by members who post in that genre — not every video will be that genre. For precise genre listening, use the member playlists on Spotify.</p>'
+    + '<table><thead><tr><th>Genre</th><th>Tracks</th><th>Play</th><th>Subgenres \u00b7 Members</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table></div>'
+    + '<footer>Generated by The Vault \u00b7 <a href="https://surdbird.github.io/music-vault/" style="color:#999">Open The Vault</a></footer>'
+    + '</body></html>';
+
+  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'links-genres.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✓ Downloaded links-genres.html — upload to GitHub as music-vault/links-genres.html');
+}
+
+// ──────────────────────────────────────────────
+// GENERATE SPOTIFY BY GENRE/ARTIST PAGES
+// ──────────────────────────────────────────────
+
+function generateSpotifyByGenrePage() {
+  const saved = JSON.parse(localStorage.getItem('vault_genre_playlists') || '{}');
+  if (!Object.keys(saved).length) {
+    toast('No genre playlists created yet — use SP ＋ in the GENRES view first');
+    return;
+  }
+
+  const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  const sorted = Object.entries(saved).sort(([a],[b]) => a.localeCompare(b));
+
+  const rows = sorted.map(([genre, data]) =>
+    '<tr>'
+    + '<td style="font-weight:700;padding:0.7rem 1rem;border-bottom:1px solid #eee;font-size:1rem">' + genre + '</td>'
+    + '<td style="padding:0.7rem 1rem;border-bottom:1px solid #eee"><a href="' + data.url + '" target="_blank" rel="noopener" style="display:inline-block;background:#1db954;color:white;padding:0.35rem 0.9rem;border-radius:3px;text-decoration:none;font-size:0.85rem;font-weight:600">◎ Listen</a></td>'
+    + '</tr>'
+  ).join('');
+
+  const pageHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>The Vault \u2014 Spotify by Genre</title>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f5;color:#1a1a1a}'
+    + 'header{background:#1a1a1a;color:white;padding:2rem}header h1{font-size:2rem;font-weight:800;letter-spacing:-.02em}header h1 span{color:#1db954}'
+    + 'header p{color:#999;font-size:.85rem;margin-top:.4rem}.container{max-width:700px;margin:0 auto;padding:2rem}'
+    + 'table{width:100%;border-collapse:collapse;background:white;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}'
+    + 'th{background:#1a1a1a;color:white;padding:.75rem 1rem;text-align:left;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase}'
+    + 'td{vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#f9f9f9}'
+    + 'footer{text-align:center;padding:2rem;color:#999;font-size:.75rem}</style></head><body>'
+    + '<header><h1>THE <span>VAULT</span></h1><p>\u266c Spotify Playlists by Genre \u00b7 Generated ' + now + ' \u00b7 ' + sorted.length + ' genres</p></header>'
+    + '<div class="container"><table><thead><tr><th>Genre</th><th>Playlist</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<footer>Generated by The Vault \u00b7 <a href="https://surdbird.github.io/music-vault/" style="color:#999">Open The Vault</a></footer></body></html>';
+
+  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'links-spotify-genres.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✓ Downloaded links-spotify-genres.html');
+}
+
+function generateSpotifyByArtistPage() {
+  const saved = JSON.parse(localStorage.getItem('vault_artist_playlists') || '{}');
+  if (!Object.keys(saved).length) {
+    toast('No artist playlists created yet — use SP ＋ in the ARTISTS view first');
+    return;
+  }
+
+  const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  const sorted = Object.entries(saved).sort(([a],[b]) => a.localeCompare(b));
+
+  const rows = sorted.map(([artist, data]) =>
+    '<tr>'
+    + '<td style="font-weight:600;padding:0.7rem 1rem;border-bottom:1px solid #eee">' + artist + '</td>'
+    + '<td style="padding:0.7rem 1rem;border-bottom:1px solid #eee"><a href="' + data.url + '" target="_blank" rel="noopener" style="display:inline-block;background:#1db954;color:white;padding:0.35rem 0.9rem;border-radius:3px;text-decoration:none;font-size:0.85rem;font-weight:600">◎ Listen</a></td>'
+    + '</tr>'
+  ).join('');
+
+  const pageHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>The Vault \u2014 Spotify by Artist</title>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f5f5;color:#1a1a1a}'
+    + 'header{background:#1a1a1a;color:white;padding:2rem}header h1{font-size:2rem;font-weight:800;letter-spacing:-.02em}header h1 span{color:#1db954}'
+    + 'header p{color:#999;font-size:.85rem;margin-top:.4rem}.container{max-width:700px;margin:0 auto;padding:2rem}'
+    + '.search-bar{margin-bottom:1.5rem}<input type=search placeholder="Search artist..." oninput="filterA(this.value)" style="width:100%;max-width:400px;padding:.5rem 1rem;border:1px solid #ddd;border-radius:4px;font-size:.9rem">'
+    + 'table{width:100%;border-collapse:collapse;background:white;border-radius:6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}'
+    + 'th{background:#1a1a1a;color:white;padding:.75rem 1rem;text-align:left;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase}'
+    + 'td{vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#f9f9f9}'
+    + 'footer{text-align:center;padding:2rem;color:#999;font-size:.75rem}</style></head><body>'
+    + '<header><h1>THE <span>VAULT</span></h1><p>\u266c Spotify Playlists by Artist \u00b7 Generated ' + now + ' \u00b7 ' + sorted.length + ' artists</p></header>'
+    + '<div class="container">'
+    + '<div style="margin-bottom:1.5rem"><input type="search" id="as" placeholder="Search artist..." oninput="filterA(this.value)" style="width:100%;max-width:400px;padding:.5rem 1rem;border:1px solid #ddd;border-radius:4px;font-size:.9rem"></div>'
+    + '<table id="at"><thead><tr><th>Artist</th><th>Playlist</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<footer>Generated by The Vault \u00b7 <a href="https://surdbird.github.io/music-vault/" style="color:#999">Open The Vault</a></footer>'
+    + '<script>function filterA(q){var r=document.querySelectorAll("#at tbody tr");q=q.toLowerCase();for(var i=0;i<r.length;i++)r[i].style.display=r[i].cells[0].textContent.toLowerCase().indexOf(q)>=0?"":"none";}<\/script>'
+    + '</body></html>';
+
+  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'links-spotify-artists.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✓ Downloaded links-spotify-artists.html');
+}
+
+// ──────────────────────────────────────────────
+// GENERATE THE VAULT SANCTORUM
+// ──────────────────────────────────────────────
+
+async function generateSanctorum() {
+  const base = 'https://surdbird.github.io/music-vault';
+  const spotifyProfile = 'https://open.spotify.com/user/sumit.nurpuri';
+  const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  // Get Complete Vault playlist URL
+  const genrePlaylists = JSON.parse(localStorage.getItem('vault_genre_playlists') || '{}');
+  const completeVaultUrl = genrePlaylists['Complete']?.url || spotifyProfile;
+  const completeVaultTracks = '6500+';
+
+  // Fetch the latest weekly digest playlist from Spotify
+  let latestWeeklyName = '';
+  let latestWeeklyUrl = spotifyProfile;
+  if (spotifyToken && spotifyUserId) {
+    try {
+      toast('Fetching latest weekly playlist...');
+      // Get user playlists and find the most recent "The Vault — W" one
+      let next = `https://api.spotify.com/v1/me/playlists?limit=50`;
+      let found = null;
+      while (next && !found) {
+        const data = await spotifyFetch(next);
+        const vaultWeekly = (data.playlists || data.items || [])
+          .filter(p => p.name && p.name.match(/The Vault.*W\d+/i))
+          .sort((a, b) => {
+            const wa = parseInt(a.name.match(/W(\d+)/)?.[1] || 0);
+            const wb = parseInt(b.name.match(/W(\d+)/)?.[1] || 0);
+            return wb - wa;
+          });
+        if (vaultWeekly.length > 0) {
+          found = vaultWeekly[0];
+        }
+        next = data.next || null;
+      }
+      if (found) {
+        latestWeeklyName = found.name;
+        latestWeeklyUrl = found.external_urls?.spotify || spotifyProfile;
+        toast('✓ Found latest weekly: ' + found.name);
+      }
+    } catch(e) {
+      console.warn('Could not fetch weekly playlist:', e.message);
+    }
+  }
+
+  const spotify = spotifyProfile;
+
+  const pageHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">'
+    + '<title>The Vault Sanctorum</title>'
+    + '<style>'
+    + '*{box-sizing:border-box;margin:0;padding:0}'
+    + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0e0c0a;color:#e8e0d4;min-height:100vh}'
+    + 'header{padding:3rem 2rem 2rem;border-bottom:1px solid #2a2420;text-align:center}'
+    + 'h1{font-size:clamp(2.5rem,8vw,5rem);font-weight:800;letter-spacing:-0.03em;line-height:1}'
+    + 'h1 span{color:#d4845a}'
+    + '.sub{color:#6b5f52;font-size:0.85rem;margin-top:0.75rem;letter-spacing:0.1em;text-transform:uppercase}'
+    + '.date{color:#6b5f52;font-size:0.75rem;margin-top:0.4rem}'
+    + '.container{max-width:900px;margin:0 auto;padding:2rem}'
+    + '.section{margin-bottom:3rem}'
+    + '.section-title{font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:#6b5f52;margin-bottom:1.25rem;padding-bottom:0.5rem;border-bottom:1px solid #2a2420}'
+    + '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}'
+    + '.card{background:#161310;border:1px solid #2a2420;border-radius:4px;padding:1.25rem;text-decoration:none;color:#e8e0d4;display:block;transition:border-color .15s}'
+    + '.card:hover{border-color:#d4845a}'
+    + '.card-icon{font-size:1.5rem;margin-bottom:0.75rem}'
+    + '.card-title{font-weight:700;font-size:1rem;margin-bottom:0.3rem}'
+    + '.card-desc{font-size:0.75rem;color:#6b5f52;line-height:1.5}'
+    + '.card-platform{display:inline-block;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.15rem 0.4rem;border-radius:2px;margin-top:0.5rem}'
+    + '.yt{background:#1a0f0f;color:#ff4444}'
+    + '.sp{background:#0a1a0f;color:#1db954}'
+    + '.multi{background:#1a1510;color:#d4845a}'
+    + 'footer{text-align:center;padding:2rem;color:#3d3530;font-size:0.72rem;border-top:1px solid #2a2420}'
+    + '@media(max-width:600px){.container{padding:1rem}.grid{grid-template-columns:1fr}}'
+    + '</style></head><body>'
+    + '<header>'
+    + '<h1>THE <span>VAULT</span><br>SANCTORUM</h1>'
+    + '<p class="sub">A community music archive · 6 years of sharing</p>'
+    + '<p class="date">Updated ' + now + '</p>'
+    + '</header>'
+    + '<div class="container">'
+
+    // By Member
+    + '<div class="section">'
+    + '<div class="section-title">By Member</div>'
+    + '<div class="grid">'
+    + '<a class="card" href="' + base + '/links-youtube.html">'
+    + '<div class="card-icon">▶</div>'
+    + '<div class="card-title">YouTube Playlists</div>'
+    + '<div class="card-desc">Every member\'s YouTube shares as a playlist. First 50 videos per member, with more parts available.</div>'
+    + '<span class="card-platform yt">YouTube</span>'
+    + '</a>'
+    + '<a class="card" href="' + spotify + '" target="_blank" rel="noopener">'
+    + '<div class="card-icon">◎</div>'
+    + '<div class="card-title">Spotify Playlists</div>'
+    + '<div class="card-desc">Individual Spotify playlists for each member. Follow to get updates as new music is added.</div>'
+    + '<span class="card-platform sp">Spotify</span>'
+    + '</a>'
+    + '<a class="card" href="' + base + '/links-apple.html">'
+    + '<div class="card-icon">♪</div>'
+    + '<div class="card-title">Apple Music Links</div>'
+    + '<div class="card-desc">Copy any member\'s Apple Music links to your clipboard.</div>'
+    + '<span class="card-platform" style="background:#1a0a0f;color:#fc3c44">Apple Music</span>'
+    + '</a>'
+    + '<a class="card" href="' + base + '/links-bandcamp.html">'
+    + '<div class="card-icon">◈</div>'
+    + '<div class="card-title">Bandcamp Links</div>'
+    + '<div class="card-desc">Copy any member\'s Bandcamp links to your clipboard.</div>'
+    + '<span class="card-platform" style="background:#0a131a;color:#1da0c3">Bandcamp</span>'
+    + '</a>'
+    + '</div></div>'
+
+    // By Artist
+    + '<div class="section">'
+    + '<div class="section-title">By Artist</div>'
+    + '<div class="grid">'
+    + '<a class="card" href="' + base + '/links-artists.html">'
+    + '<div class="card-icon">♬</div>'
+    + '<div class="card-title">Artist Playlists</div>'
+    + '<div class="card-desc">945+ artists — search and play YouTube playlists by artist. Sorted by most shared.</div>'
+    + '<span class="card-platform yt">YouTube</span>'
+    + '</a>'
+    + '<a class="card" href="' + base + '/links-spotify-artists.html">'
+    + '<div class="card-icon">◎</div>'
+    + '<div class="card-title">Artist Playlists on Spotify</div>'
+    + '<div class="card-desc">Spotify playlists curated by artist — search and listen directly.</div>'
+    + '<span class="card-platform sp">Spotify</span>'
+    + '</a>'
+    + '</div></div>'
+
+    // By Genre
+    + '<div class="section">'
+    + '<div class="section-title">By Genre</div>'
+    + '<div class="grid">'
+    + '<a class="card" href="' + base + '/links-genres.html">'
+    + '<div class="card-icon">◉</div>'
+    + '<div class="card-title">Genre Playlists</div>'
+    + '<div class="card-desc">Jazz, Rock, Blues, Folk and more — YouTube playlists curated by genre across all members.*</div>'
+    + '<span class="card-platform multi">YouTube · MusicBrainz</span>'
+    + '</a>'
+    + '<a class="card" href="' + completeVaultUrl + '" target="_blank" rel="noopener">'
+    + '<div class="card-icon">◎</div>'
+    + '<div class="card-title">The Vault — Complete</div>'
+    + '<div class="card-desc">Every Spotify track ever shared in The Vault — ' + completeVaultTracks + ' tracks, 546+ hours.</div>'
+    + '<span class="card-platform sp">Spotify</span>'
+    + '</a>'
+    + '</div></div>'
+
+    // Weekly
+    + '<div class="section">'
+    + '<div class="section-title">Weekly Digest</div>'
+    + '<div class="grid">'
+    + '<a class="card" href="' + latestWeeklyUrl + '" target="_blank" rel="noopener">'
+    + '<div class="card-icon">📅</div>'
+    + '<div class="card-title">' + (latestWeeklyName || 'Weekly Digest') + '</div>'
+    + '<div class="card-desc">' + (latestWeeklyName ? 'The latest weekly digest playlist — all music shared this week in one place.' : 'A new Spotify playlist every week with all the music shared that week.') + '</div>'
+    + '<span class="card-platform sp">Spotify</span>'
+    + '</a>'
+    + '</div></div>'
+
+    + '</div>'
+    + '<footer>* Genre playlists are approximate — YouTube videos shown are from members who share that genre, not exclusively that genre.<br><br>'
+    + 'Built with \u2665 by Sumit &amp; Claude \u00b7 <a href="' + base + '/" style="color:#3d3530">Open The Vault</a></footer>'
+    + '</body></html>';
+
+  const blob = new Blob([pageHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'links.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('✓ Downloaded links.html — upload to GitHub as music-vault/links.html');
 }
 
 // ──────────────────────────────────────────────
@@ -3764,6 +4134,11 @@ function getBroadGenre(genres) {
 
 function renderGenreView() {
   const content = document.getElementById('genreContent');
+
+  // Add Complete Vault button at top
+  const completeBtn = spotifyToken ? `<div style="text-align:right;margin-bottom:1rem">
+    <button class="btn-sm btn-sp" id="complete-vault-btn" onclick="createCompleteVaultPlaylist()">◎ Create The Vault — Complete</button>
+  </div>` : '';
   
   // Sort broad genres by track count
   const sorted = Object.entries(genreData).sort(([,a],[,b]) => {
@@ -3780,7 +4155,7 @@ function renderGenreView() {
     return;
   }
 
-  content.innerHTML = sorted.map(([broad, subGenres]) => {
+  content.innerHTML = completeBtn + sorted.map(([broad, subGenres]) => {
     const totalTracks = Object.values(subGenres).reduce((s, members) => 
       s + Object.values(members).reduce((ms, t) => ms + (typeof t === 'number' ? t : t.length), 0), 0);
     
@@ -3801,7 +4176,10 @@ function renderGenreView() {
           <span class="genre-title">${escHtml(broad)}</span>
           <span class="genre-count">${totalTracks} tracks</span>
         </div>
-        <span class="genre-chevron">▾</span>
+        <div style="display:flex;align-items:center;gap:0.5rem" onclick="event.stopPropagation()">
+
+          <span class="genre-chevron">▾</span>
+        </div>
       </div>
       <div class="subgenre-list">${subGenreItems}</div>
     </div>`;
@@ -3810,6 +4188,183 @@ function renderGenreView() {
 
 function toggleGenreCard(id) {
   document.getElementById('genre-' + id)?.classList.toggle('expanded');
+}
+
+async function createCompleteVaultPlaylist() {
+  if (!spotifyToken) { toast('Connect Spotify first'); return; }
+  const btn = document.getElementById('complete-vault-btn');
+  if (btn) { btn.textContent = '…collecting tracks'; btn.disabled = true; }
+
+  try {
+    // Collect ALL unique Spotify track URLs from all members
+    const allUrls = [];
+    for (const [, platformData] of Object.entries(allData)) {
+      for (const track of (platformData.spotify || [])) {
+        if (track.url.includes('/track/')) allUrls.push(track.url);
+      }
+    }
+
+    const uniqueUrls = [...new Set(allUrls)];
+    if (!uniqueUrls.length) { toast('No Spotify tracks found'); if(btn){btn.textContent='◎ Create The Vault — Complete';btn.disabled=false;} return; }
+
+    if (btn) btn.textContent = `…resolving ${uniqueUrls.length} tracks`;
+    const uris = uniqueUrls.map(u => { const m = u.match(/\/track\/([a-zA-Z0-9]+)/); return m ? `spotify:track:${m[1]}` : null; }).filter(Boolean);
+
+    const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+      method: 'POST',
+      body: JSON.stringify({ name: 'The Vault — Complete', description: 'Every Spotify track ever shared in The Vault community', public: true })
+    });
+
+    const BATCH = 100;
+    let added = 0;
+    for (let i = 0; i < uris.length; i += BATCH) {
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+        method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + BATCH) })
+      });
+      added += BATCH;
+      if (btn) btn.textContent = `…${Math.min(added, uris.length)}/${uris.length}`;
+      if (i + BATCH < uris.length) await sleep(500);
+    }
+
+    try { await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) }); } catch(e) {}
+
+    // Save it
+    try {
+      const saved = JSON.parse(localStorage.getItem('vault_genre_playlists') || '{}');
+      saved['Complete'] = { playlistId: pl.id, url: `https://open.spotify.com/playlist/${pl.id}`, name: 'The Vault — Complete' };
+      localStorage.setItem('vault_genre_playlists', JSON.stringify(saved));
+    } catch(e) {}
+
+    if (btn) {
+      btn.textContent = '✓ Open The Vault — Complete';
+      btn.style.background = 'var(--sp)'; btn.style.color = '#fff'; btn.disabled = false;
+      btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank');
+    }
+    toast(`✓ Created "The Vault — Complete" with ${uris.length} tracks`);
+  } catch(e) {
+    if (btn) { btn.textContent = '◎ Create The Vault — Complete'; btn.disabled = false; }
+    toast('Error: ' + e.message);
+  }
+}
+
+async function createGenreSpotifyPlaylist(broadGenre) {
+  if (!spotifyToken) { toast('Connect Spotify first'); return; }
+  const btn = document.getElementById('gsp-' + safeId(broadGenre));
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+
+  try {
+    // Collect all Spotify track URLs from members in this genre
+    const subGenres = genreData[broadGenre] || {};
+    const memberNames = new Set();
+    for (const members of Object.values(subGenres)) {
+      for (const name of Object.keys(members)) memberNames.add(name);
+    }
+
+    const allUrls = [];
+    for (const memberName of memberNames) {
+      const tracks = allData[memberName]?.spotify || [];
+      for (const t of tracks) {
+        if (t.url.includes('/track/')) allUrls.push(t.url);
+      }
+    }
+
+    if (!allUrls.length) { toast('No Spotify tracks for ' + broadGenre); if(btn){btn.textContent='SP ＋';btn.disabled=false;} return; }
+
+    if (btn) btn.textContent = `…resolving`;
+    const uris = await resolveSpotifyUris(allUrls);
+    if (!uris.length) { toast('No valid track URIs'); if(btn){btn.textContent='SP ＋';btn.disabled=false;} return; }
+
+    const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+      method: 'POST',
+      body: JSON.stringify({ name: `The Vault — ${broadGenre}`, description: `${broadGenre} music from The Vault community`, public: true })
+    });
+
+    const BATCH = 100;
+    for (let i = 0; i < uris.length; i += BATCH) {
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+        method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + BATCH) })
+      });
+      if (btn) btn.textContent = `…${Math.min(i+BATCH, uris.length)}/${uris.length}`;
+      if (i + BATCH < uris.length) await sleep(500);
+    }
+
+    try { await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) }); } catch(e) {}
+
+    if (btn) {
+      btn.textContent = '✓ Open';
+      btn.style.background = 'var(--sp)'; btn.style.color = '#fff'; btn.disabled = false;
+      btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank');
+    }
+    // Save genre playlist ID
+    try {
+      const saved = JSON.parse(localStorage.getItem('vault_genre_playlists') || '{}');
+      saved[broadGenre] = { playlistId: pl.id, url: `https://open.spotify.com/playlist/${pl.id}`, name: `The Vault — ${broadGenre}` };
+      localStorage.setItem('vault_genre_playlists', JSON.stringify(saved));
+    } catch(e) {}
+    toast(`✓ Created "The Vault — ${broadGenre}" with ${uris.length} tracks`);
+  } catch(e) {
+    if (btn) { btn.textContent = 'SP ＋'; btn.disabled = false; }
+    toast('Error: ' + e.message);
+  }
+}
+
+async function createArtistSpotifyPlaylist(artistName) {
+  if (!spotifyToken) { toast('Connect Spotify first'); return; }
+  const btnId = 'asp-' + safeId(artistName);
+  const btn = document.getElementById(btnId);
+  if (btn) { btn.textContent = '…'; btn.disabled = true; }
+
+  try {
+    // Find all Spotify tracks by this artist using title cache
+    const allUrls = [];
+    for (const [, platformData] of Object.entries(allData)) {
+      for (const track of (platformData.spotify || [])) {
+        const trackId = track.url.match(/\/track\/([a-zA-Z0-9]+)/)?.[1];
+        if (trackId && spotifyTitleCache[trackId]) {
+          const artist = extractArtistFromTitle(spotifyTitleCache[trackId]);
+          if (artist && artist.toLowerCase().trim() === artistName.toLowerCase().trim()) {
+            allUrls.push(track.url);
+          }
+        }
+      }
+    }
+
+    if (!allUrls.length) { toast('No Spotify tracks found for ' + artistName); if(btn){btn.textContent='SP ＋';btn.disabled=false;} return; }
+
+    if (btn) btn.textContent = `…resolving`;
+    const uris = [...new Set(allUrls)].map(u => { const m = u.match(/\/track\/([a-zA-Z0-9]+)/); return m ? `spotify:track:${m[1]}` : null; }).filter(Boolean);
+
+    const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+      method: 'POST',
+      body: JSON.stringify({ name: `The Vault — ${artistName}`, description: `${artistName} tracks shared in The Vault community`, public: true })
+    });
+
+    const BATCH = 100;
+    for (let i = 0; i < uris.length; i += BATCH) {
+      await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+        method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + BATCH) })
+      });
+      if (i + BATCH < uris.length) await sleep(500);
+    }
+
+    try { await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) }); } catch(e) {}
+
+    if (btn) {
+      btn.textContent = '✓ Open';
+      btn.style.background = 'var(--sp)'; btn.style.color = '#fff'; btn.disabled = false;
+      btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank');
+    }
+    // Save artist playlist ID
+    try {
+      const saved = JSON.parse(localStorage.getItem('vault_artist_playlists') || '{}');
+      saved[artistName] = { playlistId: pl.id, url: `https://open.spotify.com/playlist/${pl.id}`, name: `The Vault — ${artistName}` };
+      localStorage.setItem('vault_artist_playlists', JSON.stringify(saved));
+    } catch(e) {}
+    toast(`✓ Created "The Vault — ${artistName}" with ${uris.length} tracks`);
+  } catch(e) {
+    if (btn) { btn.textContent = 'SP ＋'; btn.disabled = false; }
+    toast('Error: ' + e.message);
+  }
 }
 
 // Load cached genre data on startup
