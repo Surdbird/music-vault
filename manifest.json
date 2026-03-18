@@ -1,0 +1,21 @@
+{
+  "name": "The Vault Sanctorum",
+  "short_name": "The Vault",
+  "description": "A community music archive — 6 years of sharing",
+  "start_url": "/music-vault/links.html",
+  "display": "standalone",
+  "background_color": "#0e0c0a",
+  "theme_color": "#d4845a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
