@@ -448,16 +448,16 @@ const DISCOGS_UA = 'TheVaultCreditsTool/1.0';
 const DISCOGS_KEY = ''; // Optional — works without key at lower rate limit
 
 async function discogsFetch(url) {
-  // Don't set custom User-Agent — triggers CORS preflight which Discogs blocks
-  // Add key as query param if available
-  const fullUrl = DISCOGS_KEY ? url + (url.includes('?') ? '&' : '?') + 'key=' + DISCOGS_KEY : url;
-  const res = await fetch(fullUrl);
+  // Route through CORS proxy to handle Discogs CORS restrictions
+  const proxy = 'https://corsproxy.io/?';
+  const fullUrl = DISCOGS_KEY ? url + (url.includes('?') ? '&' : '?') + 'token=' + DISCOGS_KEY : url;
+  const res = await fetch(proxy + encodeURIComponent(fullUrl));
   if (res.status === 429) {
-    log('Rate limited by Discogs — waiting 10s...');
+    log('Rate limited — waiting 10s...');
     await sleep(10000);
     return discogsFetch(url);
   }
-  if (!res.ok) throw new Error('Discogs API error: ' + res.status);
+  if (!res.ok) throw new Error('Fetch error: ' + res.status);
   return res.json();
 }
 
