@@ -484,53 +484,84 @@ async function fetchProducerCredits() {
     if (!artist) { log('Artist not found in MusicBrainz', 'err'); return; }
     log('Found: ' + artist.name + ' (MBID: ' + artist.id + ')', 'ok');
 
-    // Step 2: Get all recordings where this artist is credited as producer
-    // We browse releases where artist has producer relationship
-    log('Fetching producer credits (this takes a few minutes)...');
-    setProgress(5, 'Fetching recordings...');
+    // Step 2: Get releases where this artist is credited as PRODUCER
+    // Use release browse with artist relationship filter
+    log('Fetching releases produced by ' + artist.name + '...');
+    setProgress(5, 'Fetching releases...');
 
-    const recordings = [];
+    const tracks = [];
     let offset = 0;
-    const limit = 100;
+    const limit = 25;
     let total = 1;
 
-    while (offset < total && offset < 2000) {
-      const url = `https://musicbrainz.org/ws/2/recording?artist=${artist.id}&inc=artist-rels&limit=${limit}&offset=${offset}&fmt=json`;
+    while (offset < total && tracks.length < 2000) {
+      // Browse releases linked to this artist via producer relationship
+      const url = `https://musicbrainz.org/ws/2/release?artist=${artist.id}&inc=recordings+artist-rels+recording-level-rels&limit=${limit}&offset=${offset}&fmt=json`;
       const data = await mbFetch(url);
       await sleep(1100);
 
-      total = data['recording-count'] || 0;
-      const recs = data['recordings'] || [];
+      total = data['release-count'] || 0;
+      const releases = data['releases'] || [];
 
-      for (const rec of recs) {
-        // Check if this artist has a producer relationship on this recording
-        const rels = rec.relations || [];
-        const isProducer = rels.some(r =>
+      for (const release of releases) {
+        // Check release-level producer credit
+        const releaseRels = release.relations || [];
+        const isReleaseProducer = releaseRels.some(r =>
           r.type === 'producer' && r.artist?.id === artist.id
         );
-        if (isProducer) recordings.push(rec);
+
+        if (isReleaseProducer) {
+          // Add all tracks from this release
+          for (const medium of (release.media || [])) {
+            for (const track of (medium.tracks || [])) {
+              const title = track.title || track.recording?.title || '';
+              const releaseArtist = release['artist-credit']?.[0]?.name || '';
+              if (title) tracks.push({ title, artist: releaseArtist });
+            }
+          }
+        } else {
+          // Check recording-level producer credits
+          for (const medium of (release.media || [])) {
+            for (const track of (medium.tracks || [])) {
+              const recRels = track.recording?.relations || [];
+              const isRecProducer = recRels.some(r =>
+                r.type === 'producer' && r.artist?.id === artist.id
+              );
+              if (isRecProducer) {
+                const title = track.title || track.recording?.title || '';
+                const releaseArtist = release['artist-credit']?.[0]?.name || '';
+                if (title) tracks.push({ title, artist: releaseArtist });
+              }
+            }
+          }
+        }
       }
 
-      offset += recs.length;
-      if (!recs.length) break;
-      setProgress(5 + (offset / Math.max(total, 1)) * 40, `Scanning ${offset}/${total} recordings...`);
+      offset += releases.length;
+      if (!releases.length) break;
+      setProgress(5 + (offset / Math.max(total, 1)) * 40, `Scanning ${offset}/${total} releases...`);
     }
 
-    log(`Found ${recordings.length} produced recordings in MusicBrainz`, recordings.length > 0 ? 'ok' : 'err');
-    document.getElementById('statMB').textContent = recordings.length;
+    // Deduplicate
+    const seen = new Set();
+    const unique = tracks.filter(t => {
+      const key = t.title.toLowerCase() + '|' + t.artist.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
-    if (!recordings.length) {
-      // Try alternative: browse releases with producer relationship
-      log('Trying release-level producer credits...');
-      await fetchViaReleases(artist);
+    log(`Found ${unique.length} produced tracks in MusicBrainz (from ${total} releases)`, unique.length > 0 ? 'ok' : 'err');
+    document.getElementById('statMB').textContent = unique.length;
+
+    if (!unique.length) {
+      log('No producer credits found. MusicBrainz may not have credits tagged for this producer.', 'err');
+      document.getElementById('fetchBtn').disabled = false;
       return;
     }
 
     // Step 3: Search each on Spotify
-    await searchOnSpotify(recordings.map(r => ({
-      title: r.title,
-      artist: r['artist-credit']?.[0]?.name || producerName
-    })));
+    await searchOnSpotify(unique);
 
   } catch(e) {
     log('Error: ' + e.message, 'err');
