@@ -485,61 +485,55 @@ async function fetchProducerCredits() {
     log('Found: ' + artist.name + ' (MBID: ' + artist.id + ')', 'ok');
 
     // Step 2: Get releases where this artist is credited as PRODUCER
-    // Use release browse with artist relationship filter
+    // Use the correct MB approach: lookup artist with release-rels to find produced releases
     log('Fetching releases produced by ' + artist.name + '...');
     setProgress(5, 'Fetching releases...');
 
     const tracks = [];
     let offset = 0;
     const limit = 25;
-    let total = 1;
+    let totalReleases = 0;
+    let producerReleases = 0;
 
-    while (offset < total && tracks.length < 2000) {
-      // Browse releases linked to this artist via producer relationship
-      const url = `https://musicbrainz.org/ws/2/release?artist=${artist.id}&inc=recordings+artist-rels+recording-level-rels&limit=${limit}&offset=${offset}&fmt=json`;
+    // First get the artist's release relationships to find releases they produced
+    // We need to page through release-groups and check each release for producer rel
+    // Better: use the MusicBrainz search for releases with this artist as producer
+    let mbOffset = 0;
+    let mbTotal = 1;
+
+    while (mbOffset < mbTotal && tracks.length < 3000) {
+      // Query releases that have a producer relationship with this artist
+      // inc=artist-rels gets the relationship data, we filter to producer only
+      const url = `https://musicbrainz.org/ws/2/release?artist=${artist.id}&inc=recordings+artist-rels&limit=${limit}&offset=${mbOffset}&fmt=json`;
       const data = await mbFetch(url);
       await sleep(1100);
 
-      total = data['release-count'] || 0;
+      mbTotal = data['release-count'] || 0;
+      totalReleases = mbTotal;
       const releases = data['releases'] || [];
 
       for (const release of releases) {
-        // Check release-level producer credit
         const releaseRels = release.relations || [];
-        const isReleaseProducer = releaseRels.some(r =>
+        const isProducer = releaseRels.some(r =>
           r.type === 'producer' && r.artist?.id === artist.id
         );
 
-        if (isReleaseProducer) {
-          // Add all tracks from this release
+        if (isProducer) {
+          producerReleases++;
           for (const medium of (release.media || [])) {
             for (const track of (medium.tracks || [])) {
               const title = track.title || track.recording?.title || '';
               const releaseArtist = release['artist-credit']?.[0]?.name || '';
-              if (title) tracks.push({ title, artist: releaseArtist });
-            }
-          }
-        } else {
-          // Check recording-level producer credits
-          for (const medium of (release.media || [])) {
-            for (const track of (medium.tracks || [])) {
-              const recRels = track.recording?.relations || [];
-              const isRecProducer = recRels.some(r =>
-                r.type === 'producer' && r.artist?.id === artist.id
-              );
-              if (isRecProducer) {
-                const title = track.title || track.recording?.title || '';
-                const releaseArtist = release['artist-credit']?.[0]?.name || '';
-                if (title) tracks.push({ title, artist: releaseArtist });
-              }
+              if (title) tracks.push({ title, artist: releaseArtist, release: release.title });
             }
           }
         }
       }
 
-      offset += releases.length;
+      mbOffset += releases.length;
       if (!releases.length) break;
-      setProgress(5 + (offset / Math.max(total, 1)) * 40, `Scanning ${offset}/${total} releases...`);
+      setProgress(5 + (mbOffset / Math.max(mbTotal, 1)) * 40,
+        `Scanned ${mbOffset}/${mbTotal} releases · ${producerReleases} produced · ${tracks.length} tracks`);
     }
 
     // Deduplicate
