@@ -667,19 +667,39 @@ async function searchOnSpotify(tracks) {
 
     try {
       if (track.isAlbum) {
-        // Search for album on Spotify and get all its tracks
-        const q = encodeURIComponent(`album:"${title}" artist:"${artist}"`);
-        const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=album&limit=1`);
-        const album = data.albums?.items?.[0];
-        if (album) {
-          await sleep(150);
-          const albumTracks = await spFetch(`https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50`);
-          for (const t of (albumTracks.items || [])) {
-            found.push({ title: t.name, artist: t.artists.map(a=>a.name).join(', '), uri: t.uri });
-          }
-        } else {
-          missed.push({ title, artist });
+        // Clean up album title — strip everything after = or ( for better matching
+        const cleanTitle = title
+          .replace(/\s*=.*$/, '')           // strip "= Spanish title" etc
+          .replace(/\s*\(The Original.*$/, '') // strip "(The Original Motion Picture...)"
+          .replace(/\s*\[.*?\]/, '')         // strip [remaster] etc
+          .trim();
+        const cleanArtist = artist
+          .replace(/\s*\(\d+\)$/, '')       // strip disambiguation "(2)"
+          .trim();
+
+        // Try album search first
+        let albumFound = false;
+        for (const query of [
+          `album:"${cleanTitle}" artist:"${cleanArtist}"`,
+          `${cleanTitle} ${cleanArtist}`,
+          cleanTitle
+        ]) {
+          try {
+            const data = await spFetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=album&limit=1`);
+            const album = data.albums?.items?.[0];
+            if (album) {
+              await sleep(150);
+              const albumTracks = await spFetch(`https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50`);
+              for (const t of (albumTracks.items || [])) {
+                found.push({ title: t.name, artist: t.artists.map(a=>a.name).join(', '), uri: t.uri });
+              }
+              albumFound = true;
+              break;
+            }
+          } catch(e) {}
+          await sleep(100);
         }
+        if (!albumFound) missed.push({ title: cleanTitle, artist: cleanArtist });
       } else {
         const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
         const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
