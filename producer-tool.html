@@ -584,6 +584,8 @@ async function fetchByArtistRole(name, role) {
   });
 
   log(`Found ${unique.length} tracks across ${creditedReleases} ${role} releases on Discogs`, unique.length > 0 ? 'ok' : 'err');
+  // Debug: show first 3 entries
+  unique.slice(0, 3).forEach(t => log(`Sample: "${t.title}" by "${t.artist}"`));
   document.getElementById('statDiscogs').textContent = unique.length;
 
   if (!unique.length) {
