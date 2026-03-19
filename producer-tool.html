@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Vault — Producer Tool</title>
+<title>The Vault — Credits Tool</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap');
 
@@ -294,8 +294,8 @@
 
 <header>
   <div class="eyebrow">The Vault · Curator Tools</div>
-  <h1>Produced by<br><em>Quincy Jones</em></h1>
-  <p class="subtitle">Fetches Quincy Jones' producer credits from MusicBrainz, searches each track on Spotify, and creates a playlist.</p>
+  <h1>The Vault<br><em>Credits Tool</em></h1>
+  <p class="subtitle">Search Discogs for any producer, songwriter, or record label — finds their credited releases, searches each track on Spotify, and creates a playlist.</p>
 </header>
 
 <div class="container">
@@ -312,10 +312,17 @@
 
   <!-- Producer Search -->
   <div class="card">
-    <div class="card-label">02 · Producer</div>
-    <div class="input-row">
-      <input type="text" id="producerInput" value="Quincy Jones" placeholder="Producer name">
-      <button class="btn btn-gold" id="fetchBtn" onclick="fetchProducerCredits()">Fetch Credits</button>
+    <div class="card-label">02 · Search</div>
+    <div class="input-row" style="margin-bottom:0.75rem">
+      <input type="text" id="producerInput" value="Quincy Jones" placeholder="Name or label...">
+      <select id="roleSelect" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:0.85rem;padding:0.65rem 0.75rem;border-radius:2px;cursor:pointer">
+        <option value="Producer">Producer</option>
+        <option value="Written-By">Songwriter</option>
+        <option value="label">Record Label</option>
+        <option value="Arranged By">Arranger</option>
+        <option value="Conductor">Conductor</option>
+      </select>
+      <button class="btn btn-gold" id="fetchBtn" onclick="fetchCredits()">Fetch Credits</button>
     </div>
     <div class="progress-wrap" id="progressWrap">
       <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -329,8 +336,8 @@
     <div class="card-label">03 · Results</div>
     <div class="result-stats">
       <div class="stat">
-        <div class="stat-num" id="statMB">0</div>
-        <div class="stat-label">MusicBrainz credits</div>
+        <div class="stat-num" id="statDiscogs">0</div>
+        <div class="stat-label">Discogs credits</div>
       </div>
       <div class="stat">
         <div class="stat-num" id="statFound">0</div>
@@ -436,14 +443,18 @@ async function spFetch(url, opts = {}) {
   return res.json();
 }
 
-// ── MusicBrainz ──────────────────────────────────────────────────────────────
-const MB_UA = 'TheVaultProducerTool/1.0 (music-community-app)';
+// ── Discogs ──────────────────────────────────────────────────────────────────
+const DISCOGS_UA = 'TheVaultCreditsTool/1.0';
+const DISCOGS_KEY = ''; // Optional — works without key at lower rate limit
 
-async function mbFetch(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': MB_UA, 'Accept': 'application/json' } });
-  if (res.status === 503 || res.status === 429) {
-    await sleep(2000);
-    return mbFetch(url);
+async function discogsFetch(url) {
+  const headers = { 'User-Agent': DISCOGS_UA };
+  if (DISCOGS_KEY) headers['Authorization'] = 'Discogs key=' + DISCOGS_KEY;
+  const res = await fetch(url, { headers });
+  if (res.status === 429) {
+    log('Rate limited by Discogs — waiting 10s...');
+    await sleep(10000);
+    return discogsFetch(url);
   }
   return res.json();
 }
@@ -459,104 +470,24 @@ function log(msg, type = '') {
   el.scrollTop = el.scrollHeight;
 }
 
-// ── Main fetch flow ──────────────────────────────────────────────────────────
-let foundTracks = []; // { title, artist, spotifyUri }
-
-async function fetchProducerCredits() {
-  const producerName = document.getElementById('producerInput').value.trim();
-  if (!producerName) return;
+async function fetchCredits() {
+  const name = document.getElementById('producerInput').value.trim();
+  const role = document.getElementById('roleSelect').value;
+  if (!name) return;
 
   foundTracks = [];
   document.getElementById('progressWrap').style.display = 'block';
   document.getElementById('resultsCard').style.display = 'none';
   document.getElementById('log').innerHTML = '';
   document.getElementById('fetchBtn').disabled = true;
+  setProgress(2, 'Searching Discogs...');
 
   try {
-    // Step 1: Find artist MBID
-    log('Searching MusicBrainz for "' + producerName + '"...');
-    const searchRes = await mbFetch(
-      'https://musicbrainz.org/ws/2/artist/?query=' + encodeURIComponent(producerName) + '&limit=5&fmt=json'
-    );
-    await sleep(1100);
-
-    const artist = searchRes.artists?.find(a => a.score >= 85);
-    if (!artist) { log('Artist not found in MusicBrainz', 'err'); return; }
-    log('Found: ' + artist.name + ' (MBID: ' + artist.id + ')', 'ok');
-
-    // Step 2: Get releases where this artist is credited as PRODUCER
-    // Use the correct MB approach: lookup artist with release-rels to find produced releases
-    log('Fetching releases produced by ' + artist.name + '...');
-    setProgress(5, 'Fetching releases...');
-
-    const tracks = [];
-    let offset = 0;
-    const limit = 25;
-    let totalReleases = 0;
-    let producerReleases = 0;
-
-    // First get the artist's release relationships to find releases they produced
-    // We need to page through release-groups and check each release for producer rel
-    // Better: use the MusicBrainz search for releases with this artist as producer
-    let mbOffset = 0;
-    let mbTotal = 1;
-
-    while (mbOffset < mbTotal && tracks.length < 3000) {
-      // Query releases that have a producer relationship with this artist
-      // inc=artist-rels gets the relationship data, we filter to producer only
-      const url = `https://musicbrainz.org/ws/2/release?artist=${artist.id}&inc=recordings+artist-rels&limit=${limit}&offset=${mbOffset}&fmt=json`;
-      const data = await mbFetch(url);
-      await sleep(1100);
-
-      mbTotal = data['release-count'] || 0;
-      totalReleases = mbTotal;
-      const releases = data['releases'] || [];
-
-      for (const release of releases) {
-        const releaseRels = release.relations || [];
-        const isProducer = releaseRels.some(r =>
-          r.type === 'producer' && r.artist?.id === artist.id
-        );
-
-        if (isProducer) {
-          producerReleases++;
-          for (const medium of (release.media || [])) {
-            for (const track of (medium.tracks || [])) {
-              const title = track.title || track.recording?.title || '';
-              const releaseArtist = release['artist-credit']?.[0]?.name || '';
-              if (title) tracks.push({ title, artist: releaseArtist, release: release.title });
-            }
-          }
-        }
-      }
-
-      mbOffset += releases.length;
-      if (!releases.length) break;
-      setProgress(5 + (mbOffset / Math.max(mbTotal, 1)) * 40,
-        `Scanned ${mbOffset}/${mbTotal} releases · ${producerReleases} produced · ${tracks.length} tracks`);
+    if (role === 'label') {
+      await fetchByLabel(name);
+    } else {
+      await fetchByArtistRole(name, role);
     }
-
-    // Deduplicate
-    const seen = new Set();
-    const unique = tracks.filter(t => {
-      const key = t.title.toLowerCase() + '|' + t.artist.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    log(`Found ${unique.length} produced tracks in MusicBrainz (from ${total} releases)`, unique.length > 0 ? 'ok' : 'err');
-    document.getElementById('statMB').textContent = unique.length;
-
-    if (!unique.length) {
-      log('No producer credits found. MusicBrainz may not have credits tagged for this producer.', 'err');
-      document.getElementById('fetchBtn').disabled = false;
-      return;
-    }
-
-    // Step 3: Search each on Spotify
-    await searchOnSpotify(unique);
-
   } catch(e) {
     log('Error: ' + e.message, 'err');
   } finally {
@@ -564,45 +495,147 @@ async function fetchProducerCredits() {
   }
 }
 
-async function fetchViaReleases(artist) {
-  // Get releases where artist is producer
-  log('Fetching releases with producer credits...');
-  const releases = [];
-  let offset = 0;
-  const limit = 25;
-  let total = 1;
+async function fetchByArtistRole(name, role) {
+  // Step 1: Find artist on Discogs
+  log('Searching Discogs for "' + name + '"...');
+  const searchRes = await discogsFetch(
+    'https://api.discogs.com/database/search?q=' + encodeURIComponent(name) + '&type=artist&per_page=5'
+  );
+  await sleep(1100);
 
-  while (offset < total && releases.length < 500) {
-    const url = `https://musicbrainz.org/ws/2/release?artist=${artist.id}&inc=recordings+artist-rels&limit=${limit}&offset=${offset}&fmt=json`;
-    const data = await mbFetch(url);
+  const artist = searchRes.results?.[0];
+  if (!artist) { log('Artist not found on Discogs', 'err'); return; }
+  log('Found: ' + artist.title + ' (ID: ' + artist.id + ')', 'ok');
+
+  // Step 2: Get artist's releases
+  log('Fetching ' + role + ' credits from Discogs...');
+  const tracks = [];
+  let page = 1;
+  let totalPages = 1;
+  let totalReleases = 0;
+  let creditedReleases = 0;
+
+  while (page <= totalPages && tracks.length < 3000) {
+    const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
+    const data = await discogsFetch(url);
     await sleep(1100);
 
-    total = data['release-count'] || 0;
-    const rels = data['releases'] || [];
+    totalPages = data.pagination?.pages || 1;
+    totalReleases = data.pagination?.items || 0;
+    const releases = data.releases || [];
 
-    for (const release of rels) {
-      const artistRels = release.relations || [];
-      const isProducer = artistRels.some(r => r.type === 'producer' && r.artist?.id === artist.id);
-      if (isProducer) {
-        for (const medium of (release.media || [])) {
-          for (const track of (medium.tracks || [])) {
-            releases.push({
-              title: track.title || track.recording?.title,
-              artist: release['artist-credit']?.[0]?.name || artist.name
-            });
+    for (const release of releases) {
+      // Check if this is credited as the right role
+      // Discogs release list shows role as 'role' field
+      if (release.role && release.role.includes(role)) {
+        creditedReleases++;
+        // Get full release details for tracklist
+        try {
+          const releaseData = await discogsFetch(
+            `https://api.discogs.com/releases/${release.id}`
+          );
+          await sleep(1100);
+
+          const releaseArtist = releaseData.artists_sort || releaseData.artists?.[0]?.name || '';
+          for (const track of (releaseData.tracklist || [])) {
+            if (track.type_ === 'track' && track.title) {
+              tracks.push({
+                title: track.title,
+                artist: releaseArtist,
+                release: releaseData.title,
+                year: releaseData.year
+              });
+            }
           }
+        } catch(e) {
+          // Skip release if fetch fails
         }
       }
     }
 
-    offset += rels.length;
-    if (!rels.length) break;
-    setProgress(5 + (offset / Math.max(total, 1)) * 40, `Scanning ${offset}/${total} releases...`);
+    page++;
+    setProgress(5 + (page / Math.max(totalPages, 1)) * 45,
+      `Page ${page-1}/${totalPages} · ${creditedReleases} ${role} releases · ${tracks.length} tracks`);
   }
 
-  log(`Found ${releases.length} tracks via releases`, releases.length > 0 ? 'ok' : 'err');
-  document.getElementById('statMB').textContent = releases.length;
-  if (releases.length) await searchOnSpotify(releases);
+  // Deduplicate
+  const seen = new Set();
+  const unique = tracks.filter(t => {
+    const key = t.title.toLowerCase() + '|' + t.artist.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  log(`Found ${unique.length} tracks across ${creditedReleases} ${role} releases on Discogs`, unique.length > 0 ? 'ok' : 'err');
+  document.getElementById('statDiscogs').textContent = unique.length;
+
+  if (!unique.length) {
+    log('No ' + role + ' credits found on Discogs for ' + name, 'err');
+    return;
+  }
+
+  // Update playlist name
+  document.getElementById('playlistName').value = `The Vault — ${role} by ${name}`;
+  await searchOnSpotify(unique);
+}
+
+async function fetchByLabel(labelName) {
+  // Search for label
+  log('Searching Discogs for label "' + labelName + '"...');
+  const searchRes = await discogsFetch(
+    'https://api.discogs.com/database/search?q=' + encodeURIComponent(labelName) + '&type=label&per_page=5'
+  );
+  await sleep(1100);
+
+  const label = searchRes.results?.[0];
+  if (!label) { log('Label not found on Discogs', 'err'); return; }
+  log('Found: ' + label.title + ' (ID: ' + label.id + ')', 'ok');
+
+  // Get label releases
+  const tracks = [];
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages && tracks.length < 2000) {
+    const url = `https://api.discogs.com/labels/${label.id}/releases?per_page=100&page=${page}`;
+    const data = await discogsFetch(url);
+    await sleep(1100);
+
+    totalPages = data.pagination?.pages || 1;
+    const releases = data.releases || [];
+
+    // Sample releases (every 3rd to avoid too many API calls)
+    for (let i = 0; i < releases.length; i += 3) {
+      const release = releases[i];
+      try {
+        const releaseData = await discogsFetch(`https://api.discogs.com/releases/${release.id}`);
+        await sleep(1100);
+        const releaseArtist = releaseData.artists_sort || '';
+        for (const track of (releaseData.tracklist || [])) {
+          if (track.type_ === 'track' && track.title) {
+            tracks.push({ title: track.title, artist: releaseArtist, release: releaseData.title });
+          }
+        }
+      } catch(e) {}
+    }
+
+    page++;
+    setProgress(5 + (page / Math.max(totalPages, 1)) * 45, `Page ${page-1}/${totalPages} · ${tracks.length} tracks`);
+  }
+
+  const seen = new Set();
+  const unique = tracks.filter(t => {
+    const key = t.title.toLowerCase() + '|' + t.artist.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  log(`Found ${unique.length} tracks from label ${labelName}`, unique.length > 0 ? 'ok' : 'err');
+  document.getElementById('statDiscogs').textContent = unique.length;
+  document.getElementById('playlistName').value = `The Vault — ${labelName} Label`;
+  if (unique.length) await searchOnSpotify(unique);
 }
 
 async function searchOnSpotify(tracks) {
