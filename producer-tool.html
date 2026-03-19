@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Vault — Producer Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0806;
+    --surface: #110e0b;
+    --border: #2a2018;
+    --gold: #c8943a;
+    --gold-dim: #7a5820;
+    --sp: #1db954;
+    --text: #e8ddd0;
+    --muted: #6b5c48;
+    --red: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* Vinyl record background decoration */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    border: 40px solid #1a1208;
+    box-shadow: 0 0 0 20px #130f08, 0 0 0 40px #1a1208, 0 0 0 60px #110e08, 0 0 0 80px #1a1208;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  header {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+  }
+
+  .eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+
+  h1 em {
+    color: var(--gold);
+    font-style: normal;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 500px;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 1rem;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus { border-color: var(--gold); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 0.65rem 1.25rem;
+    border-radius: 2px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:not(:disabled):hover { opacity: 0.85; }
+
+  .btn-gold { background: var(--gold); color: #0a0806; font-weight: 500; }
+  .btn-sp { background: var(--sp); color: #000; font-weight: 500; }
+  .btn-outline { background: none; border: 1px solid var(--border); color: var(--text); }
+
+  .sp-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .sp-status {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .sp-status.connected { color: var(--sp); }
+
+  /* Progress */
+  .progress-wrap {
+    margin-top: 1rem;
+    display: none;
+  }
+
+  .progress-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--gold);
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-text {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    margin-top: 1rem;
+  }
+
+  .result-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .track-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+
+  .track-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+
+  .track-item:last-child { border-bottom: none; }
+  .track-item:hover { background: rgba(200, 148, 58, 0.04); }
+
+  .track-num {
+    color: var(--muted);
+    width: 2.5rem;
+    text-align: right;
+    flex-shrink: 0;
+    font-size: 0.65rem;
+  }
+
+  .track-info { flex: 1; min-width: 0; }
+  .track-title { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-artist { color: var(--muted); font-size: 0.67rem; margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .track-badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .badge-found { background: rgba(29,185,84,0.15); color: var(--sp); }
+  .badge-miss { background: rgba(192,57,43,0.15); color: #e74c3c; }
+
+  .action-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .playlist-name-input {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .log {
+    margin-top: 0.75rem;
+    font-size: 0.65rem;
+    color: var(--muted);
+    max-height: 80px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+
+  .log-line { color: var(--muted); }
+  .log-line.ok { color: var(--sp); }
+  .log-line.err { color: #e74c3c; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">The Vault · Curator Tools</div>
+  <h1>Produced by<br><em>Quincy Jones</em></h1>
+  <p class="subtitle">Fetches Quincy Jones' producer credits from MusicBrainz, searches each track on Spotify, and creates a playlist.</p>
+</header>
+
+<div class="container">
+
+  <!-- Spotify Auth -->
+  <div class="card">
+    <div class="card-label">01 · Spotify</div>
+    <div class="sp-row">
+      <input type="text" id="clientId" placeholder="Spotify Client ID" style="max-width:280px">
+      <button class="btn btn-sp" onclick="connectSpotify()">Connect Spotify</button>
+      <span class="sp-status" id="spStatus">Not connected</span>
+    </div>
+  </div>
+
+  <!-- Producer Search -->
+  <div class="card">
+    <div class="card-label">02 · Producer</div>
+    <div class="input-row">
+      <input type="text" id="producerInput" value="Quincy Jones" placeholder="Producer name">
+      <button class="btn btn-gold" id="fetchBtn" onclick="fetchProducerCredits()">Fetch Credits</button>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">Starting...</div>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="card results" id="resultsCard">
+    <div class="card-label">03 · Results</div>
+    <div class="result-stats">
+      <div class="stat">
+        <div class="stat-num" id="statMB">0</div>
+        <div class="stat-label">MusicBrainz credits</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="statFound">0</div>
+        <div class="stat-label">Found on Spotify</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="statMiss">0</div>
+        <div class="stat-label">Not found</div>
+      </div>
+    </div>
+    <div class="track-list" id="trackList"></div>
+    <div class="action-row">
+      <input type="text" id="playlistName" class="playlist-name-input" placeholder="Playlist name" value="The Vault — Produced by Quincy Jones">
+      <button class="btn btn-sp" id="createBtn" onclick="createPlaylist()" disabled>◎ Create Spotify Playlist</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Spotify Auth (PKCE) ──────────────────────────────────────────────────────
+let spToken = null;
+let spUserId = null;
+
+function loadClientId() {
+  const stored = localStorage.getItem('sp_client_id');
+  if (stored) document.getElementById('clientId').value = stored;
+}
+
+async function connectSpotify() {
+  const clientId = document.getElementById('clientId').value.trim();
+  if (!clientId) { alert('Enter your Spotify Client ID first'); return; }
+  localStorage.setItem('sp_client_id', clientId);
+
+  // Check if we're returning from auth
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('code')) {
+    await handleCallback(clientId, params.get('code'));
+    return;
+  }
+
+  // Generate PKCE
+  const verifier = generateVerifier();
+  sessionStorage.setItem('pkce_verifier', verifier);
+  const challenge = await generateChallenge(verifier);
+  const state = Math.random().toString(36).slice(2);
+  sessionStorage.setItem('pkce_state', state);
+
+  const authUrl = new URL('https://accounts.spotify.com/authorize');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('redirect_uri', window.location.href.split('?')[0]);
+  authUrl.searchParams.set('scope', 'playlist-modify-public playlist-modify-private');
+  authUrl.searchParams.set('code_challenge_method', 'S256');
+  authUrl.searchParams.set('code_challenge', challenge);
+  authUrl.searchParams.set('state', state);
+  window.location = authUrl.toString();
+}
+
+async function handleCallback(clientId, code) {
+  const verifier = sessionStorage.getItem('pkce_verifier');
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: window.location.href.split('?')[0],
+      client_id: clientId,
+      code_verifier: verifier
+    })
+  });
+  const data = await res.json();
+  if (data.access_token) {
+    spToken = data.access_token;
+    window.history.replaceState({}, '', window.location.pathname);
+    const me = await spFetch('https://api.spotify.com/v1/me');
+    spUserId = me.id;
+    document.getElementById('spStatus').textContent = '✓ Connected as ' + me.display_name;
+    document.getElementById('spStatus').className = 'sp-status connected';
+  }
+}
+
+function generateVerifier() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function generateChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function spFetch(url, opts = {}) {
+  const res = await fetch(url, {
+    ...opts,
+    headers: { 'Authorization': 'Bearer ' + spToken, 'Content-Type': 'application/json', ...(opts.headers||{}) }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  if (res.status === 204) return {};
+  return res.json();
+}
+
+// ── MusicBrainz ──────────────────────────────────────────────────────────────
+const MB_UA = 'TheVaultProducerTool/1.0 (music-community-app)';
+
+async function mbFetch(url) {
+  const res = await fetch(url, { headers: { 'User-Agent': MB_UA, 'Accept': 'application/json' } });
+  if (res.status === 503 || res.status === 429) {
+    await sleep(2000);
+    return mbFetch(url);
+  }
+  return res.json();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function log(msg, type = '') {
+  const el = document.getElementById('log');
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── Main fetch flow ──────────────────────────────────────────────────────────
+let foundTracks = []; // { title, artist, spotifyUri }
+
+async function fetchProducerCredits() {
+  const producerName = document.getElementById('producerInput').value.trim();
+  if (!producerName) return;
+
+  foundTracks = [];
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('fetchBtn').disabled = true;
+
+  try {
+    // Step 1: Find artist MBID
+    log('Searching MusicBrainz for "' + producerName + '"...');
+    const searchRes = await mbFetch(
+      'https://musicbrainz.org/ws/2/artist/?query=' + encodeURIComponent(producerName) + '&limit=5&fmt=json'
+    );
+    await sleep(1100);
+
+    const artist = searchRes.artists?.find(a => a.score >= 85);
+    if (!artist) { log('Artist not found in MusicBrainz', 'err'); return; }
+    log('Found: ' + artist.name + ' (MBID: ' + artist.id + ')', 'ok');
+
+    // Step 2: Get all recordings where this artist is credited as producer
+    // We browse releases where artist has producer relationship
+    log('Fetching producer credits (this takes a few minutes)...');
+    setProgress(5, 'Fetching recordings...');
+
+    const recordings = [];
+    let offset = 0;
+    const limit = 100;
+    let total = 1;
+
+    while (offset < total && offset < 2000) {
+      const url = `https://musicbrainz.org/ws/2/recording?artist=${artist.id}&inc=artist-rels&limit=${limit}&offset=${offset}&fmt=json`;
+      const data = await mbFetch(url);
+      await sleep(1100);
+
+      total = data['recording-count'] || 0;
+      const recs = data['recordings'] || [];
+
+      for (const rec of recs) {
+        // Check if this artist has a producer relationship on this recording
+        const rels = rec.relations || [];
+        const isProducer = rels.some(r =>
+          r.type === 'producer' && r.artist?.id === artist.id
+        );
+        if (isProducer) recordings.push(rec);
+      }
+
+      offset += recs.length;
+      if (!recs.length) break;
+      setProgress(5 + (offset / Math.max(total, 1)) * 40, `Scanning ${offset}/${total} recordings...`);
+    }
+
+    log(`Found ${recordings.length} produced recordings in MusicBrainz`, recordings.length > 0 ? 'ok' : 'err');
+    document.getElementById('statMB').textContent = recordings.length;
+
+    if (!recordings.length) {
+      // Try alternative: browse releases with producer relationship
+      log('Trying release-level producer credits...');
+      await fetchViaReleases(artist);
+      return;
+    }
+
+    // Step 3: Search each on Spotify
+    await searchOnSpotify(recordings.map(r => ({
+      title: r.title,
+      artist: r['artist-credit']?.[0]?.name || producerName
+    })));
+
+  } catch(e) {
+    log('Error: ' + e.message, 'err');
+  } finally {
+    document.getElementById('fetchBtn').disabled = false;
+  }
+}
+
+async function fetchViaReleases(artist) {
+  // Get releases where artist is producer
+  log('Fetching releases with producer credits...');
+  const releases = [];
+  let offset = 0;
+  const limit = 25;
+  let total = 1;
+
+  while (offset < total && releases.length < 500) {
+    const url = `https://musicbrainz.org/ws/2/release?artist=${artist.id}&inc=recordings+artist-rels&limit=${limit}&offset=${offset}&fmt=json`;
+    const data = await mbFetch(url);
+    await sleep(1100);
+
+    total = data['release-count'] || 0;
+    const rels = data['releases'] || [];
+
+    for (const release of rels) {
+      const artistRels = release.relations || [];
+      const isProducer = artistRels.some(r => r.type === 'producer' && r.artist?.id === artist.id);
+      if (isProducer) {
+        for (const medium of (release.media || [])) {
+          for (const track of (medium.tracks || [])) {
+            releases.push({
+              title: track.title || track.recording?.title,
+              artist: release['artist-credit']?.[0]?.name || artist.name
+            });
+          }
+        }
+      }
+    }
+
+    offset += rels.length;
+    if (!rels.length) break;
+    setProgress(5 + (offset / Math.max(total, 1)) * 40, `Scanning ${offset}/${total} releases...`);
+  }
+
+  log(`Found ${releases.length} tracks via releases`, releases.length > 0 ? 'ok' : 'err');
+  document.getElementById('statMB').textContent = releases.length;
+  if (releases.length) await searchOnSpotify(releases);
+}
+
+async function searchOnSpotify(tracks) {
+  if (!spToken) { log('Connect Spotify first to search tracks', 'err'); showResults(); return; }
+
+  log('Searching ' + tracks.length + ' tracks on Spotify...');
+  const found = [];
+  const missed = [];
+
+  for (let i = 0; i < tracks.length; i++) {
+    const { title, artist } = tracks[i];
+    setProgress(45 + (i / tracks.length) * 50, `Spotify search: ${i+1}/${tracks.length}`);
+
+    try {
+      const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
+      const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
+      const item = data.tracks?.items?.[0];
+      if (item) {
+        found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
+      } else {
+        // Try simpler search
+        const q2 = encodeURIComponent(title + ' ' + artist);
+        const data2 = await spFetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=1`);
+        const item2 = data2.tracks?.items?.[0];
+        if (item2) {
+          found.push({ title: item2.name, artist: item2.artists.map(a=>a.name).join(', '), uri: item2.uri });
+        } else {
+          missed.push({ title, artist });
+        }
+      }
+    } catch(e) {
+      missed.push({ title, artist });
+    }
+
+    await sleep(150);
+  }
+
+  foundTracks = found;
+  log(`Spotify: ${found.length} found, ${missed.length} not found`, 'ok');
+  document.getElementById('statFound').textContent = found.length;
+  document.getElementById('statMiss').textContent = missed.length;
+
+  setProgress(100, 'Done!');
+  showResults(found, missed);
+}
+
+function showResults(found = [], missed = []) {
+  document.getElementById('resultsCard').style.display = 'block';
+  document.getElementById('createBtn').disabled = found.length === 0;
+
+  const list = document.getElementById('trackList');
+  const allTracks = [
+    ...found.map(t => ({ ...t, found: true })),
+    ...missed.map(t => ({ ...t, found: false }))
+  ];
+
+  list.innerHTML = allTracks.map((t, i) => `
+    <div class="track-item">
+      <div class="track-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="track-info">
+        <div class="track-title">${t.title}</div>
+        <div class="track-artist">${t.artist}</div>
+      </div>
+      <span class="track-badge ${t.found ? 'badge-found' : 'badge-miss'}">${t.found ? '✓' : '✗'}</span>
+    </div>
+  `).join('');
+}
+
+async function createPlaylist() {
+  if (!spToken || !foundTracks.length) return;
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true;
+  btn.textContent = '…creating';
+
+  try {
+    const name = document.getElementById('playlistName').value || 'The Vault — Producer Playlist';
+    const pl = await spFetch('https://api.spotify.com/v1/me/playlists', {
+      method: 'POST',
+      body: JSON.stringify({ name, description: 'Created by The Vault Producer Tool', public: true })
+    });
+
+    const uris = [...new Set(foundTracks.map(t => t.uri))];
+    const BATCH = 100;
+    for (let i = 0; i < uris.length; i += BATCH) {
+      await spFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+        method: 'POST',
+        body: JSON.stringify({ uris: uris.slice(i, i + BATCH) })
+      });
+      btn.textContent = `…${Math.min(i+BATCH, uris.length)}/${uris.length}`;
+      await sleep(500);
+    }
+
+    btn.textContent = '✓ Open Playlist';
+    btn.style.background = '#c8943a';
+    btn.disabled = false;
+    btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank');
+    log(`✓ Created "${name}" with ${uris.length} tracks!`, 'ok');
+  } catch(e) {
+    btn.textContent = '◎ Create Spotify Playlist';
+    btn.disabled = false;
+    log('Error creating playlist: ' + e.message, 'err');
+  }
+}
+
+function setProgress(pct, text) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = text;
+}
+
+// Init
+loadClientId();
+
+// Handle Spotify callback on page load
+window.addEventListener('load', async () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('code')) {
+    const clientId = localStorage.getItem('sp_client_id');
+    if (clientId) await handleCallback(clientId, params.get('code'));
+  }
+});
+</script>
+</body>
+</html>
