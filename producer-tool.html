@@ -314,6 +314,9 @@
   <div class="card">
     <div class="card-label">02 · Search</div>
     <div class="input-row" style="margin-bottom:0.75rem">
+      <input type="text" id="discogsToken" placeholder="Discogs personal token (optional but recommended)" style="flex:1" oninput="localStorage.setItem('discogs_token',this.value)">
+    </div>
+    <div class="input-row" style="margin-bottom:0.75rem">
       <input type="text" id="producerInput" value="Quincy Jones" placeholder="Name or label...">
       <select id="roleSelect" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:0.85rem;padding:0.65rem 0.75rem;border-radius:2px;cursor:pointer">
         <option value="Producer">Producer</option>
@@ -445,20 +448,38 @@ async function spFetch(url, opts = {}) {
 
 // ── Discogs ──────────────────────────────────────────────────────────────────
 const DISCOGS_UA = 'TheVaultCreditsTool/1.0';
-const DISCOGS_KEY = ''; // Optional — works without key at lower rate limit
+let DISCOGS_KEY = localStorage.getItem('discogs_token') || '';
 
-async function discogsFetch(url) {
+async function discogsFetch(url, retries = 3) {
   // Route through CORS proxy to handle Discogs CORS restrictions
   const proxy = 'https://corsproxy.io/?';
+  DISCOGS_KEY = document.getElementById('discogsToken')?.value || localStorage.getItem('discogs_token') || '';
   const fullUrl = DISCOGS_KEY ? url + (url.includes('?') ? '&' : '?') + 'token=' + DISCOGS_KEY : url;
-  const res = await fetch(proxy + encodeURIComponent(fullUrl));
-  if (res.status === 429) {
-    log('Rate limited — waiting 10s...');
-    await sleep(10000);
-    return discogsFetch(url);
+  try {
+    const res = await fetch(proxy + encodeURIComponent(fullUrl));
+    if (res.status === 429) {
+      log('Rate limited — waiting 15s...');
+      await sleep(15000);
+      return discogsFetch(url, retries);
+    }
+    if (res.status === 503 || res.status === 502) {
+      if (retries > 0) {
+        log('Proxy error, retrying in 5s...');
+        await sleep(5000);
+        return discogsFetch(url, retries - 1);
+      }
+      throw new Error('Proxy unavailable after retries');
+    }
+    if (!res.ok) throw new Error('Fetch error: ' + res.status);
+    return res.json();
+  } catch(e) {
+    if (retries > 0 && e.message.includes('fetch')) {
+      log('Network error, retrying in 5s...');
+      await sleep(5000);
+      return discogsFetch(url, retries - 1);
+    }
+    throw e;
   }
-  if (!res.ok) throw new Error('Fetch error: ' + res.status);
-  return res.json();
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -503,7 +524,7 @@ async function fetchByArtistRole(name, role) {
   const searchRes = await discogsFetch(
     'https://api.discogs.com/database/search?q=' + encodeURIComponent(name) + '&type=artist&per_page=5'
   );
-  await sleep(1100);
+  await sleep(1500);
 
   const artist = searchRes.results?.[0];
   if (!artist) { log('Artist not found on Discogs', 'err'); return; }
@@ -520,7 +541,7 @@ async function fetchByArtistRole(name, role) {
   while (page <= totalPages && tracks.length < 3000) {
     const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
     const data = await discogsFetch(url);
-    await sleep(1100);
+    await sleep(1500);
 
     totalPages = data.pagination?.pages || 1;
     totalReleases = data.pagination?.items || 0;
@@ -581,7 +602,7 @@ async function fetchByLabel(labelName) {
   const searchRes = await discogsFetch(
     'https://api.discogs.com/database/search?q=' + encodeURIComponent(labelName) + '&type=label&per_page=5'
   );
-  await sleep(1100);
+  await sleep(1500);
 
   const label = searchRes.results?.[0];
   if (!label) { log('Label not found on Discogs', 'err'); return; }
@@ -595,7 +616,7 @@ async function fetchByLabel(labelName) {
   while (page <= totalPages && tracks.length < 2000) {
     const url = `https://api.discogs.com/labels/${label.id}/releases?per_page=100&page=${page}`;
     const data = await discogsFetch(url);
-    await sleep(1100);
+    await sleep(1500);
 
     totalPages = data.pagination?.pages || 1;
     const releases = data.releases || [];
@@ -605,7 +626,7 @@ async function fetchByLabel(labelName) {
       const release = releases[i];
       try {
         const releaseData = await discogsFetch(`https://api.discogs.com/releases/${release.id}`);
-        await sleep(1100);
+        await sleep(1500);
         const releaseArtist = releaseData.artists_sort || '';
         for (const track of (releaseData.tracklist || [])) {
           if (track.type_ === 'track' && track.title) {
@@ -757,6 +778,11 @@ function setProgress(pct, text) {
 
 // Init
 loadClientId();
+// Load saved Discogs token
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('discogs_token');
+  if (saved) document.getElementById('discogsToken').value = saved;
+});
 
 // Handle Spotify callback on page load
 window.addEventListener('load', async () => {
