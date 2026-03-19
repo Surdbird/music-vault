@@ -531,26 +531,19 @@ async function fetchByArtistRole(name, role) {
       // Discogs release list shows role as 'role' field
       if (release.role && release.role.includes(role)) {
         creditedReleases++;
-        // Get full release details for tracklist
-        try {
-          const releaseData = await discogsFetch(
-            `https://api.discogs.com/releases/${release.id}`
-          );
-          await sleep(1100);
-
-          const releaseArtist = releaseData.artists_sort || releaseData.artists?.[0]?.name || '';
-          for (const track of (releaseData.tracklist || [])) {
-            if (track.type_ === 'track' && track.title) {
-              tracks.push({
-                title: track.title,
-                artist: releaseArtist,
-                release: releaseData.title,
-                year: releaseData.year
-              });
-            }
-          }
-        } catch(e) {
-          // Skip release if fetch fails
+        // Use artist + title from listing to search Spotify — avoids extra API calls
+        const releaseArtist = release.artist || '';
+        const releaseTitle = release.title || '';
+        if (releaseTitle) {
+          // Add release as a single search entry (artist + album title)
+          // Spotify will find the most popular track from it
+          tracks.push({
+            title: releaseTitle,
+            artist: releaseArtist.replace(/\s*\(\d+\)$/, '').trim(), // strip discogs "(2)" disambiguation
+            release: releaseTitle,
+            year: release.year,
+            isAlbum: true
+          });
         }
       }
     }
@@ -652,20 +645,35 @@ async function searchOnSpotify(tracks) {
     setProgress(45 + (i / tracks.length) * 50, `Spotify search: ${i+1}/${tracks.length}`);
 
     try {
-      const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
-      const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
-      const item = data.tracks?.items?.[0];
-      if (item) {
-        found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
-      } else {
-        // Try simpler search
-        const q2 = encodeURIComponent(title + ' ' + artist);
-        const data2 = await spFetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=1`);
-        const item2 = data2.tracks?.items?.[0];
-        if (item2) {
-          found.push({ title: item2.name, artist: item2.artists.map(a=>a.name).join(', '), uri: item2.uri });
+      if (track.isAlbum) {
+        // Search for album on Spotify and get all its tracks
+        const q = encodeURIComponent(`album:"${title}" artist:"${artist}"`);
+        const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=album&limit=1`);
+        const album = data.albums?.items?.[0];
+        if (album) {
+          await sleep(150);
+          const albumTracks = await spFetch(`https://api.spotify.com/v1/albums/${album.id}/tracks?limit=50`);
+          for (const t of (albumTracks.items || [])) {
+            found.push({ title: t.name, artist: t.artists.map(a=>a.name).join(', '), uri: t.uri });
+          }
         } else {
           missed.push({ title, artist });
+        }
+      } else {
+        const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
+        const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
+        const item = data.tracks?.items?.[0];
+        if (item) {
+          found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
+        } else {
+          const q2 = encodeURIComponent(title + ' ' + artist);
+          const data2 = await spFetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=1`);
+          const item2 = data2.tracks?.items?.[0];
+          if (item2) {
+            found.push({ title: item2.name, artist: item2.artists.map(a=>a.name).join(', '), uri: item2.uri });
+          } else {
+            missed.push({ title, artist });
+          }
         }
       }
     } catch(e) {
