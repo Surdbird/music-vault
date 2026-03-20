@@ -671,14 +671,17 @@ async function searchOnSpotify(tracks) {
       if (track.isAlbum) {
         // Clean title — strip slash alternates, strip after =
         const cleanTitle = title
-          .replace(/\s*\/.*$/, '')          // strip "/ (Main Theme From) Exodus"
+          .replace(/^\d+\s*[-–]\s*/, '')    // strip "6 - " track number prefix
+          .replace(/\s*\/.*$/, '')           // strip "/ (Main Theme From) Exodus"
           .replace(/\s*=.*$/, '')            // strip "= Spanish title"
-          .replace(/\s*\[.*?\]/, '')        // strip [remaster]
+          .replace(/\s*\[.*?\]/, '')         // strip [remaster]
+          .replace(/\s*\(.*?Version.*?\)/i, '') // strip (Live Version) etc
           .trim();
         const cleanArtist = artist
-          .replace(/\s*\(\d+\)$/, '')      // strip "(2)"
-          .replace(/\s*(Et Son Orchestre|And His Orchestra|And His Band).*$/i, '')
+          .replace(/\s*\(\d+\)$/, '')        // strip "(2)"
+          .replace(/\s*(Et Son Orchestre|And His Orchestra|And His Band|And His Orch\.|& His Orch\.).*$/i, '')
           .replace(/Accompagn[eé]e? Par .*/i, '')
+          .replace(/\s*\*$/, '')             // strip trailing asterisk
           .trim();
 
         let trackFound = false;
