@@ -450,36 +450,33 @@ async function spFetch(url, opts = {}) {
 const DISCOGS_UA = 'TheVaultCreditsTool/1.0';
 let DISCOGS_KEY = localStorage.getItem('discogs_token') || '';
 
-async function discogsFetch(url, retries = 3) {
-  // Route through CORS proxy to handle Discogs CORS restrictions
-  const proxy = 'https://corsproxy.io/?';
+async function discogsFetch(url) {
   DISCOGS_KEY = document.getElementById('discogsToken')?.value || localStorage.getItem('discogs_token') || '';
   const fullUrl = DISCOGS_KEY ? url + (url.includes('?') ? '&' : '?') + 'token=' + DISCOGS_KEY : url;
-  try {
-    const res = await fetch(proxy + encodeURIComponent(fullUrl));
-    if (res.status === 429) {
-      log('Rate limited — waiting 15s...');
-      await sleep(15000);
-      return discogsFetch(url, retries);
-    }
-    if (res.status === 503 || res.status === 502) {
-      if (retries > 0) {
-        log('Proxy error, retrying in 5s...');
-        await sleep(5000);
-        return discogsFetch(url, retries - 1);
+
+  // Try allorigins first (more reliable), then corsproxy as fallback
+  const proxies = [
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+  ];
+
+  for (let p = 0; p < proxies.length; p++) {
+    try {
+      const res = await fetch(proxies[p](fullUrl));
+      if (res.status === 429) {
+        log('Rate limited — waiting 12s...');
+        await sleep(12000);
+        const res2 = await fetch(proxies[p](fullUrl));
+        if (res2.ok) return res2.json();
+        continue;
       }
-      throw new Error('Proxy unavailable after retries');
+      if (!res.ok) { continue; }
+      return res.json();
+    } catch(e) {
+      if (p === proxies.length - 1) throw new Error('All proxies failed');
     }
-    if (!res.ok) throw new Error('Fetch error: ' + res.status);
-    return res.json();
-  } catch(e) {
-    if (retries > 0 && e.message.includes('fetch')) {
-      log('Network error, retrying in 5s...');
-      await sleep(5000);
-      return discogsFetch(url, retries - 1);
-    }
-    throw e;
   }
+  throw new Error('Failed to fetch');
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
