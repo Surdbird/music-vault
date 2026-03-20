@@ -454,15 +454,16 @@ async function discogsFetch(url) {
   DISCOGS_KEY = document.getElementById('discogsToken')?.value || localStorage.getItem('discogs_token') || '';
   const fullUrl = DISCOGS_KEY ? url + (url.includes('?') ? '&' : '?') + 'token=' + DISCOGS_KEY : url;
 
-  // Try allorigins first (more reliable), then corsproxy as fallback
   const proxies = [
+    u => u, // direct — works when token is provided
     u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
     u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+    u => 'https://thingproxy.freeboard.io/fetch/' + u,
   ];
 
   for (let p = 0; p < proxies.length; p++) {
     try {
-      const res = await fetch(proxies[p](fullUrl));
+      const res = await fetch(proxies[p](fullUrl), { mode: p === 0 ? 'cors' : 'cors' });
       if (res.status === 429) {
         log('Rate limited — waiting 12s...');
         await sleep(12000);
@@ -470,10 +471,12 @@ async function discogsFetch(url) {
         if (res2.ok) return res2.json();
         continue;
       }
-      if (!res.ok) { continue; }
-      return res.json();
+      if (!res.ok) continue;
+      const text = await res.text();
+      return JSON.parse(text);
     } catch(e) {
-      if (p === proxies.length - 1) throw new Error('All proxies failed');
+      if (p === proxies.length - 1) throw new Error('All proxies failed: ' + e.message);
+      await sleep(500);
     }
   }
   throw new Error('Failed to fetch');
