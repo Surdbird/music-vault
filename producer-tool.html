@@ -465,18 +465,44 @@ async function discogsFetch(url) {
   DISCOGS_KEY = document.getElementById('discogsToken')?.value || localStorage.getItem('discogs_token') || '';
   const fullUrl = DISCOGS_KEY ? url + (url.includes('?') ? '&' : '?') + 'token=' + DISCOGS_KEY : url;
 
+  // Try direct XHR first (token in URL satisfies Discogs CORS)
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', fullUrl);
+      xhr.setRequestHeader('User-Agent', 'TheVaultCreditsTool/1.0');
+      xhr.timeout = 15000;
+      xhr.onload = () => {
+        if (xhr.status === 429) { reject(new Error('RATE_LIMITED')); return; }
+        if (xhr.status >= 400) { reject(new Error('HTTP ' + xhr.status)); return; }
+        try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
+      };
+      xhr.onerror = () => reject(new Error('CORS'));
+      xhr.ontimeout = () => reject(new Error('Timeout'));
+      xhr.send();
+    });
+    return result;
+  } catch(e) {
+    if (e.message === 'RATE_LIMITED') {
+      log('Rate limited — waiting 30s...');
+      await sleep(30000);
+      return discogsFetch(url); // retry
+    }
+    // CORS or network error — fall through to proxies
+  }
+
+  // Proxy fallback
   const proxies = [
-    u => u, // direct — works when token is provided
-    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
     u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
     u => 'https://thingproxy.freeboard.io/fetch/' + u,
   ];
 
   for (let p = 0; p < proxies.length; p++) {
     try {
-      const res = await fetch(proxies[p](fullUrl), { mode: p === 0 ? 'cors' : 'cors' });
+      const res = await fetch(proxies[p](fullUrl));
       if (res.status === 429) {
-        log('Rate limited — waiting 30s...');
+        log('Rate limited (proxy) — waiting 30s...');
         await sleep(30000);
         const res2 = await fetch(proxies[p](fullUrl));
         if (res2.ok) return res2.json();
