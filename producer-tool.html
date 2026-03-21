@@ -437,9 +437,14 @@ async function generateChallenge(verifier) {
 }
 
 async function spFetch(url, opts = {}) {
+  const isGet = !opts.method || opts.method === 'GET';
   const res = await fetch(url, {
     ...opts,
-    headers: { 'Authorization': 'Bearer ' + spToken, 'Content-Type': 'application/json', ...(opts.headers||{}) }
+    headers: {
+      'Authorization': 'Bearer ' + spToken,
+      ...(isGet ? {} : { 'Content-Type': 'application/json' }),
+      ...(opts.headers || {})
+    }
   });
   if (!res.ok) throw new Error(await res.text());
   if (res.status === 204) return {};
