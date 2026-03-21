@@ -206,12 +206,17 @@ dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.
 
 async function handleFile(file) {
   if (!file) return;
-  let text = '';
   if (file.name.endsWith('.zip')) {
     dropZone.textContent = 'ZIP files not supported here — please export as .txt';
     return;
   }
-  text = await file.text();
+  dropZone.textContent = '⏳ Loading file...';
+  dropZone.classList.remove('loaded');
+  // Give UI a chance to update before heavy parsing
+  await new Promise(r => setTimeout(r, 50));
+  const text = await file.text();
+  dropZone.textContent = '⏳ Parsing ' + text.length.toLocaleString() + ' characters...';
+  await new Promise(r => setTimeout(r, 50));
   parseChat(text);
 }
 
