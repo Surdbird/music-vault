@@ -670,53 +670,50 @@ async function fetchByArtistAll(name) {
   // Step 1: Search Spotify for the artist
   log('Searching Spotify for "' + name + '"...');
   setProgress(5, 'Finding artist on Spotify...');
+  await sleep(300);
   const searchData = await spFetch(
     `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=5`
   );
   const artist = searchData.artists?.items?.[0];
   if (!artist) { log('Artist not found on Spotify', 'err'); return; }
   log(`Found: ${artist.name} (${artist.followers?.total?.toLocaleString()} followers)`, 'ok');
+  setProgress(15, 'Fetching top tracks...');
 
-  // Step 2: Fetch all albums
-  log('Fetching discography from Spotify...');
-  const albums = [];
-  let albumUrl = `https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album,single&limit=50&market=US`;
+  // Step 2: Get top tracks (fast, single call)
+  await sleep(500);
+  const topData = await spFetch(
+    `https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`
+  );
+  const topTracks = (topData.tracks || []).map(t => ({
+    title: t.name,
+    artist: t.artists.map(a => a.name).join(', '),
+    uri: t.uri
+  }));
+  log(`Got ${topTracks.length} top tracks`, 'ok');
+  setProgress(30, 'Fetching albums...');
 
-  while (albumUrl && albums.length < 500) {
-    const data = await spFetch(albumUrl);
-    albums.push(...(data.items || []));
-    albumUrl = data.next || null;
-    setProgress(10 + (albums.length / Math.max(data.total, 1)) * 35,
-      `Fetching albums: ${albums.length}/${data.total}`);
-    await sleep(100);
-  }
+  // Step 3: Fetch first page of albums only (50 max)
+  await sleep(500);
+  const albumData = await spFetch(
+    `https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album&limit=50&market=US`
+  );
+  const albums = albumData.items || [];
+  log(`Found ${albumData.total} albums total, using first ${albums.length}`, 'ok');
+  document.getElementById('statDiscogs').textContent = albums.length;
+  setProgress(40, 'Getting one track per album...');
 
-  // Deduplicate albums by name (removes regional duplicates)
-  const seen = new Set();
-  const uniqueAlbums = albums.filter(a => {
-    const key = a.name.toLowerCase().replace(/\s*\(.*?\)/g, '').trim();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  log(`Found ${uniqueAlbums.length} unique albums/singles`, 'ok');
-  document.getElementById('statDiscogs').textContent = uniqueAlbums.length;
-
-  // Step 3: Get top track from each album
-  log('Finding top track per album...');
-  const found = [];
-  for (let i = 0; i < uniqueAlbums.length; i++) {
-    const album = uniqueAlbums[i];
-    setProgress(45 + (i / uniqueAlbums.length) * 50,
-      `Getting tracks: ${i + 1}/${uniqueAlbums.length}`);
+  // Step 4: Get first track from each album with generous delays
+  const albumTracks = [];
+  for (let i = 0; i < albums.length; i++) {
+    setProgress(40 + (i / albums.length) * 55, `Album ${i + 1}/${albums.length}`);
+    await sleep(500);
     try {
       const tracksData = await spFetch(
-        `https://api.spotify.com/v1/albums/${album.id}/tracks?limit=1&market=US`
+        `https://api.spotify.com/v1/albums/${albums[i].id}/tracks?limit=1&market=US`
       );
       const track = tracksData.items?.[0];
       if (track) {
-        found.push({
+        albumTracks.push({
           title: track.name,
           artist: track.artists.map(a => a.name).join(', '),
           uri: track.uri
@@ -724,23 +721,28 @@ async function fetchByArtistAll(name) {
       }
     } catch(e) {
       if (e.message.includes('429') || e.message.includes('Too Many')) {
-        log('Rate limited — waiting 10s...');
-        await sleep(10000);
-        i--; // retry this album
-        continue;
+        log(`Rate limited at album ${i + 1} — waiting 20s...`);
+        await sleep(20000);
+        i--; continue;
       }
-      /* skip other failures */
     }
-    await sleep(300);
   }
 
-  foundTracks = found;
-  log(`Spotify: ${found.length} tracks found`, 'ok');
-  document.getElementById('statFound').textContent = found.length;
-  document.getElementById('statMiss').textContent = uniqueAlbums.length - found.length;
+  // Combine top tracks + album tracks, deduplicate by URI
+  const seenUris = new Set();
+  const allTracks = [...topTracks, ...albumTracks].filter(t => {
+    if (seenUris.has(t.uri)) return false;
+    seenUris.add(t.uri);
+    return true;
+  });
+
+  foundTracks = allTracks;
+  log(`Done: ${allTracks.length} tracks total`, 'ok');
+  document.getElementById('statFound').textContent = allTracks.length;
+  document.getElementById('statMiss').textContent = 0;
   document.getElementById('playlistName').value = `The Vault — ${artist.name}`;
   setProgress(100, 'Done!');
-  showResults(found, []);
+  showResults(allTracks, []);
 }
 
 async function fetchByLabel(labelName) {
