@@ -537,7 +537,7 @@ async function discogsFetch(url) {
         } catch(e2) { /* fall through to next proxy */ }
       }
       if (p === proxies.length - 1) throw new Error('All proxies failed: ' + e.message);
-      await sleep(500);
+      await sleep(2000);
     }
   }
   throw new Error('Failed to fetch');
@@ -587,7 +587,7 @@ async function fetchByArtistRole(name, role) {
   const searchRes = await discogsFetch(
     'https://api.discogs.com/database/search?q=' + encodeURIComponent(name) + '&type=artist&per_page=5'
   );
-  await sleep(1500);
+  await sleep(2500);
 
   const artist = searchRes.results?.[0];
   if (!artist) { log('Artist not found on Discogs', 'err'); return; }
@@ -604,7 +604,7 @@ async function fetchByArtistRole(name, role) {
   while (page <= Math.min(totalPages, 50) && tracks.length < 3000) {
     const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
     const data = await discogsFetch(url);
-    await sleep(1500);
+    await sleep(2500);
 
     totalPages = data.pagination?.pages || 1;
     totalReleases = data.pagination?.items || 0;
@@ -670,7 +670,7 @@ async function fetchByArtistAll(name) {
   const searchRes = await discogsFetch(
     'https://api.discogs.com/database/search?q=' + encodeURIComponent(name) + '&type=artist&per_page=5'
   );
-  await sleep(1500);
+  await sleep(2500);
 
   const artist = searchRes.results?.[0];
   if (!artist) { log('Artist not found on Discogs', 'err'); return; }
@@ -686,7 +686,7 @@ async function fetchByArtistAll(name) {
   while (page <= Math.min(totalPages, 50) && tracks.length < 3000) {
     const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
     const data = await discogsFetch(url);
-    await sleep(1500);
+    await sleep(2500);
 
     totalPages = data.pagination?.pages || 1;
     totalReleases = data.pagination?.items || 0;
@@ -740,7 +740,7 @@ async function fetchByLabel(labelName) {
   const searchRes = await discogsFetch(
     'https://api.discogs.com/database/search?q=' + encodeURIComponent(labelName) + '&type=label&per_page=5'
   );
-  await sleep(1500);
+  await sleep(2500);
 
   const label = searchRes.results?.[0];
   if (!label) { log('Label not found on Discogs', 'err'); return; }
@@ -754,7 +754,7 @@ async function fetchByLabel(labelName) {
   while (page <= totalPages && tracks.length < 2000) {
     const url = `https://api.discogs.com/labels/${label.id}/releases?per_page=100&page=${page}`;
     const data = await discogsFetch(url);
-    await sleep(1500);
+    await sleep(2500);
 
     totalPages = data.pagination?.pages || 1;
     const releases = data.releases || [];
@@ -764,7 +764,7 @@ async function fetchByLabel(labelName) {
       const release = releases[i];
       try {
         const releaseData = await discogsFetch(`https://api.discogs.com/releases/${release.id}`);
-        await sleep(1500);
+        await sleep(2500);
         const releaseArtist = releaseData.artists_sort || '';
         for (const track of (releaseData.tracklist || [])) {
           if (track.type_ === 'track' && track.title) {
