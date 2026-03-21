@@ -492,27 +492,50 @@ async function discogsFetch(url) {
     // CORS or network error — fall through to proxies
   }
 
-  // Proxy fallback
+  // Proxy fallback — use XHR for all to avoid macOS 26 fetch issues
   const proxies = [
-    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
     u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    u => 'https://corsproxy.io/?' + encodeURIComponent(u),
     u => 'https://thingproxy.freeboard.io/fetch/' + u,
   ];
 
   for (let p = 0; p < proxies.length; p++) {
     try {
-      const res = await fetch(proxies[p](fullUrl));
-      if (res.status === 429) {
+      const result = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', proxies[p](fullUrl));
+        xhr.timeout = 20000;
+        xhr.onload = () => {
+          if (xhr.status === 429) { reject(new Error('RATE_LIMITED_PROXY')); return; }
+          if (xhr.status >= 400) { reject(new Error('HTTP ' + xhr.status)); return; }
+          try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
+        };
+        xhr.onerror = () => reject(new Error('proxy_network'));
+        xhr.ontimeout = () => reject(new Error('proxy_timeout'));
+        xhr.send();
+      });
+      return result;
+    } catch(e) {
+      if (e.message === 'RATE_LIMITED_PROXY') {
         log('Rate limited (proxy) — waiting 30s...');
         await sleep(30000);
-        const res2 = await fetch(proxies[p](fullUrl));
-        if (res2.ok) return res2.json();
-        continue;
+        // retry same proxy
+        try {
+          const result = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', proxies[p](fullUrl));
+            xhr.timeout = 20000;
+            xhr.onload = () => {
+              if (xhr.status >= 400) { reject(new Error('HTTP ' + xhr.status)); return; }
+              try { resolve(JSON.parse(xhr.responseText)); } catch(e2) { reject(e2); }
+            };
+            xhr.onerror = () => reject(new Error('retry_network'));
+            xhr.ontimeout = () => reject(new Error('retry_timeout'));
+            xhr.send();
+          });
+          return result;
+        } catch(e2) { /* fall through to next proxy */ }
       }
-      if (!res.ok) continue;
-      const text = await res.text();
-      return JSON.parse(text);
-    } catch(e) {
       if (p === proxies.length - 1) throw new Error('All proxies failed: ' + e.message);
       await sleep(500);
     }
