@@ -665,73 +665,74 @@ async function fetchByArtistRole(name, role) {
 }
 
 async function fetchByArtistAll(name) {
-  // Find artist on Discogs
-  log('Searching Discogs for "' + name + '"...');
-  const searchRes = await discogsFetch(
-    'https://api.discogs.com/database/search?q=' + encodeURIComponent(name) + '&type=artist&per_page=5'
+  if (!spToken) { log('Connect Spotify first', 'err'); return; }
+
+  // Step 1: Search Spotify for the artist
+  log('Searching Spotify for "' + name + '"...');
+  setProgress(5, 'Finding artist on Spotify...');
+  const searchData = await spFetch(
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=5`
   );
-  await sleep(2500);
+  const artist = searchData.artists?.items?.[0];
+  if (!artist) { log('Artist not found on Spotify', 'err'); return; }
+  log(`Found: ${artist.name} (${artist.followers?.total?.toLocaleString()} followers)`, 'ok');
 
-  const artist = searchRes.results?.[0];
-  if (!artist) { log('Artist not found on Discogs', 'err'); return; }
-  log('Found: ' + artist.title + ' (ID: ' + artist.id + ')', 'ok');
+  // Step 2: Fetch all albums
+  log('Fetching discography from Spotify...');
+  const albums = [];
+  let albumUrl = `https://api.spotify.com/v1/artists/${artist.id}/albums?include_groups=album,single&limit=50&market=US`;
 
-  // Get all releases — no role filter
-  log('Fetching all releases from Discogs...');
-  const tracks = [];
-  let page = 1;
-  let totalPages = 1;
-  let totalReleases = 0;
-
-  while (page <= Math.min(totalPages, 50) && tracks.length < 3000) {
-    const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
-    const data = await discogsFetch(url);
-    await sleep(2500);
-
-    totalPages = data.pagination?.pages || 1;
-    totalReleases = data.pagination?.items || 0;
-    const releases = data.releases || [];
-
-    for (const release of releases) {
-      // Skip compilations and appearances — only own releases
-      if (release.role && (release.role === 'Main' || release.role === 'Appearance')) {
-        if (release.role === 'Main' && release.title) {
-          tracks.push({
-            title: release.title,
-            artist: artist.title.replace(/\s*\(\d+\)$/, '').trim(),
-            release: release.title,
-            year: release.year,
-            isAlbum: true
-          });
-        }
-      }
-    }
-
-    const cappedPages = Math.min(totalPages, 50);
-    setProgress(5 + (page / Math.max(cappedPages, 1)) * 45,
-      `Page ${page}/${cappedPages} · ${tracks.length} releases found`);
-    page++;
+  while (albumUrl && albums.length < 500) {
+    const data = await spFetch(albumUrl);
+    albums.push(...(data.items || []));
+    albumUrl = data.next || null;
+    setProgress(10 + (albums.length / Math.max(data.total, 1)) * 35,
+      `Fetching albums: ${albums.length}/${data.total}`);
+    await sleep(100);
   }
 
-  if (totalPages > 50) log(`Note: capped at 50 pages of ${totalPages} total`);
-
-  // Deduplicate
+  // Deduplicate albums by name (removes regional duplicates)
   const seen = new Set();
-  const unique = tracks.filter(t => {
-    const key = t.title.toLowerCase() + '|' + t.artist.toLowerCase();
+  const uniqueAlbums = albums.filter(a => {
+    const key = a.name.toLowerCase().replace(/\s*\(.*?\)/g, '').trim();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
-  log(`Found ${unique.length} releases on Discogs`, unique.length > 0 ? 'ok' : 'err');
-  unique.slice(0, 3).forEach(t => log(`Sample: "${t.title}" by "${t.artist}"`));
-  document.getElementById('statDiscogs').textContent = unique.length;
+  log(`Found ${uniqueAlbums.length} unique albums/singles`, 'ok');
+  document.getElementById('statDiscogs').textContent = uniqueAlbums.length;
 
-  if (!unique.length) { log('No releases found on Discogs for ' + name, 'err'); return; }
+  // Step 3: Get top track from each album
+  log('Finding top track per album...');
+  const found = [];
+  for (let i = 0; i < uniqueAlbums.length; i++) {
+    const album = uniqueAlbums[i];
+    setProgress(45 + (i / uniqueAlbums.length) * 50,
+      `Getting tracks: ${i + 1}/${uniqueAlbums.length}`);
+    try {
+      const tracksData = await spFetch(
+        `https://api.spotify.com/v1/albums/${album.id}/tracks?limit=1&market=US`
+      );
+      const track = tracksData.items?.[0];
+      if (track) {
+        found.push({
+          title: track.name,
+          artist: track.artists.map(a => a.name).join(', '),
+          uri: track.uri
+        });
+      }
+    } catch(e) { /* skip failed albums */ }
+    await sleep(80);
+  }
 
-  document.getElementById('playlistName').value = `The Vault — ${name}`;
-  await searchOnSpotify(unique);
+  foundTracks = found;
+  log(`Spotify: ${found.length} tracks found`, 'ok');
+  document.getElementById('statFound').textContent = found.length;
+  document.getElementById('statMiss').textContent = uniqueAlbums.length - found.length;
+  document.getElementById('playlistName').value = `The Vault — ${artist.name}`;
+  setProgress(100, 'Done!');
+  showResults(found, []);
 }
 
 async function fetchByLabel(labelName) {
