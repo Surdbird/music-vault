@@ -677,7 +677,7 @@ async function searchOnSpotify(tracks) {
     setProgress(45 + (i / tracks.length) * 50, `Spotify search: ${i+1}/${tracks.length}`);
 
     try {
-      if (track.isAlbum) {
+      if (tracks[i].isAlbum) {
         // Clean title — strip slash alternates, strip after =
         const cleanTitle = title
           .replace(/^\d+\s*[-–]\s*/, '')    // strip "6 - " track number prefix
