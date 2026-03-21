@@ -320,7 +320,9 @@
       <input type="text" id="producerInput" value="Quincy Jones" placeholder="Name or label...">
       <select id="roleSelect" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:0.85rem;padding:0.65rem 0.75rem;border-radius:2px;cursor:pointer">
         <option value="Producer">Producer</option>
-        <option value="Written-By">Songwriter</option>
+        <option value="Written-By">Songwriter / Written-By</option>
+        <option value="Lyrics By">Lyrics By</option>
+        <option value="Music By">Music By</option>
         <option value="label">Record Label</option>
         <option value="Arranged By">Arranger</option>
         <option value="Conductor">Conductor</option>
@@ -559,7 +561,7 @@ async function fetchByArtistRole(name, role) {
     for (const release of releases) {
       // Check if this is credited as the right role
       // Discogs release list shows role as 'role' field
-      if (release.role && release.role.includes(role)) {
+      if (release.role && release.role.toLowerCase().includes(role.toLowerCase())) {
         creditedReleases++;
         // Use artist + title from listing to search Spotify — avoids extra API calls
         const releaseArtist = release.artist || '';
