@@ -152,6 +152,15 @@
 
 <div class="container">
 
+  <div class="card" id="apiKeyCard">
+    <div class="card-label">00 · Anthropic API Key</div>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:0.8rem;padding:0.65rem 1rem;border-radius:2px;" oninput="saveApiKey()">
+      <span id="apiKeyStatus" style="font-size:0.7rem;color:var(--muted);white-space:nowrap">not set</span>
+    </div>
+    <div style="margin-top:0.5rem;font-size:0.65rem;color:var(--muted)">Stored locally in your browser. Never sent anywhere except api.anthropic.com.</div>
+  </div>
+
   <div class="card">
     <div class="card-label">01 · Chat Export</div>
     <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
@@ -197,6 +206,27 @@
 <script>
 let chatData = {}; // { weekKey: { messages: [], members: Set, links: [] } }
 let allLines = [];
+
+// ── API Key ───────────────────────────────────────────────────────────────────
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) {
+    localStorage.setItem('anthropic_key', key);
+    document.getElementById('apiKeyStatus').textContent = '✓ saved';
+    document.getElementById('apiKeyStatus').style.color = 'var(--sp)';
+  }
+}
+
+function loadApiKey() {
+  const key = localStorage.getItem('anthropic_key') || '';
+  if (key) {
+    document.getElementById('apiKeyInput').value = key;
+    document.getElementById('apiKeyStatus').textContent = '✓ saved';
+    document.getElementById('apiKeyStatus').style.color = 'var(--sp)';
+  }
+}
+
+loadApiKey();
 
 // ── File handling ────────────────────────────────────────────────────────────
 const dropZone = document.getElementById('dropZone');
@@ -378,10 +408,22 @@ ${styleInstructions[style]}
 
 Important: Quote actual members by name where relevant. Only reference music and conversations that actually appear above.`;
 
+    const apiKey = localStorage.getItem('anthropic_key') || '';
+    if (!apiKey) {
+      alert('Please enter your Anthropic API key in the box at the top of the page.');
+      clearInterval(loadingInterval);
+      document.getElementById('loading').classList.remove('active');
+      document.getElementById('summariseBtn').disabled = false;
+      return;
+    }
+
     const result = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', 'https://api.anthropic.com/v1/messages');
       xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('x-api-key', apiKey);
+      xhr.setRequestHeader('anthropic-version', '2023-06-01');
+      xhr.setRequestHeader('anthropic-dangerous-direct-browser-access', 'true');
       xhr.timeout = 60000;
       xhr.onload = () => {
         if (xhr.status >= 400) { reject(new Error('API error: ' + xhr.responseText)); return; }
