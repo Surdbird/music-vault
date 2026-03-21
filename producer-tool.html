@@ -684,6 +684,9 @@ async function searchOnSpotify(tracks) {
           .replace(/\s*\*$/, '')             // strip trailing asterisk
           .trim();
 
+        // Log first 3 searches for debugging
+        if (i < 3) log(`Searching: "${cleanTitle}" by "${cleanArtist}"`);
+
         let trackFound = false;
         for (const query of [
           `track:"${cleanTitle}" artist:"${cleanArtist}"`,
@@ -692,13 +695,14 @@ async function searchOnSpotify(tracks) {
         ]) {
           try {
             const data = await spFetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`);
+            if (i < 3) log(`Query "${query}" → ${data.tracks?.items?.length || 0} results`);
             const item = data.tracks?.items?.[0];
             if (item) {
               found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
               trackFound = true;
               break;
             }
-          } catch(e) {}
+          } catch(e) { if (i < 3) log(`Error: ${e.message}`, 'err'); }
           await sleep(80);
         }
         if (!trackFound) missed.push({ title: cleanTitle, artist: cleanArtist });
