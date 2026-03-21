@@ -722,8 +722,16 @@ async function fetchByArtistAll(name) {
           uri: track.uri
         });
       }
-    } catch(e) { /* skip failed albums */ }
-    await sleep(80);
+    } catch(e) {
+      if (e.message.includes('429') || e.message.includes('Too Many')) {
+        log('Rate limited — waiting 10s...');
+        await sleep(10000);
+        i--; // retry this album
+        continue;
+      }
+      /* skip other failures */
+    }
+    await sleep(300);
   }
 
   foundTracks = found;
