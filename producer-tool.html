@@ -438,17 +438,21 @@ async function generateChallenge(verifier) {
 
 async function spFetch(url, opts = {}) {
   const isGet = !opts.method || opts.method === 'GET';
-  const res = await fetch(url, {
-    ...opts,
-    headers: {
-      'Authorization': 'Bearer ' + spToken,
-      ...(isGet ? {} : { 'Content-Type': 'application/json' }),
-      ...(opts.headers || {})
-    }
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(opts.method || 'GET', url);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + spToken);
+    if (!isGet) xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = () => {
+      if (xhr.status === 204) { resolve({}); return; }
+      if (xhr.status >= 400) { reject(new Error(xhr.responseText)); return; }
+      try { resolve(JSON.parse(xhr.responseText)); } catch(e) { reject(e); }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.ontimeout = () => reject(new Error('Timeout'));
+    xhr.timeout = 10000;
+    xhr.send(opts.body || null);
   });
-  if (!res.ok) throw new Error(await res.text());
-  if (res.status === 204) return {};
-  return res.json();
 }
 
 // ── Discogs ──────────────────────────────────────────────────────────────────
