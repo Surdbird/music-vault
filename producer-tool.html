@@ -476,8 +476,8 @@ async function discogsFetch(url) {
     try {
       const res = await fetch(proxies[p](fullUrl), { mode: p === 0 ? 'cors' : 'cors' });
       if (res.status === 429) {
-        log('Rate limited — waiting 12s...');
-        await sleep(12000);
+        log('Rate limited — waiting 30s...');
+        await sleep(30000);
         const res2 = await fetch(proxies[p](fullUrl));
         if (res2.ok) return res2.json();
         continue;
@@ -549,7 +549,7 @@ async function fetchByArtistRole(name, role) {
   let totalReleases = 0;
   let creditedReleases = 0;
 
-  while (page <= totalPages && tracks.length < 3000) {
+  while (page <= Math.min(totalPages, 50) && tracks.length < 3000) {
     const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
     const data = await discogsFetch(url);
     await sleep(1500);
@@ -561,6 +561,7 @@ async function fetchByArtistRole(name, role) {
     for (const release of releases) {
       // Check if this is credited as the right role
       // Discogs release list shows role as 'role' field
+      if (page === 1 && releases.indexOf(release) < 5) log(`Release: "${release.title}" role="${release.role}"`);
       if (release.role && release.role.toLowerCase().includes(role.toLowerCase())) {
         creditedReleases++;
         // Use artist + title from listing to search Spotify — avoids extra API calls
@@ -581,8 +582,9 @@ async function fetchByArtistRole(name, role) {
     }
 
     page++;
-    setProgress(5 + (page / Math.max(totalPages, 1)) * 45,
-      `Page ${page-1}/${totalPages} · ${creditedReleases} ${role} releases · ${tracks.length} tracks`);
+    const cappedPages = Math.min(totalPages, 50);
+    setProgress(5 + (page / Math.max(cappedPages, 1)) * 45,
+      `Page ${page-1}/${cappedPages} · ${creditedReleases} ${role} releases · ${tracks.length} tracks`);
   }
 
   // Deduplicate
@@ -594,6 +596,7 @@ async function fetchByArtistRole(name, role) {
     return true;
   });
 
+  if (totalPages > 50) log(`Note: capped at 50 pages of ${totalPages} total — ${totalReleases} releases on Discogs`);
   log(`Found ${unique.length} tracks across ${creditedReleases} ${role} releases on Discogs`, unique.length > 0 ? 'ok' : 'err');
   // Debug: show first 3 entries
   unique.slice(0, 3).forEach(t => log(`Sample: "${t.title}" by "${t.artist}"`));
