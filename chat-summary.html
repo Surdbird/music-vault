@@ -172,6 +172,16 @@
       <div class="stat"><div class="stat-num" id="statLinks">0</div><div class="stat-label">Music links</div></div>
     </div>
 
+    <div style="margin-top:0.75rem">
+      <select id="styleSelect" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:0.85rem;padding:0.65rem 1rem;border-radius:2px;cursor:pointer">
+        <option value="warm">🎵 Warm community recap</option>
+        <option value="dylan">📻 Bob Dylan Radio Hour</option>
+        <option value="bbc">🎙️ BBC Radio 6 presenter</option>
+        <option value="rolling_stone">📰 Rolling Stone review</option>
+        <option value="hunter">🌶️ Hunter S. Thompson</option>
+        <option value="plain">📋 Just the facts</option>
+      </select>
+    </div>
     <button class="btn btn-gold" id="summariseBtn" onclick="summarise()" disabled>✦ Generate Weekly Summary</button>
   </div>
 
@@ -342,25 +352,26 @@ async function summarise() {
     const linkCount = data.links.length;
     const memberList = [...data.members].join(', ');
 
-    const prompt = `You are summarising a week of conversations from "Music Only" — a passionate WhatsApp group of music lovers who share links and discuss music daily. The group has been going for 6 years and members know each other well.
+    const style = document.getElementById('styleSelect').value;
+
+    const styleInstructions = {
+      warm: 'Write a warm, celebratory summary as a fellow music lover. Use sections: THE WEEK IN MUSIC, HIGHLIGHTS, DEBATES & DISCUSSIONS, MOST ACTIVE MEMBERS, MUSIC SHARED. Quote members by name. Keep it celebratory.',
+      dylan: 'Write this exactly like Bob Dylan presenting his Theme Time Radio Hour. Rambling, poetic, full of unexpected connections between artists and eras. Reference old bluesmen, strange facts, weave the week into a monologue. Start with a philosophical observation. End with a song dedication. Use "Well..." a lot.',
+      bbc: 'Write this as a BBC Radio 6 Music presenter doing a weekly roundup — warm, knowledgeable, slightly dry British wit. Reference conversations as if on air. Use phrases like "quite remarkable", "rather wonderful", "and if you haven't heard this yet..."',
+      rolling_stone: 'Write this as a Rolling Stone feature — punchy lede, cultural context, name-drop the right artists, treat the group like a scene worth documenting. Use bold section headers. End with a member quote as the kicker.',
+      hunter: 'Write this as Hunter S. Thompson covering a music group for Rolling Stone circa 1972. Gonzo journalism — you're a participant, it's chaotic, the music is urgent. Fear and Loathing energy but about music.',
+      plain: 'Write a concise plain-text summary for pasting into WhatsApp. No formatting, just 3-4 short paragraphs covering what was shared and discussed. Under 200 words.'
+    };
+
+    const prompt = `You are summarising a week of conversations from "Music Only" — a passionate WhatsApp group of music lovers who have been sharing music daily for 6 years.
 
 Here are the conversations from this week (${msgs.length} messages from ${data.members.size} members, plus ${linkCount} music links shared):
 
 ${chatText}
 
-Please provide a lively, warm summary with these sections:
+${styleInstructions[style]}
 
-1. **THE WEEK IN MUSIC** — A 2-3 sentence overview of the musical mood and themes this week
-
-2. **HIGHLIGHTS** — 3-5 specific memorable moments, recommendations, or exchanges (quote members by name where relevant)
-
-3. **DEBATES & DISCUSSIONS** — Any interesting conversations, disagreements, or deep dives into musical topics
-
-4. **MOST ACTIVE MEMBERS** — Who drove the conversation this week and what were they excited about
-
-5. **MUSIC SHARED** — Notable artists, albums, or tracks that came up in conversation (not just links, but things people talked about)
-
-Keep the tone warm, music-obsessed, and celebratory of the community. Write as if you're a fellow music lover summarising for the group.`;
+Important: Quote actual members by name where relevant. Only reference music and conversations that actually appear above.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
