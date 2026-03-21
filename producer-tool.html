@@ -323,6 +323,7 @@
         <option value="Written-By">Songwriter / Written-By</option>
         <option value="Lyrics By">Lyrics By</option>
         <option value="Music By">Music By</option>
+        <option value="artist">Primary Artist (all own releases)</option>
         <option value="label">Record Label</option>
         <option value="Arranged By">Arranger</option>
         <option value="Conductor">Conductor</option>
@@ -545,6 +546,8 @@ async function fetchCredits() {
   try {
     if (role === 'label') {
       await fetchByLabel(name);
+    } else if (role === 'artist') {
+      await fetchByArtistAll(name);
     } else {
       await fetchByArtistRole(name, role);
     }
@@ -635,6 +638,76 @@ async function fetchByArtistRole(name, role) {
 
   // Update playlist name
   document.getElementById('playlistName').value = `The Vault — ${role} by ${name}`;
+  await searchOnSpotify(unique);
+}
+
+async function fetchByArtistAll(name) {
+  // Find artist on Discogs
+  log('Searching Discogs for "' + name + '"...');
+  const searchRes = await discogsFetch(
+    'https://api.discogs.com/database/search?q=' + encodeURIComponent(name) + '&type=artist&per_page=5'
+  );
+  await sleep(1500);
+
+  const artist = searchRes.results?.[0];
+  if (!artist) { log('Artist not found on Discogs', 'err'); return; }
+  log('Found: ' + artist.title + ' (ID: ' + artist.id + ')', 'ok');
+
+  // Get all releases — no role filter
+  log('Fetching all releases from Discogs...');
+  const tracks = [];
+  let page = 1;
+  let totalPages = 1;
+  let totalReleases = 0;
+
+  while (page <= Math.min(totalPages, 50) && tracks.length < 3000) {
+    const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
+    const data = await discogsFetch(url);
+    await sleep(1500);
+
+    totalPages = data.pagination?.pages || 1;
+    totalReleases = data.pagination?.items || 0;
+    const releases = data.releases || [];
+
+    for (const release of releases) {
+      // Skip compilations and appearances — only own releases
+      if (release.role && (release.role === 'Main' || release.role === 'Appearance')) {
+        if (release.role === 'Main' && release.title) {
+          tracks.push({
+            title: release.title,
+            artist: artist.title.replace(/\s*\(\d+\)$/, '').trim(),
+            release: release.title,
+            year: release.year,
+            isAlbum: true
+          });
+        }
+      }
+    }
+
+    const cappedPages = Math.min(totalPages, 50);
+    setProgress(5 + (page / Math.max(cappedPages, 1)) * 45,
+      `Page ${page}/${cappedPages} · ${tracks.length} releases found`);
+    page++;
+  }
+
+  if (totalPages > 50) log(`Note: capped at 50 pages of ${totalPages} total`);
+
+  // Deduplicate
+  const seen = new Set();
+  const unique = tracks.filter(t => {
+    const key = t.title.toLowerCase() + '|' + t.artist.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  log(`Found ${unique.length} releases on Discogs`, unique.length > 0 ? 'ok' : 'err');
+  unique.slice(0, 3).forEach(t => log(`Sample: "${t.title}" by "${t.artist}"`));
+  document.getElementById('statDiscogs').textContent = unique.length;
+
+  if (!unique.length) { log('No releases found on Discogs for ' + name, 'err'); return; }
+
+  document.getElementById('playlistName').value = `The Vault — ${name}`;
   await searchOnSpotify(unique);
 }
 
