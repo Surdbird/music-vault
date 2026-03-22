@@ -835,40 +835,51 @@ async function searchOnSpotify(tracks) {
         // Log first 3 searches for debugging
         if (i < 3) log(`Searching: "${cleanTitle}" by "${cleanArtist}"`);
 
+        // Single query attempt — reduces API calls
+        const query = `${cleanTitle} ${cleanArtist}`;
+        let retries = 0;
         let trackFound = false;
-        for (const query of [
-          `track:"${cleanTitle}" artist:"${cleanArtist}"`,
-          `${cleanTitle} ${cleanArtist}`,
-          cleanTitle
-        ]) {
+        while (retries < 3) {
           try {
             const data = await spFetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`);
-            if (i < 3) log(`Query "${query}" → ${data.tracks?.items?.length || 0} results`);
             const item = data.tracks?.items?.[0];
             if (item) {
               found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
               trackFound = true;
+            }
+            break;
+          } catch(e) {
+            if (e.message.includes('429') || e.message.includes('Too Many')) {
+              log(`Rate limited at ${i+1}/${tracks.length} — waiting 20s...`);
+              await sleep(20000);
+              retries++;
+            } else {
               break;
             }
-          } catch(e) { if (i < 3) log(`Error: ${e.message}`, 'err'); }
-          await sleep(80);
+          }
         }
         if (!trackFound) missed.push({ title: cleanTitle, artist: cleanArtist });
       } else {
-        const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
-        const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
-        const item = data.tracks?.items?.[0];
+        const q = encodeURIComponent(title + ' ' + artist);
+        let retries = 0;
+        let item = null;
+        while (retries < 3) {
+          try {
+            const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
+            item = data.tracks?.items?.[0];
+            break;
+          } catch(e) {
+            if (e.message.includes('429') || e.message.includes('Too Many')) {
+              log(`Rate limited at ${i+1}/${tracks.length} — waiting 20s...`);
+              await sleep(20000);
+              retries++;
+            } else { break; }
+          }
+        }
         if (item) {
           found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
         } else {
-          const q2 = encodeURIComponent(title + ' ' + artist);
-          const data2 = await spFetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=1`);
-          const item2 = data2.tracks?.items?.[0];
-          if (item2) {
-            found.push({ title: item2.name, artist: item2.artists.map(a=>a.name).join(', '), uri: item2.uri });
-          } else {
-            missed.push({ title, artist });
-          }
+          missed.push({ title, artist });
         }
       }
     } catch(e) {
