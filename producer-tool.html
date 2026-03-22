@@ -601,7 +601,7 @@ async function fetchByArtistRole(name, role) {
   let totalReleases = 0;
   let creditedReleases = 0;
 
-  while (page <= Math.min(totalPages, 50) && tracks.length < 3000) {
+  while (page <= Math.min(totalPages, 50) && tracks.length < 200) {
     const url = `https://api.discogs.com/artists/${artist.id}/releases?per_page=100&page=${page}&sort=year&sort_order=asc`;
     const data = await discogsFetch(url);
     await sleep(2500);
@@ -649,6 +649,7 @@ async function fetchByArtistRole(name, role) {
   });
 
   if (totalPages > 50) log(`Note: capped at 50 pages of ${totalPages} total — ${totalReleases} releases on Discogs`);
+  if (unique.length >= 200) log(`Note: capped at 200 releases — full catalog has more`);
   log(`Found ${unique.length} tracks across ${creditedReleases} ${role} releases on Discogs`, unique.length > 0 ? 'ok' : 'err');
   // Debug: show first 3 entries
   unique.slice(0, 3).forEach(t => log(`Sample: "${t.title}" by "${t.artist}"`));
@@ -762,7 +763,7 @@ async function fetchByLabel(labelName) {
   let page = 1;
   let totalPages = 1;
 
-  while (page <= totalPages && tracks.length < 2000) {
+  while (page <= totalPages && tracks.length < 200) {
     const url = `https://api.discogs.com/labels/${label.id}/releases?per_page=100&page=${page}`;
     const data = await discogsFetch(url);
     await sleep(2500);
