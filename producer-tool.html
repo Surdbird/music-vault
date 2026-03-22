@@ -849,32 +849,44 @@ async function searchOnSpotify(tracks) {
               trackFound = true;
               break;
             }
-          } catch(e) { if (i < 3) log(`Error: ${e.message}`, 'err'); }
-          await sleep(80);
+          } catch(e) {
+            if (e.message.includes('429') || e.message.includes('Too Many')) {
+              log('Rate limited — waiting 15s...');
+              await sleep(15000);
+            } else if (i < 3) log(`Error: ${e.message}`, 'err');
+          }
+          await sleep(300);
         }
         if (!trackFound) missed.push({ title: cleanTitle, artist: cleanArtist });
       } else {
-        const q = encodeURIComponent(`track:"${title}" artist:"${artist}"`);
-        const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
-        const item = data.tracks?.items?.[0];
+        let item = null;
+        for (const q of [
+          encodeURIComponent(`track:"${title}" artist:"${artist}"`),
+          encodeURIComponent(title + ' ' + artist)
+        ]) {
+          try {
+            const data = await spFetch(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=1`);
+            item = data.tracks?.items?.[0];
+            if (item) break;
+          } catch(e) {
+            if (e.message.includes('429') || e.message.includes('Too Many')) {
+              log('Rate limited — waiting 15s...');
+              await sleep(15000);
+            }
+          }
+          await sleep(300);
+        }
         if (item) {
           found.push({ title: item.name, artist: item.artists.map(a=>a.name).join(', '), uri: item.uri });
         } else {
-          const q2 = encodeURIComponent(title + ' ' + artist);
-          const data2 = await spFetch(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=1`);
-          const item2 = data2.tracks?.items?.[0];
-          if (item2) {
-            found.push({ title: item2.name, artist: item2.artists.map(a=>a.name).join(', '), uri: item2.uri });
-          } else {
-            missed.push({ title, artist });
-          }
+          missed.push({ title, artist });
         }
       }
     } catch(e) {
       missed.push({ title, artist });
     }
 
-    await sleep(150);
+    await sleep(400);
   }
 
   foundTracks = found;
