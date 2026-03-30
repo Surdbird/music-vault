@@ -1243,6 +1243,9 @@ textarea::placeholder { color: var(--muted); }
   <button onclick="generateSpotifyByArtistPage()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--sp);color:var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
     ◎ Generate Spotify by Artist Page
   </button>
+  <button id="updateAllBtn" onclick="updateAllPlaylists()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:var(--sp);color:#0a0a0a;border:1px solid var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer;font-weight:600">
+    ↑ Update All Member Playlists
+  </button>
 </div>
 
 <!-- MAIN AREA (hidden until data loaded) -->
@@ -2058,6 +2061,84 @@ async function updateSpotifyPlaylist(memberName) {
     actionBtn.textContent = 'Retry';
     toast('Update failed: ' + e.message);
   }
+}
+
+// ── Batch update all member playlists ──────────────────────────────────────
+async function updateAllPlaylists() {
+  if (!spotifyToken) { toast('Connect Spotify first'); return; }
+  if (!allData || Object.keys(allData).length === 0) { toast('Load chat data first'); return; }
+
+  // Find all members who have an existing playlist
+  const members = Object.keys(allData).filter(m => loadMemberPlaylist(m));
+  if (!members.length) { toast('No member playlists found — create some first'); return; }
+
+  const btn = document.getElementById('updateAllBtn');
+  btn.disabled = true;
+  btn.textContent = '↑ Updating…';
+
+  let updated = 0, skipped = 0, failed = 0;
+
+  for (let i = 0; i < members.length; i++) {
+    const memberName = members[i];
+    btn.textContent = `↑ ${i + 1}/${members.length} — ${memberName}`;
+
+    const rec = loadMemberPlaylist(memberName);
+    if (!rec) { skipped++; continue; }
+
+    const data = allData[memberName];
+    if (!data) { skipped++; continue; }
+
+    const lastUpdated = new Date(rec.updatedAt);
+    const lastUpdatedDateOnly = new Date(lastUpdated.getFullYear(), lastUpdated.getMonth(), lastUpdated.getDate());
+    const allSpotify = data.spotify || [];
+    const newTracks = allSpotify.filter(t => {
+      const d = parseWADate(t.date);
+      return d && d >= lastUpdatedDateOnly;
+    });
+
+    if (newTracks.length === 0) { skipped++; continue; }
+
+    try {
+      // Resolve URIs
+      const newUris = await resolveSpotifyUris(newTracks.map(t => t.url), () => {});
+      if (!newUris.length) { skipped++; continue; }
+
+      // Check existing tracks to avoid duplicates
+      const existingUris = new Set();
+      let next = `https://api.spotify.com/v1/playlists/${rec.playlistId}/items?limit=100`;
+      while (next) {
+        const page = await spotifyFetch(next);
+        for (const item of (page?.items || [])) {
+          if (item?.track?.uri) existingUris.add(item.track.uri);
+        }
+        next = page?.next || null;
+        if (next) await sleep(150);
+      }
+
+      const toAdd = newUris.filter(u => !existingUris.has(u));
+      if (!toAdd.length) { saveMemberPlaylist(memberName, rec.playlistId); skipped++; continue; }
+
+      // Add tracks in chunks of 100
+      for (let j = 0; j < toAdd.length; j += 100) {
+        await spotifyFetch(`https://api.spotify.com/v1/playlists/${rec.playlistId}/items`, {
+          method: 'POST',
+          body: JSON.stringify({ uris: toAdd.slice(j, j + 100) })
+        });
+        await sleep(300);
+      }
+
+      saveMemberPlaylist(memberName, rec.playlistId);
+      updated++;
+    } catch(e) {
+      failed++;
+    }
+
+    await sleep(300);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '↑ Update All Member Playlists';
+  toast(`✓ Done — ${updated} updated, ${skipped} skipped, ${failed} failed`);
 }
 
 // Called when user clicks "◎ Spotify Playlist" button
