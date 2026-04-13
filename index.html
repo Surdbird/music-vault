@@ -3549,6 +3549,17 @@ async function generateSanctorum() {
       ? _ytChunks.map((chunk,i) => '<a class="card" href="https://www.youtube.com/watch_videos?video_ids=' + chunk.join(',') + '" target="_blank" rel="noopener"><div class="card-icon">\u25b6</div><div class="card-title">This Week on YouTube' + (_ytChunks.length>1?' \u00b7 Part '+(i+1):'') + '</div><div class="card-desc">W' + _wNum + ' \u00b7 ' + _weekYTIds.length + ' videos</div><span class="card-platform yt">YouTube</span></a>').join('')
       : '<div class="card" style="opacity:0.5;cursor:default"><div class="card-icon">\u25b6</div><div class="card-title">This Week on YouTube</div><div class="card-desc">No YouTube links yet this week.</div><span class="card-platform yt">YouTube</span></div>';
 
+    const dispatchesSection = '<div class="section">'
+    + '<div class="section-title">Weekly Dispatches</div>'
+    + '<div class="grid">'
+    + '<a class="card" href="' + base + '/links-summaries.html">'
+    + '<div class="card-icon">✦</div>'
+    + '<div class="card-title">Weekly Dispatches</div>'
+    + '<div class="card-desc">Six years of music, narrated in borrowed voices. Hunter S. Thompson, García Márquez, Ginsberg, DFW and more.</div>'
+    + '<span class="card-platform multi">Archive</span>'
+    + '</a>'
+    + '</div></div>';
+
     const weeklySection = '<div class="section">'
     + '<div class="section-title">Weekly Digest</div>'
     + '<div class="grid">'
@@ -3563,7 +3574,7 @@ async function generateSanctorum() {
     + '<p style="font-size:0.72rem;color:#3d3530;margin-top:0.75rem">** Spotify digest is created at the end of each week — YouTube shows the current week live.</p>'
     + '</div>';
 
-    const pageHtmlEnd = weeklySection
+    const pageHtmlEnd = dispatchesSection + weeklySection
     + '</div>'
     + '<footer>* Genre playlists are approximate — YouTube videos shown are from members who share that genre, not exclusively that genre.<br><br>'
     + 'Built with \u2665 by Sumit &amp; Claude \u00b7 <a href="' + base + '/" style="color:#3d3530">Open The Vault</a></footer>'
