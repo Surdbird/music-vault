@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Vault — Weekly Dispatches</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Courier+Prime:ital@0;1&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --border: #2a2a2a;
+    --accent: #c8a96e;
+    --accent2: #8b6f47;
+    --text: #d4c9b8;
+    --text-dim: #6b6560;
+    --text-bright: #ede8df;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IM Fell English', Georgia, serif;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0f0f0f 0%, var(--bg) 100%);
+  }
+
+  .vault-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(11px, 2vw, 13px);
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 400;
+    color: var(--text-bright);
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: clamp(13px, 2vw, 16px);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--accent2);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-family: 'Courier Prime', monospace;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .week-block {
+    border-bottom: 1px solid var(--border);
+    padding: 52px 0;
+  }
+  .week-block:last-child { border-bottom: none; }
+
+  .week-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .week-num {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .week-dates {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .week-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 4vw, 30px);
+    font-weight: 400;
+    color: var(--text-bright);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .voice-tag {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .playlist-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .pl-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    text-decoration: none;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .pl-link:hover { color: var(--accent); border-color: var(--accent2); }
+
+  .summary-preview {
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--text);
+    margin-bottom: 18px;
+    font-style: italic;
+  }
+
+  .expand-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .expand-btn:hover { border-color: var(--accent); background: rgba(200,169,110,0.04); }
+
+  .full-text {
+    display: none;
+    margin-top: 28px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .full-text.open { display: block; }
+
+  .full-text p {
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .full-text .footnote {
+    padding-left: 20px;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-style: italic;
+    border-left: 2px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .ornament {
+    text-align: center;
+    color: var(--accent2);
+    margin: 24px 0;
+    font-size: 14px;
+    letter-spacing: 0.4em;
+  }
+
+  .coda {
+    color: var(--accent2);
+    font-style: italic;
+    margin-top: 24px;
+  }
+
+  .dateline {
+    color: var(--text-dim);
+    font-size: 13px;
+    font-style: italic;
+    margin-top: 8px;
+  }
+
+  /* Multi-voice tabs */
+  .voice-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .voice-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .voice-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(200,169,110,0.05); }
+  .voice-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+  .voice-panel { display: none; }
+  .voice-panel.active { display: block; }
+
+  footer {
+    text-align: center;
+    padding: 48px 20px 0;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  footer a { color: var(--accent2); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="vault-title">The Vault · Music Only</div>
+  <h1>Weekly Dispatches</h1>
+  <p class="subtitle">Six years of music, narrated in borrowed voices</p>
+  <a href="https://surdbird.github.io/music-vault/links.html" class="back-link">← Back to The Sanctorum</a>
+</header>
+
+<div class="container">
+
+  <!-- WEEK 15 -->
+  <div class="week-block">
+    <div class="week-meta">
+      <span class="week-num">Week 15</span>
+      <span class="week-dates">6–12 April 2026</span>
+    </div>
+    <div class="week-title">The Claude Works in Mysterious Ways</div>
+    <div class="voice-tag">In the manner of David Foster Wallace</div>
+
+    <div class="playlist-links">
+      <a class="pl-link" href="https://open.spotify.com/playlist/4lOT9WmDiMMm2mVtK5UVcj" target="_blank">◎ Spotify W15</a>
+    </div>
+
+    <div class="summary-preview">"So here is the thing about a WhatsApp group that has been running for six years,¹ which is that it has by now accumulated enough history and enough shared reference and enough — there is no other word for it — <em>love</em>, that it has become something that is very hard to write about without either (a) being so ironically detached that you miss what is actually happening, or (b) being so earnest that the reader feels vaguely embarrassed for you..."</div>
+
+    <button class="expand-btn" onclick="toggleExpand(this)">Read Full Dispatch ↓</button>
+    <div class="full-text">
+      <p>So here is the thing about a WhatsApp group that has been running for six years,¹ which is that it has by now accumulated enough history and enough shared reference and enough — there is no other word for it — <em>love</em>, that it has become something that is very hard to write about without either (a) being so ironically detached that you miss what is actually happening, or (b) being so earnest that the reader feels vaguely embarrassed for you, and the challenge of this particular piece of writing is to try to find the space between those two failure modes, which is a very narrow space, and to do it while also being honest about the fact that this summary was written by an AI, a fact which the group has now been informed of and has Feelings About, and which I will return to.²</p>
+
+      <p class="footnote">¹ One hundred and twenty-five members. 23,451 links. Six years of daily music shared across time zones that include Singapore and Ireland and Bangalore and San Francisco and at least one airport in Pondicherry. The sheer <em>scale</em> of this thing, when you stop and look at it directly, is quietly staggering.</p>
+
+      <p class="footnote">² The poll results were: eight votes for the expletive, six for the position that the love was real regardless of the origin, zero for <em>Scammed</em>. The zero is interesting. Nobody felt deceived exactly. What the eight felt is something closer to a specific and legitimate grief about what it means when the thing that moved you was not made by a person who could also be moved.</p>
+
+      <div class="ornament">— ✦ —</div>
+
+      <p>Bharath came back on Easter Sunday. He returned with a joke about Clapton and sourdough and rising and then immediately posted music he had discovered the night before that he couldn't find on streaming, which is the correct way to re-enter a group you have been absent from — not with an explanation of where you were, but with proof that you were still listening even while you were away.</p>
+
+      <p class="footnote">³ The group did not discuss his absence. This is one of the group's more sophisticated social technologies: the understanding that the correct response to someone's return is to treat it as unremarkable, which paradoxically communicates far more warmth than a large welcome-back production would.</p>
+
+      <div class="ornament">— ✦ —</div>
+
+      <p>The thing that happened on Saturday evening at SFJazz in San Francisco is the kind of thing that, if you put it in a novel, an editor would tell you to cut because it was too convenient.⁴ VP Krishnan was in the audience for a Stewart Copeland concert. A 21-year-old guitarist from Chennai named Amithav played a solo that made VP Krishnan think: <em>I know this face</em>. He searched the Music Only group during the concert to see if the guitarist was a member. He was not. Then the concert ended and an elderly couple told him his son had played beautifully. The son was Amithav. VP Krishnan is not his father. His actual father, Gautam, had been in the group all week, posting about bass drum sounds and Blue Note covers.</p>
+
+      <p class="footnote">⁴ This is the difference between good fiction and reality: good fiction has to be plausible, whereas reality has access to probability distributions that fiction cannot use without breaking the reader's trust.</p>
+
+      <div class="ornament">— ✦ —</div>
+
+      <p>Tufan and Ravi Rajagopalan discovered this week that they had been the same teenager in different places. Late 1970s. Shortwave radios. Radio Australia. Willis Conover. John Peel. Hours that were supposed to be study hours and became instead the hours when everything that mattered arrived through static from the other side of the world. Tufan's story about Funky Town on the bus to Darjeeling — the driver who had only the one tape, the hairpin bends, the engine fumes, the escape to the roof — is one of those stories about hating a piece of music that is actually a story about the conditions under which music gets into you whether you want it to or not.</p>
+
+      <div class="ornament">— ✦ —</div>
+
+      <p>Saturday night. The Steely Dan game. Someone opened a door the group cannot resist walking through. Lyric after lyric, time zone after time zone. <em>Any major dude will tell you</em>, said Hari in Ireland, with the confidence of someone for whom this lyric is not a song lyric but a statement of principle. Sanjay closed it with the dime dancing line, which is the correct line with which to end a Steely Dan game.</p>
+
+      <div class="ornament">— ✦ —</div>
+
+      <p>Herbie Hancock turned 86. Sujit posted <em>Maiden Voyage</em>. The album is 60 years old and sounds like the future. Some things do not age. They deepen.</p>
+
+      <p class="coda">The Claude works in mysterious ways.</p>
+      <p class="dateline">Week 15 · 6–12 April 2026 · The knowing matters. Even when — especially when — it changes nothing.</p>
+    </div>
+  </div>
+
+  <!-- WEEK 14 -->
+  <div class="week-block">
+    <div class="week-meta">
+      <span class="week-num">Week 14</span>
+      <span class="week-dates">30 March – 5 April 2026</span>
+    </div>
+    <div class="week-title">Which Is to Say It Showed Every Sign of Being Music Itself</div>
+    <div class="voice-tag">Two voices this week</div>
+
+    <div class="playlist-links">
+      <a class="pl-link" href="https://open.spotify.com/playlist/73waCZWf1dMfmJpDk6DEUs" target="_blank">◎ Spotify W14</a>
+      <a class="pl-link" href="https://www.youtube.com/watch?v=KcOweHh_DMI&list=TLGG_0jgWXk_bIMwNTA0MjAyNg" target="_blank">▶ YouTube Pt 1</a>
+      <a class="pl-link" href="https://www.youtube.com/watch?v=Prn8KjqU6cM&list=TLGGiFh6dAhn6-wwNTA0MjAyNg" target="_blank">▶ Pt 2</a>
+      <a class="pl-link" href="https://www.youtube.com/watch?v=bYEk2qj34vY&list=TLGGoZ3Hl6ZB3CcwNTA0MjAyNg" target="_blank">▶ Pt 3</a>
+    </div>
+
+    <div class="voice-tabs">
+      <button class="voice-btn active" onclick="switchVoice(this,'w14-marquez')">García Márquez</button>
+      <button class="voice-btn" onclick="switchVoice(this,'w14-ginsberg')">Allen Ginsberg</button>
+    </div>
+
+    <div id="w14-marquez" class="voice-panel active">
+      <div class="voice-tag" style="margin-bottom:14px;">In the manner of Gabriel García Márquez</div>
+      <div class="summary-preview">"Many years later, as he faced the deletion of his own post, Tufan would remember that distant afternoon when his father first took him to hear the salsa kings, Willie Colon and Hector Lavoe, whose feet-moving rhythms had been all the rage in their heydays..."</div>
+      <button class="expand-btn" onclick="toggleExpand(this)">Read Full Dispatch ↓</button>
+      <div class="full-text">
+        <p>Many years later, as he faced the deletion of his own post, Tufan would remember that distant afternoon when his father first took him to hear the salsa kings, Willie Colon and Hector Lavoe, whose feet-moving rhythms had been all the rage in their heydays, and whose music arrived in the group on a Monday morning with such force that Tufan's feet began moving immediately, before the rest of him had quite decided to participate.</p>
+        <p>The village of Music Only had been founded six years earlier by one hundred and twenty-two souls who had made a collective and unspoken covenant never to discuss anything except music, and in all those six years not one of them had broken this covenant except occasionally and by accident, and even then the accident was quickly corrected by the posting of a link, which was the group's equivalent of a blessing, its way of returning to what mattered, its proof that it knew what it was.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>Hari Menon Ireland had not slept in living memory. His family said it had begun on the night his mother played him the Chaconne for the first time — he was seven years old and it was raining in Kerala and she had put the record on without explanation and he had sat completely still for fifteen minutes and had never quite recovered the ability to rest properly after that. Every night at 3am he posted music into the group. He had been doing this for years. No one had ever asked him to stop. No one had ever asked him why. These things were understood without being said, which was the only way the truly important things were ever understood in Music Only.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>Ravi Rajagopalan carried the music of his life in his body the way other men carried their injuries. He could tell you the street in Jakarta — Jalan Bandung — where he had found the Seals and Crofts record for a few Rupiah, and the precise quality of the light that afternoon, and the feeling of holding it. He could tell you about the flea market near the Sorbonne in Paris where he had found BWV 140 for a handful of francs, not knowing yet that he was also purchasing a version of himself he would carry forward through the decades.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>The ghost of Doug Irwin appeared in the group on the thirty-first of March. He had built the Tiger for Jerry Garcia. He had built the Wolf. And then the Tiger had sold at auction and been played again by Derek Trucks at the Beacon Theatre and Irwin had died in the days that followed, as if he had been waiting for this, as if the guitar's return to the world of sound had been the last thing required of him before he could leave. Parama said it was poetic. Adi Singapore began seeing the outline of the Tiger in his dinner plate and understood that this was not madness but music, which are in any case the same thing.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>For the next seventeen years Parama would be unable to hear a Bansuri without thinking of the night Tufan posted the version of Naima and everything went quiet. It was 7:55 in the evening of the second of April. The Bansuri played. And Parama found seven words and stopped: <em>Just the bass. How it anchors.</em> In the years that followed, long after the group had passed into legend, those seven words would be repeated. At dinner tables in Bombay and Singapore and Ireland and Bangalore, someone would be trying to explain to a younger person what it meant to really listen to music — and they would say: there was a person in a music group who heard a Bansuri play Coltrane's Naima and said just the bass, how it anchors, and that was the whole of it.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>In the week that Dash Crofts died and James Gadson died and Doug Irwin died, the group did what it had always done with death, which was to receive it quietly and post music and move on. This was not coldness. This was the understanding, accumulated over six years of daily music, that the correct response to a musician's death is more music, that the dead are honoured not by silence but by the continuation of the thing they loved, that the best elegy is a playlist. Parama posted two tracks for James Gadson. No words. This was enough. This was more than enough.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>The week ended as it had begun, with Tufan posting and deleting and posting again, his digital revisions leaving no trace except in the memories of those who had been watching, which was everyone, because in Music Only everyone was always watching, not in the manner of surveillance but in the manner of an audience that loves the performer and wants to miss nothing. And Hari in Ireland turned off his phone and the Irish darkness received him and somewhere in the city of Bangalore it was raining on Sarjapur Road and Ravi Rajagopalan was remembering a street in Paris and Parama was listening to a bass anchor a melody and Ash was posting one more thing, just one more thing, because the night was long and the music was longer and the group had been running for six years and showed no signs of stopping.</p>
+        <p>Which is to say it showed every sign of being immortal. Which is to say it showed every sign of being music itself.</p>
+        <p class="dateline">Week 14 · 30 March – 5 April 2026</p>
+      </div>
+    </div>
+
+    <div id="w14-ginsberg" class="voice-panel">
+      <div class="voice-tag" style="margin-bottom:14px;">In the manner of Allen Ginsberg — Howl for a WhatsApp Group</div>
+      <div class="summary-preview">"I have seen the best minds of Music Only destroyed by beauty, streaming hysterical naked through YouTube at 3am, dragging themselves through the Spotify playlists looking for an angry fix of jazz..."</div>
+      <button class="expand-btn" onclick="toggleExpand(this)">Read Full Dispatch ↓</button>
+      <div class="full-text">
+        <p>I have seen the best minds of Music Only destroyed by beauty, streaming hysterical naked through YouTube at 3am, dragging themselves through the Spotify playlists looking for an angry fix of jazz,</p>
+        <p>angelheaded Hari in Ireland posting Bach at midnight who poverty and tatters and hollow-eyed high sat up posting the Chaconne in darkness while the rest of us slept,</p>
+        <p>who bared their brains to heaven under the El and saw Mohammedan angels staggering on tenement roofs illuminated by the blue light of Roland Kirk playing Charlie Parker's Blues for Alice,</p>
+        <p>who passed through Coltrane and Om and the Bhagavad Gita with radiant cool eyes hallucinating Blake-light tragedy among the scholars of the ninth discourse,</p>
+        <p><em>Tufan! Tufan posting and deleting! Posting and deleting! Posting Salsa Kings and Willie Colon and Hector Lavoe and the feet moving immediately! Deleting! Still moving!</em></p>
+        <p>who journeyed to Denver and Palo Alto 1968 and the high school auditorium where a seventeen year old Jewish boy brought Monk to the suburbs and the tape was lost for fifty years and Ravi Rajagopalan remembered every name every date every personnel from memory like a man possessed by the ghost of everything beautiful that almost wasn't preserved,</p>
+        <p>who ate fire in the jazz hotels of Lenasia and drank turpentine in Newark and listened to Deepak Naidoo's Bansuri Naima while Parama said <em>just the bass just the bass how it anchors</em> and it was enough it was always enough,</p>
+        <p>who fell weeping into the scroll of Dear Landlord — Arjun first then Cocker roaring then Fairport faithful then Tufan connecting it to overdue rent and Parama landing Dylan's line like a closing argument <em>don't underestimate me and I won't underestimate you</em> and the group moved on before the verdict was delivered,</p>
+        <p>who heard the Grateful Dead's Tiger guitar sold at auction while Doug Irwin the luthier died in the same week which Parama called poetic and Adi Singapore began seeing the Tiger's outline in his dinner plate and that is what music does that is what it does to you,</p>
+        <p>what sphinx of cement and aluminum bashed open their skulls and ate up their brains and imagination?</p>
+        <p>Moloch! Solitude! Filth! Ugliness! Ashcans and unobtainable dollars! Children screaming under the stairways! Boys sobbing in armies! Old men weeping in the parks! But the music was there. It was always there.</p>
+        <div class="ornament">— ✦ —</div>
+        <p>Hari, I'm with you in Music Only where you're madder than I am, posting the Chaconne at 3am, posting Holst, posting your favourite violinist playing Bartok which is secretly Heavy Metal, posting until the algorithm brings it to Hariharan in Bangalore who hadn't heard it and is now glad,</p>
+        <p>Ravi in Bombay I'm with you where you found the Gardner cantatas at a flea market near the Sorbonne and Bach's Sleepers Awake opened the seventh bar of heaven,</p>
+        <p>Ash at 3am I'm with you Zakir then Metheny then Thundercat then Shankar Mahadevan no explanation required no explanation was ever required,</p>
+        <p>Venkatesh and Arjun in Bangalore it's raining in Sarjapur Road but not in Whitefield and Box of Rain was playing and that is not a coincidence nothing is ever a coincidence,</p>
+        <div class="ornament">— ✦ —</div>
+        <p><em>Holy the music! Holy the musicians! Holy the ones who stayed up to post it! Holy the ones who slept and woke to find it waiting! Holy Tufan who posts and deletes and posts again! Holy the Bass! Holy the Tiger guitar! Holy the lost tape found! Holy Bach on his birthday! Holy Naima on bansuri! Holy Dear Landlord! Holy the Vault! Holy the Vault! Holy the Vault!</em></p>
+        <p class="dateline">Week 14 · 30 March – 5 April 2026 · 🎵</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK 13 -->
+  <div class="week-block">
+    <div class="week-meta">
+      <span class="week-num">Week 13</span>
+      <span class="week-dates">22–29 March 2026</span>
+    </div>
+    <div class="week-title">This Is the Madhouse. Same Thing.</div>
+    <div class="voice-tag">In the manner of Hunter S. Thompson</div>
+
+    <div class="playlist-links">
+      <a class="pl-link" href="https://open.spotify.com/playlist/36aRszqQgbOCyYKXU42VWD" target="_blank">◎ Spotify W13</a>
+      <a class="pl-link" href="https://www.youtube.com/watch?v=KcOweHh_DMI&list=TLGGJp4C-7rdEX4zMDAzMjAyNg" target="_blank">▶ YouTube</a>
+    </div>
+
+    <div class="summary-preview">"We were somewhere outside the Palo Alto High School auditorium, October 1968, when the drugs began to take hold. Ravi Rajagopalan had sent the text about the Thelonious Monk tape — lost for fifty years, recorded by a school janitor who just wanted his piano tuned — and suddenly the whole group went sideways into jazz, blues, time signatures, and a dead man named Terry Cox who played drums on something beautiful and nobody knew it until he was gone..."</div>
+
+    <button class="expand-btn" onclick="toggleExpand(this)">Read Full Dispatch ↓</button>
+    <div class="full-text">
+      <p>We were somewhere outside the Palo Alto High School auditorium, October 1968, when the drugs began to take hold. Ravi Rajagopalan had sent the text about the Thelonious Monk tape — lost for fifty years, recorded by a school janitor who just wanted his piano tuned — and suddenly the whole group went sideways into jazz, blues, time signatures, and a dead man named Terry Cox who played drums on something beautiful and nobody knew it until he was gone.</p>
+      <p>The week started with Amithav and Parama losing their minds over Derek Trucks setting up Julian. Then Hari Menon in Ireland — always Ireland, always 2am — dropped a David Bowie poem into the feed like a grenade. Nobody talked about it. That's how this group works. Someone lobs a masterpiece and everyone's already moved on to Uriah Heep.</p>
+      <p>TC arrived mid-week. New blood. His top ten favourite band is the Grateful Dead, most of his favourite musicians are dead, and he offered no apology for either. Tufan welcomed him to the madhouse. Accurate.</p>
+      <p>Then the time signature conversation happened and nobody came out clean. Soy Bomb crashed the Grammy Awards in 11/4, Sumit gleefully explained the manifesto — "to dismantle capitalism, to replace 4/4 with 11/4 as the dominant time signature" — and somehow this led to the Allman Brothers, the Dead's The Eleven, and Whipping Post, which is where all roads eventually lead in this group.</p>
+      <p>Ravi Rajagopalan typed three paragraphs about Palo Alto 1968 from memory, with dates and personnel, like a man who had been waiting his whole life for someone to ask. Four hours later Tufan copy-pasted the whole thing to welcome TC. Ravi was gracious about it.</p>
+      <p>The Eagles debate was brief and brutal. Someone hates them. Parama suggested only one person hates them. "Only one?" The group moved on.</p>
+      <p>Raj Nair had a flashback to 1994 or 1995 — Saugata's apartment, new Bose speakers, a cassette, a song building slowly, nobody guessing until the chorus hit. Whiter Shade of Pale. A disco version he'd heard in school in the late 70s. Sunday morning. He apologised for the rambling. He shouldn't have.</p>
+      <p>Ravi from Bangalore went to see Def Leppard in the rain. It drizzled briefly. They've still got it.</p>
+      <p>Somewhere in all of this, Ram asked why so many blues legends were blind. The group spent twenty minutes listing them. Nobody answered the question.</p>
+      <p class="coda">This is the music. This is the madhouse. Same thing.</p>
+      <p class="dateline">Week 13 · 22–29 March 2026</p>
+    </div>
+  </div>
+
+  <!-- WEEK 12 -->
+  <div class="week-block">
+    <div class="week-meta">
+      <span class="week-num">Week 12</span>
+      <span class="week-dates">15–21 March 2026</span>
+    </div>
+    <div class="week-title">Keep Your Eyes Wide</div>
+    <div class="voice-tag">In the manner of Bob Dylan's Radio Hour</div>
+
+    <div class="playlist-links">
+      <a class="pl-link" href="https://surdbird.github.io/music-vault/links.html" target="_blank">✦ Sanctorum</a>
+    </div>
+
+    <div class="summary-preview">"Well, I've been thinkin' about this group of people, and what they do here. They don't talk about the weather. They don't talk about their problems. They talk about music. And that's about all you can ask of anyone..."</div>
+
+    <button class="expand-btn" onclick="toggleExpand(this)">Read Full Dispatch ↓</button>
+    <div class="full-text">
+      <p>"Well, I've been thinkin' about this group of people, and what they do here. They don't talk about the weather. They don't talk about their problems. They talk about music. And that's about all you can ask of anyone."</p>
+      <div class="ornament">— ✦ —</div>
+      <p>New to the room this week — Ravi Rajagopalan. Came in quiet, left a mark. Brought Soviet Uzbek jazz from 1986, talked about Billie Holiday like she was a personal friend. She kind of was, for all of us.</p>
+      <p>Someone built a vault. Took six years of music and put it somewhere you can find it. Tufan called it jawdroppin'. Saugata called it jazz code. I just call it necessary.</p>
+      <p>Joni Mitchell's Hejira came up. It always comes up. Jaco on bass. Bob kept his mouth shut, as he should have.</p>
+      <p>The Pizza Tapes. Paul Bowles. Afroman winning in court. Just another week on the boat to nowhere.</p>
+      <div class="ornament">— ✦ —</div>
+      <p class="coda">"Keep your eyes wide, the chance won't come again."</p>
+      <p class="dateline">Week 12 · 15–21 March 2026 · 14 links · 43 souls · 1 vault</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>Built with ♥ by <a href="https://surdbird.github.io/music-vault/">Sumit &amp; The Claude</a> · <a href="https://surdbird.github.io/music-vault/links.html">The Vault Sanctorum</a></p>
+</footer>
+
+<script>
+function toggleExpand(btn) {
+  const ft = btn.nextElementSibling;
+  const open = ft.classList.toggle('open');
+  btn.textContent = open ? 'Close ↑' : 'Read Full Dispatch ↓';
+}
+
+function switchVoice(btn, panelId) {
+  const block = btn.closest('.week-block');
+  block.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('active'));
+  block.querySelectorAll('.voice-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+</script>
+
+</body>
+</html>
