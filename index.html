@@ -1246,6 +1246,9 @@ textarea::placeholder { color: var(--muted); }
   <button id="updateAllBtn" onclick="updateAllPlaylists()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:var(--sp);color:#0a0a0a;border:1px solid var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer;font-weight:600">
     ↑ Update All Member Playlists
   </button>
+  <button onclick="buildJazzPlaylist()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--sp);color:var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ♪ No Excuse for Jazz — Build Playlist
+  </button>
 </div>
 
 <!-- MAIN AREA (hidden until data loaded) -->
@@ -4554,6 +4557,161 @@ function toast(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 4000);
 }
+
+// ── No Excuse for Jazz ───────────────────────────────────────
+async function buildJazzPlaylist() {
+  if (!spotifyToken) { toast('Connect Spotify first'); return; }
+
+  const MAX_MS = 60 * 60 * 1000;
+  const ALBUMS = [
+    {num:1, artist:'Miles Davis', title:'Kind of Blue'},
+    {num:2, artist:'Dave Brubeck Quartet', title:'Time Out'},
+    {num:3, artist:'Chet Baker', title:'Chet Baker Sings'},
+    {num:4, artist:'Ella Fitzgerald', title:'Ella and Louis'},
+    {num:5, artist:'Norah Jones', title:'Come Away With Me'},
+    {num:6, artist:'Vince Guaraldi Trio', title:'A Charlie Brown Christmas'},
+    {num:7, artist:'Stan Getz', title:'Getz/Gilberto'},
+    {num:8, artist:'Ahmad Jamal', title:'At the Pershing'},
+    {num:9, artist:'Ella Fitzgerald', title:'Ella Fitzgerald Sings the Cole Porter Song Book'},
+    {num:10,artist:'John Coltrane', title:'John Coltrane and Johnny Hartman'},
+    {num:11,artist:'Gregory Porter', title:'Liquid Spirit'},
+    {num:12,artist:'Esperanza Spalding', title:'Radio Music Society'},
+    {num:13,artist:'Art Blakey', title:"Moanin'"},
+    {num:14,artist:'Cannonball Adderley', title:"Somethin' Else"},
+    {num:15,artist:'Herbie Hancock', title:'Head Hunters'},
+    {num:16,artist:'Donald Byrd', title:'Black Byrd'},
+    {num:17,artist:'Donald Byrd', title:'Street Lady'},
+    {num:18,artist:'Ramsey Lewis Trio', title:'The In Crowd'},
+    {num:19,artist:'Jimmy Smith', title:'The Sermon!'},
+    {num:20,artist:'Charles Mingus', title:'Mingus Ah Um'},
+    {num:21,artist:'Oscar Peterson Trio', title:'Night Train'},
+    {num:22,artist:'Grant Green', title:'Idle Moments'},
+    {num:23,artist:'Chick Corea', title:'Light as a Feather'},
+    {num:24,artist:'Stan Getz', title:'Jazz Samba'},
+    {num:25,artist:'Bill Evans Trio', title:'Waltz for Debby'},
+    {num:26,artist:'Bill Evans Trio', title:'Sunday at the Village Vanguard'},
+    {num:27,artist:'John Coltrane', title:'My Favorite Things'},
+    {num:28,artist:'Wes Montgomery', title:"Bumpin'"},
+    {num:29,artist:'Weather Report', title:'Heavy Weather'},
+    {num:30,artist:'The Crusaders', title:'Free as the Wind'},
+    {num:31,artist:'Robert Glasper Experiment', title:'Black Radio'},
+    {num:32,artist:'Nujabes', title:'Modal Soul'},
+    {num:33,artist:'Flying Lotus', title:'Cosmogramma'},
+    {num:34,artist:'Thundercat', title:'Drunk'},
+    {num:35,artist:'Alfa Mist', title:'Antiphon'},
+    {num:36,artist:'Alfa Mist', title:'Bring Backs'},
+    {num:37,artist:'DOMi & JD Beck', title:'NOT TiGHT'},
+    {num:38,artist:'BADBADNOTGOOD', title:'IV'},
+    {num:39,artist:'BADBADNOTGOOD', title:'Talk Memory'},
+    {num:40,artist:'Yussef Dayes', title:'Black Classical Music'},
+    {num:41,artist:'Tom Misch', title:'What Kinda Music'},
+    {num:42,artist:'KOKOROKO', title:'Could We Be More'},
+    {num:43,artist:'Nubya Garcia', title:'Source'},
+    {num:44,artist:'Kamasi Washington', title:'The Epic'},
+    {num:45,artist:'Hiromi', title:'Voice'},
+    {num:46,artist:'Snarky Puppy', title:'We Like It Here'},
+    {num:47,artist:'Cécile McLorin Salvant', title:'WomanChild'},
+    {num:48,artist:'Wes Montgomery', title:'The Incredible Jazz Guitar of Wes Montgomery'},
+    {num:49,artist:'Herbie Hancock', title:'Speak Like a Child'},
+    {num:50,artist:'Lonnie Liston Smith', title:'Astral Traveling'},
+  ];
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function spFetchJazz(url, opts={}) {
+    const r = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(opts.method||'GET', url);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + spotifyToken);
+      if (opts.body) xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = () => resolve({status: xhr.status, text: () => xhr.responseText, json: () => JSON.parse(xhr.responseText), headers: {get: h => xhr.getResponseHeader(h)}});
+      xhr.onerror = reject;
+      xhr.send(opts.body ? JSON.stringify(opts.body) : null);
+    });
+    if (r.status === 429) {
+      const w = (parseInt(r.headers.get('Retry-After')||'2') * 1000) + 500;
+      await sleep(w);
+      return spFetchJazz(url, opts);
+    }
+    return r.status === 204 ? null : r.json();
+  }
+
+  // Get user id
+  toast('♪ Building jazz playlist...');
+  const me = await spFetchJazz('https://api.spotify.com/v1/me');
+  if (!me?.id) { toast('Could not get Spotify user — reconnect'); return; }
+
+  // Create playlist
+  const playlist = await spFetchJazz(`https://api.spotify.com/v1/users/${me.id}/playlists`, {
+    method: 'POST',
+    body: {
+      name: 'The Vault — No Excuse for Jazz',
+      description: '50 gateway jazz albums, up to 60 min each. Via headphonesty.com',
+      public: true
+    }
+  });
+
+  if (!playlist?.id) { toast('Error creating playlist: ' + (playlist?.error?.message || 'unknown')); return; }
+  const playlistId = playlist.id;
+  let totalAdded = 0;
+  let allUris = [];
+
+  for (let i = 0; i < ALBUMS.length; i++) {
+    const a = ALBUMS[i];
+    toast(`♪ Jazz playlist: searching ${i+1}/50 — ${a.title}`);
+
+    // Search for album
+    const q = encodeURIComponent(`album:${a.title} artist:${a.artist}`);
+    let albumId = null;
+    const sd = await spFetchJazz(`https://api.spotify.com/v1/search?q=${q}&type=album&limit=3`);
+    if (sd?.albums?.items?.length) albumId = sd.albums.items[0].id;
+    if (!albumId) {
+      const q2 = encodeURIComponent(`${a.title} ${a.artist}`);
+      const sd2 = await spFetchJazz(`https://api.spotify.com/v1/search?q=${q2}&type=album&limit=3`);
+      if (sd2?.albums?.items?.length) albumId = sd2.albums.items[0].id;
+    }
+    if (!albumId) { await sleep(150); continue; }
+
+    // Get tracks
+    const tracks = [];
+    let url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
+    while (url) {
+      const td = await spFetchJazz(url);
+      if (!td?.items) break;
+      tracks.push(...td.items);
+      url = td.next || null;
+    }
+
+    // Add up to 60 min
+    let ms = 0;
+    for (const t of tracks) {
+      if (ms + t.duration_ms > 60 * 60 * 1000) break;
+      allUris.push(t.uri);
+      ms += t.duration_ms;
+    }
+
+    // Flush in batches of 100
+    while (allUris.length >= 100) {
+      await spFetchJazz(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        method: 'POST', body: { uris: allUris.splice(0, 100) }
+      });
+      await sleep(200);
+      totalAdded += 100;
+    }
+    await sleep(150);
+  }
+
+  // Flush remainder
+  if (allUris.length > 0) {
+    await spFetchJazz(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      method: 'POST', body: { uris: allUris }
+    });
+    totalAdded += allUris.length;
+  }
+
+  toast(`✓ Jazz playlist created — ${totalAdded} tracks · open.spotify.com/playlist/${playlistId}`);
+}
+
 </script>
 </body>
 </html>
