@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Excuse for Jazz — Playlist Builder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+  :root {
+    --bg:#0a0a0a;--panel:#111;--border:#222;--accent:#1db954;
+    --gold:#c8a96e;--text:#d4c9b8;--dim:#555;--bright:#fff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Syne Mono',monospace;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px 80px}
+  header{text-align:center;margin-bottom:48px}
+  .label{font-size:11px;letter-spacing:.4em;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+  h1{font-family:'Playfair Display',serif;font-size:clamp(28px,6vw,52px);font-weight:400;
+    color:var(--bright);line-height:1.1;margin-bottom:12px}
+  .sub{font-size:12px;color:var(--dim);letter-spacing:.1em}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    padding:28px;width:100%;max-width:680px;margin-bottom:16px}
+  .btn{background:var(--accent);color:#000;border:none;padding:14px 32px;
+    font-family:'Syne Mono',monospace;font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background .2s;width:100%}
+  .btn:hover{background:#1ed760}
+  .btn:disabled{background:#333;color:#555;cursor:not-allowed}
+  .btn-ghost{background:none;border:1px solid var(--accent);color:var(--accent)}
+  .btn-ghost:hover{background:rgba(29,185,84,.1)}
+  .status-area{margin-top:20px}
+  .status{font-size:12px;color:var(--dim);margin-bottom:6px}
+  .progress-bar{height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin:12px 0}
+  .progress-fill{height:100%;background:var(--accent);transition:width .3s;width:0%}
+  .album-list{margin-top:16px;max-height:380px;overflow-y:auto}
+  .album-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:11px}
+  .album-item:last-child{border-bottom:none}
+  .album-header{display:flex;align-items:center;gap:10px}
+  .album-num{color:var(--dim);width:28px;text-align:right;flex-shrink:0}
+  .album-name{color:var(--bright);flex:1}
+  .album-tracks{color:var(--dim);font-size:10px;flex-shrink:0}
+  .album-status{flex-shrink:0;font-size:11px}
+  .album-status.ok{color:var(--accent)}
+  .album-status.miss{color:#e74c3c}
+  .album-status.pending{color:var(--dim)}
+  .album-status.working{color:var(--gold)}
+  .result-box{display:none;margin-top:20px;padding:16px;background:rgba(29,185,84,.08);
+    border:1px solid rgba(29,185,84,.3);border-radius:4px;text-align:center}
+  .result-box a{color:var(--accent);text-decoration:none;font-size:13px}
+  .result-box a:hover{text-decoration:underline}
+  .result-box .big{font-family:'Playfair Display',serif;font-size:18px;color:var(--bright);margin-bottom:8px}
+  .user-info{display:none;align-items:center;gap:10px;margin-bottom:16px;font-size:11px;color:var(--dim)}
+  .dot{color:var(--accent)}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:var(--border)}
+  ::-webkit-scrollbar-thumb{background:var(--dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">The Vault · Music Only</div>
+  <h1>No Excuse<br>for Jazz</h1>
+  <p class="sub">50 albums · up to 60 min each · one Spotify playlist</p>
+</header>
+
+<div class="card">
+  <div class="user-info" id="userInfo">
+    <span class="dot">●</span>
+    <span id="userName">Connected</span>
+  </div>
+
+  <button class="btn" id="connectBtn" onclick="connectSpotify()">
+    Connect Spotify to Build Playlist
+  </button>
+
+  <button class="btn btn-ghost" id="buildBtn" onclick="buildPlaylist()" style="display:none;margin-top:10px">
+    ▶ Build Playlist — 50 Albums · 60 Min Each
+  </button>
+
+  <div class="status-area" id="statusArea" style="display:none">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="status" id="statusText">Starting...</div>
+    <div class="album-list" id="albumList"></div>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <div class="big">Playlist Created ✓</div>
+    <div class="status" id="trackCount" style="margin-bottom:10px"></div>
+    <a id="playlistLink" href="#" target="_blank">Open in Spotify →</a>
+  </div>
+</div>
+
+<script>
+const CLIENT_ID = '05d1e6e31ccf465a84de32fe886550fe';
+const REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
+const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private';
+const MAX_MS = 60 * 60 * 1000; // 60 minutes in ms
+
+const ALBUMS = [
+  { num:1,  artist:'Miles Davis',               title:'Kind of Blue',                                     id:'1weenld61qoidwYuZ1GESA' },
+  { num:2,  artist:'Dave Brubeck Quartet',       title:'Time Out',                                         id:'0nTTEAhCZsbbeplyDMIFuA' },
+  { num:3,  artist:'Chet Baker',                 title:'Chet Baker Sings',                                 id:'27iCBMSFSuQqJLfYRHVAFG' },
+  { num:4,  artist:'Ella Fitzgerald & Louis Armstrong', title:'Ella and Louis',                            id:'5SFNbVCSNl4sncTL3hI7ug' },
+  { num:5,  artist:'Norah Jones',                title:'Come Away With Me',                                id:'1KbVDPvMLMdQOBKCPaKNAX' },
+  { num:6,  artist:'Vince Guaraldi Trio',        title:'A Charlie Brown Christmas',                        id:'0V3DjFfpN3Y37ALhDtxLAp' },
+  { num:7,  artist:'Stan Getz & João Gilberto',  title:'Getz/Gilberto',                                   id:'0vGHJLTjJkMWVF2eR4RGkJ' },
+  { num:8,  artist:'Ahmad Jamal',                title:'At the Pershing: But Not for Me',                  id:null },
+  { num:9,  artist:'Ella Fitzgerald',            title:'Ella Fitzgerald Sings the Cole Porter Song Book', id:null },
+  { num:10, artist:'John Coltrane',              title:'John Coltrane and Johnny Hartman',                 id:null },
+  { num:11, artist:'Gregory Porter',             title:'Liquid Spirit',                                    id:null },
+  { num:12, artist:'Esperanza Spalding',         title:'Radio Music Society',                              id:null },
+  { num:13, artist:'Art Blakey',                 title:"Moanin'",                                          id:null },
+  { num:14, artist:'Cannonball Adderley',        title:"Somethin' Else",                                   id:null },
+  { num:15, artist:'Herbie Hancock',             title:'Head Hunters',                                     id:null },
+  { num:16, artist:'Donald Byrd',                title:'Black Byrd',                                       id:null },
+  { num:17, artist:'Donald Byrd',                title:'Street Lady',                                      id:null },
+  { num:18, artist:'Ramsey Lewis Trio',          title:'The In Crowd',                                     id:null },
+  { num:19, artist:'Jimmy Smith',                title:'The Sermon!',                                      id:null },
+  { num:20, artist:'Charles Mingus',             title:'Mingus Ah Um',                                     id:null },
+  { num:21, artist:'Oscar Peterson Trio',        title:'Night Train',                                      id:null },
+  { num:22, artist:'Grant Green',                title:'Idle Moments',                                     id:null },
+  { num:23, artist:'Chick Corea',                title:'Light as a Feather',                               id:null },
+  { num:24, artist:'Stan Getz',                  title:'Jazz Samba',                                       id:null },
+  { num:25, artist:'Bill Evans Trio',            title:'Waltz for Debby',                                  id:null },
+  { num:26, artist:'Bill Evans Trio',            title:'Sunday at the Village Vanguard',                   id:null },
+  { num:27, artist:'John Coltrane',              title:'My Favorite Things',                               id:null },
+  { num:28, artist:'Wes Montgomery',             title:"Bumpin'",                                          id:null },
+  { num:29, artist:'Weather Report',             title:'Heavy Weather',                                    id:null },
+  { num:30, artist:'The Crusaders',              title:'Free as the Wind',                                 id:null },
+  { num:31, artist:'Robert Glasper Experiment',  title:'Black Radio',                                      id:null },
+  { num:32, artist:'Nujabes',                    title:'Modal Soul',                                       id:null },
+  { num:33, artist:'Flying Lotus',               title:'Cosmogramma',                                      id:null },
+  { num:34, artist:'Thundercat',                 title:'Drunk',                                            id:null },
+  { num:35, artist:'Alfa Mist',                  title:'Antiphon',                                         id:null },
+  { num:36, artist:'Alfa Mist',                  title:'Bring Backs',                                      id:null },
+  { num:37, artist:'DOMi & JD Beck',             title:'NOT TiGHT',                                        id:null },
+  { num:38, artist:'BADBADNOTGOOD',              title:'IV',                                               id:null },
+  { num:39, artist:'BADBADNOTGOOD',              title:'Talk Memory',                                      id:null },
+  { num:40, artist:'Yussef Dayes',               title:'Black Classical Music',                            id:null },
+  { num:41, artist:'Tom Misch',                  title:'What Kinda Music',                                 id:null },
+  { num:42, artist:'KOKOROKO',                   title:'Could We Be More',                                 id:null },
+  { num:43, artist:'Nubya Garcia',               title:'Source',                                           id:null },
+  { num:44, artist:'Kamasi Washington',          title:'The Epic',                                         id:null },
+  { num:45, artist:'Hiromi',                     title:'Voice',                                            id:null },
+  { num:46, artist:'Snarky Puppy',               title:'We Like It Here',                                  id:null },
+  { num:47, artist:'Cécile McLorin Salvant',     title:'WomanChild',                                       id:null },
+  { num:48, artist:'Wes Montgomery',             title:'The Incredible Jazz Guitar of Wes Montgomery',    id:null },
+  { num:49, artist:'Herbie Hancock',             title:'Speak Like a Child',                               id:null },
+  { num:50, artist:'Lonnie Liston Smith',        title:'Astral Traveling',                                 id:null },
+];
+
+let accessToken = null;
+let userId = null;
+
+function generateCodeVerifier(length=128) {
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  return Array.from(crypto.getRandomValues(new Uint8Array(length))).map(b=>chars[b%chars.length]).join('');
+}
+async function generateCodeChallenge(v) {
+  const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
+  return btoa(String.fromCharCode(...new Uint8Array(d))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function connectSpotify() {
+  const v=generateCodeVerifier(); sessionStorage.setItem('pkce_verifier',v);
+  const c=await generateCodeChallenge(v);
+  window.location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({
+    client_id:CLIENT_ID,response_type:'code',redirect_uri:REDIRECT_URI,
+    scope:SCOPES,code_challenge_method:'S256',code_challenge:c});
+}
+async function exchangeCode(code) {
+  const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIRECT_URI,
+      client_id:CLIENT_ID,code_verifier:sessionStorage.getItem('pkce_verifier')})});
+  return (await r.json()).access_token;
+}
+async function api(method,url,body) {
+  const opts={method,headers:{Authorization:`Bearer ${accessToken}`}};
+  if(body){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(body);}
+  const r=await fetch(url,opts);
+  if(r.status===429){const w=parseInt(r.headers.get('Retry-After')||'2')*1000+500;await sleep(w);return api(method,url,body);}
+  return r.status===204?null:r.json();
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function findAlbumId(album) {
+  if(album.id) return album.id;
+  const q=encodeURIComponent(`album:${album.title} artist:${album.artist}`);
+  const d=await api('GET',`https://api.spotify.com/v1/search?q=${q}&type=album&limit=3`);
+  const items=d?.albums?.items||[];
+  if(items.length>0) return items[0].id;
+  // fallback
+  const q2=encodeURIComponent(`${album.title} ${album.artist}`);
+  const d2=await api('GET',`https://api.spotify.com/v1/search?q=${q2}&type=album&limit=3`);
+  return d2?.albums?.items?.[0]?.id||null;
+}
+
+async function getAlbumTracks(albumId) {
+  const tracks=[];
+  let url=`https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
+  while(url){
+    const d=await api('GET',url);
+    if(!d?.items) break;
+    tracks.push(...d.items);
+    url=d.next||null;
+  }
+  return tracks;
+}
+
+function setAlbumStatus(num,text,cls){
+  const el=document.getElementById(`astatus-${num}`);
+  const tEl=document.getElementById(`atracks-${num}`);
+  if(el){el.textContent=text;el.className=`album-status ${cls}`;}
+}
+
+async function buildPlaylist() {
+  document.getElementById('buildBtn').disabled=true;
+  document.getElementById('statusArea').style.display='block';
+  const albumList=document.getElementById('albumList');
+  const progressFill=document.getElementById('progressFill');
+  const statusText=document.getElementById('statusText');
+
+  albumList.innerHTML=ALBUMS.map(a=>`
+    <div class="album-item" id="aitem-${a.num}">
+      <div class="album-header">
+        <span class="album-num">${a.num}</span>
+        <span class="album-name">${a.artist} — ${a.title}</span>
+        <span class="album-tracks" id="atracks-${a.num}"></span>
+        <span class="album-status pending" id="astatus-${a.num}">…</span>
+      </div>
+    </div>`).join('');
+
+  statusText.textContent='Creating playlist...';
+  const playlist=await api('POST',`https://api.spotify.com/v1/users/${userId}/playlists`,{
+    name:'The Vault — No Excuse for Jazz',
+    description:'50 gateway jazz albums. Up to 60 minutes each. No excuses. Via headphonesty.com',
+    public:true});
+  const playlistId=playlist.id;
+
+  let allUris=[];
+  let totalTracks=0;
+  let found=0;
+
+  for(let i=0;i<ALBUMS.length;i++){
+    const a=ALBUMS[i];
+    statusText.textContent=`Processing ${i+1}/50 — ${a.title}`;
+    progressFill.style.width=`${((i+1)/ALBUMS.length)*100}%`;
+    setAlbumStatus(a.num,'⟳','working');
+    document.getElementById(`aitem-${a.num}`)?.scrollIntoView({block:'nearest'});
+
+    try {
+      const albumId=await findAlbumId(a);
+      if(!albumId){setAlbumStatus(a.num,'✗','miss');await sleep(100);continue;}
+
+      const tracks=await getAlbumTracks(albumId);
+      let ms=0; const uris=[];
+      for(const t of tracks){
+        if(ms+t.duration_ms>MAX_MS) break;
+        uris.push(t.uri);
+        ms+=t.duration_ms;
+      }
+
+      const mins=Math.round(ms/60000);
+      document.getElementById(`atracks-${a.num}`).textContent=`${uris.length} tracks · ${mins}m`;
+      setAlbumStatus(a.num,'✓','ok');
+      allUris.push(...uris);
+      totalTracks+=uris.length;
+      found++;
+
+      // Push in batches of 100
+      while(allUris.length>=100){
+        await api('POST',`https://api.spotify.com/v1/playlists/${playlistId}/tracks`,{uris:allUris.splice(0,100)});
+        await sleep(200);
+      }
+    } catch(e){
+      setAlbumStatus(a.num,'✗','miss');
+    }
+    await sleep(150);
+  }
+
+  // Flush remainder
+  while(allUris.length>0){
+    await api('POST',`https://api.spotify.com/v1/playlists/${playlistId}/tracks`,{uris:allUris.splice(0,100)});
+    await sleep(200);
+  }
+
+  statusText.textContent=`Done — ${found}/50 albums · ${totalTracks} tracks added`;
+  progressFill.style.width='100%';
+
+  const resultBox=document.getElementById('resultBox');
+  resultBox.style.display='block';
+  document.getElementById('trackCount').textContent=`${totalTracks} tracks from ${found} albums`;
+  document.getElementById('playlistLink').href=`https://open.spotify.com/playlist/${playlistId}`;
+}
+
+async function init(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  if(code){
+    window.history.replaceState({},'',REDIRECT_URI);
+    accessToken=await exchangeCode(code);
+    if(!accessToken) return;
+    const me=await api('GET','https://api.spotify.com/v1/me');
+    userId=me.id;
+    document.getElementById('connectBtn').style.display='none';
+    document.getElementById('buildBtn').style.display='block';
+    document.getElementById('userInfo').style.display='flex';
+    document.getElementById('userName').textContent=me.display_name||me.id;
+  }
+}
+init();
+</script>
+</body>
+</html>
