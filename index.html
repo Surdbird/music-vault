@@ -4655,7 +4655,7 @@ async function buildJazzPlaylist() {
       } catch(e) {}
       for (let j = 0; j < uris.length; j += 100) {
         try {
-          await spotifyFetch('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks', {
+          await spotifyFetch('https://api.spotify.com/v1/playlists/' + playlistId + '/items', {
             method: 'POST', body: JSON.stringify({ uris: uris.slice(j, j+100) })
           });
           totalAdded += Math.min(100, uris.length - j);
@@ -4748,7 +4748,7 @@ async function buildJazzHighlights() {
     let added = 0;
     for (let i = 0; i < uris.length; i += 100) {
       try {
-        await spotifyFetch('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks', {
+        await spotifyFetch('https://api.spotify.com/v1/playlists/' + playlistId + '/items', {
           method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i+100) })
         });
         added += Math.min(100, uris.length - i);
