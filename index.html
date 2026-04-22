@@ -4659,13 +4659,13 @@ async function buildJazzPlaylist() {
             method: 'POST', body: JSON.stringify({ uris: uris.slice(j, j+100) })
           });
           totalAdded += Math.min(100, uris.length - j);
-        } catch(e) { toast('Add error: ' + e.message); }
+        } catch(e) { alert('Add tracks error: ' + e.message); }
         await sleep(300);
       }
       await sleep(200);
     }
     toast('✓ No Excuse for Jazz — ' + totalAdded + ' tracks · open.spotify.com/playlist/' + playlistId);
-  } catch(e) { toast('Error: ' + e.message); }
+  } catch(e) { alert('Jazz playlist error: ' + e.message); }
 }
 
 async function buildJazzHighlights() {
@@ -4752,11 +4752,11 @@ async function buildJazzHighlights() {
           method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i+100) })
         });
         added += Math.min(100, uris.length - i);
-      } catch(e) { toast('Add error: ' + e.message); }
+      } catch(e) { alert('Add tracks error: ' + e.message); }
       await sleep(300);
     }
     toast('✓ Highlights done — ' + added + '/' + uris.length + ' tracks · open.spotify.com/playlist/' + playlistId);
-  } catch(e) { toast('Error: ' + e.message); }
+  } catch(e) { alert('Highlights error: ' + e.message); }
 }
 
 
