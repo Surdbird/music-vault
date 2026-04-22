@@ -235,7 +235,15 @@ async function buildPlaylist() {
     name:'The Vault — No Excuse for Jazz',
     description:'50 gateway jazz albums. Up to 60 minutes each. No excuses. Via headphonesty.com',
     public:true});
+
+  if(!playlist?.id){
+    statusText.textContent='Error creating playlist: '+(playlist?.error?.message||JSON.stringify(playlist));
+    statusText.style.color='#e74c3c';
+    document.getElementById('buildBtn').disabled=false;
+    return;
+  }
   const playlistId=playlist.id;
+  statusText.textContent='Playlist created: '+playlistId;
 
   let allUris=[];
   let totalTracks=0;

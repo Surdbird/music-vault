@@ -153,6 +153,13 @@ async function buildPlaylist(){
 
   statusText.textContent='Creating playlist...';
   const playlist=await api('POST',`https://api.spotify.com/v1/users/${userId}/playlists`,{name:'The Vault — No Excuse for Jazz (Highlights)',description:'One gateway track from each of 50 essential jazz albums. Via headphonesty.com',public:true});
+
+  if(!playlist?.id){
+    statusText.textContent='Error creating playlist: '+(playlist?.error?.message||JSON.stringify(playlist));
+    statusText.style.color='#e74c3c';
+    document.getElementById('buildBtn').disabled=false;
+    return;
+  }
   const playlistId=playlist.id;
   const uris=[];let found=0;
 
