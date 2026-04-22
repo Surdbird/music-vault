@@ -1247,7 +1247,10 @@ textarea::placeholder { color: var(--muted); }
     ↑ Update All Member Playlists
   </button>
   <button onclick="buildJazzPlaylist()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--sp);color:var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
-    ♪ No Excuse for Jazz — Build Playlist
+    ♪ No Excuse for Jazz — Full Albums
+  </button>
+  <button onclick="buildJazzHighlights()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:none;border:1px solid var(--sp);color:var(--sp);padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
+    ♪ No Excuse for Jazz — Highlights
   </button>
 </div>
 
@@ -4562,7 +4565,6 @@ function toast(msg) {
 async function buildJazzPlaylist() {
   if (!spotifyToken) { toast('Connect Spotify first'); return; }
 
-  const MAX_MS = 60 * 60 * 1000;
   const ALBUMS = [
     {num:1, artist:'Miles Davis', title:'Kind of Blue'},
     {num:2, artist:'Dave Brubeck Quartet', title:'Time Out'},
@@ -4618,98 +4620,192 @@ async function buildJazzPlaylist() {
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  async function spFetchJazz(url, opts={}) {
+  async function spJ(url, opts={}) {
     const r = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open(opts.method||'GET', url);
       xhr.setRequestHeader('Authorization', 'Bearer ' + spotifyToken);
       if (opts.body) xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.onload = () => resolve({status: xhr.status, text: () => xhr.responseText, json: () => JSON.parse(xhr.responseText), headers: {get: h => xhr.getResponseHeader(h)}});
+      xhr.onload = () => resolve({status: xhr.status, body: xhr.responseText, headers: {get: h => xhr.getResponseHeader(h)}});
       xhr.onerror = reject;
       xhr.send(opts.body ? JSON.stringify(opts.body) : null);
     });
-    if (r.status === 429) {
-      const w = (parseInt(r.headers.get('Retry-After')||'2') * 1000) + 500;
-      await sleep(w);
-      return spFetchJazz(url, opts);
-    }
-    return r.status === 204 ? null : r.json();
+    if (r.status === 429) { await sleep((parseInt(r.headers.get('Retry-After')||'2')*1000)+500); return spJ(url, opts); }
+    if (!r.body || r.status === 204) return null;
+    try { return JSON.parse(r.body); } catch(e) { return null; }
   }
 
-  // Get user id
-  toast('♪ Building jazz playlist...');
-  const me = await spFetchJazz('https://api.spotify.com/v1/me');
-  if (!me?.id) { toast('Could not get Spotify user — reconnect'); return; }
+  async function addBatch(playlistId, uris) {
+    if (!uris.length) return 0;
+    const result = await spJ(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      method: 'POST', body: { uris }
+    });
+    await sleep(300);
+    return result?.snapshot_id ? uris.length : 0;
+  }
 
-  // Create playlist
-  const playlist = await spFetchJazz(`https://api.spotify.com/v1/me/playlists`, {
+  toast('♪ Building No Excuse for Jazz playlist...');
+
+  const playlist = await spJ('https://api.spotify.com/v1/me/playlists', {
     method: 'POST',
-    body: {
-      name: 'The Vault — No Excuse for Jazz',
-      description: '50 gateway jazz albums, up to 60 min each. Via headphonesty.com',
-      public: true
-    }
+    body: { name: 'The Vault — No Excuse for Jazz', description: '50 gateway jazz albums, up to 60 min each. Via headphonesty.com', public: true }
   });
 
-  if (!playlist?.id) { toast('Error creating playlist: ' + (playlist?.error?.message || 'unknown')); return; }
+  if (!playlist?.id) { toast('Error: ' + (playlist?.error?.message || 'could not create playlist')); return; }
   const playlistId = playlist.id;
   let totalAdded = 0;
-  let allUris = [];
 
   for (let i = 0; i < ALBUMS.length; i++) {
     const a = ALBUMS[i];
-    toast(`♪ Jazz playlist: searching ${i+1}/50 — ${a.title}`);
+    toast(`♪ Jazz: ${i+1}/50 — ${a.title}`);
 
-    // Search for album
-    const q = encodeURIComponent(`album:${a.title} artist:${a.artist}`);
+    // Find album
     let albumId = null;
-    const sd = await spFetchJazz(`https://api.spotify.com/v1/search?q=${q}&type=album&limit=3`);
+    const q = encodeURIComponent('album:' + a.title + ' artist:' + a.artist);
+    const sd = await spJ('https://api.spotify.com/v1/search?q=' + q + '&type=album&limit=3');
     if (sd?.albums?.items?.length) albumId = sd.albums.items[0].id;
     if (!albumId) {
-      const q2 = encodeURIComponent(`${a.title} ${a.artist}`);
-      const sd2 = await spFetchJazz(`https://api.spotify.com/v1/search?q=${q2}&type=album&limit=3`);
+      const q2 = encodeURIComponent(a.title + ' ' + a.artist);
+      const sd2 = await spJ('https://api.spotify.com/v1/search?q=' + q2 + '&type=album&limit=3');
       if (sd2?.albums?.items?.length) albumId = sd2.albums.items[0].id;
     }
-    if (!albumId) { await sleep(150); continue; }
+    if (!albumId) { await sleep(200); continue; }
 
-    // Get tracks
-    const tracks = [];
-    let url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
-    while (url) {
-      const td = await spFetchJazz(url);
-      if (!td?.items) break;
-      tracks.push(...td.items);
-      url = td.next || null;
-    }
-
-    // Add up to 60 min
+    // Get tracks up to 60 min
+    const uris = [];
     let ms = 0;
-    for (const t of tracks) {
-      if (ms + t.duration_ms > 60 * 60 * 1000) break;
-      allUris.push(t.uri);
-      ms += t.duration_ms;
+    let trackUrl = 'https://api.spotify.com/v1/albums/' + albumId + '/tracks?limit=50';
+    while (trackUrl && ms < 3600000) {
+      const td = await spJ(trackUrl);
+      if (!td?.items) break;
+      for (const t of td.items) {
+        if (ms + t.duration_ms > 3600000) break;
+        uris.push(t.uri);
+        ms += t.duration_ms;
+      }
+      trackUrl = (ms < 3600000 && td.next) ? td.next : null;
     }
 
-    // Flush in batches of 100
-    while (allUris.length >= 100) {
-      await spFetchJazz(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-        method: 'POST', body: { uris: allUris.splice(0, 100) }
-      });
-      await sleep(200);
-      totalAdded += 100;
+    // Add this album's tracks immediately in batches of 100
+    for (let j = 0; j < uris.length; j += 100) {
+      const added = await addBatch(playlistId, uris.slice(j, j + 100));
+      totalAdded += added;
     }
-    await sleep(150);
+    await sleep(200);
   }
 
-  // Flush remainder
-  if (allUris.length > 0) {
-    await spFetchJazz(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-      method: 'POST', body: { uris: allUris }
+  toast('✓ Done — ' + totalAdded + ' tracks added to No Excuse for Jazz · open.spotify.com/playlist/' + playlistId);
+}
+
+
+async function buildJazzHighlights() {
+  if (!spotifyToken) { toast('Connect Spotify first'); return; }
+
+  const TRACKS = [
+    {num:1, artist:'Miles Davis', track:'So What'},
+    {num:2, artist:'Dave Brubeck Quartet', track:'Take Five'},
+    {num:3, artist:'Chet Baker', track:'My Funny Valentine'},
+    {num:4, artist:'Ella Fitzgerald', track:"Isn't This a Lovely Day"},
+    {num:5, artist:'Norah Jones', track:"Don't Know Why"},
+    {num:6, artist:'Vince Guaraldi Trio', track:'Linus and Lucy'},
+    {num:7, artist:'Stan Getz', track:'The Girl from Ipanema'},
+    {num:8, artist:'Ahmad Jamal', track:'Poinciana'},
+    {num:9, artist:'Ella Fitzgerald', track:'Night and Day'},
+    {num:10,artist:'John Coltrane', track:'Lush Life'},
+    {num:11,artist:'Gregory Porter', track:'Liquid Spirit'},
+    {num:12,artist:'Esperanza Spalding', track:'Black Gold'},
+    {num:13,artist:'Art Blakey', track:"Moanin'"},
+    {num:14,artist:'Cannonball Adderley', track:'Autumn Leaves'},
+    {num:15,artist:'Herbie Hancock', track:'Chameleon'},
+    {num:16,artist:'Donald Byrd', track:'Black Byrd'},
+    {num:17,artist:'Donald Byrd', track:'Street Lady'},
+    {num:18,artist:'Ramsey Lewis', track:'The In Crowd'},
+    {num:19,artist:'Jimmy Smith', track:'The Sermon'},
+    {num:20,artist:'Charles Mingus', track:'Better Git It in Your Soul'},
+    {num:21,artist:'Oscar Peterson', track:'Night Train'},
+    {num:22,artist:'Grant Green', track:'Idle Moments'},
+    {num:23,artist:'Chick Corea', track:'Spain'},
+    {num:24,artist:'Stan Getz', track:'Desafinado'},
+    {num:25,artist:'Bill Evans', track:'Waltz for Debby'},
+    {num:26,artist:'Bill Evans', track:"My Man's Gone Now"},
+    {num:27,artist:'John Coltrane', track:'My Favorite Things'},
+    {num:28,artist:'Wes Montgomery', track:"Bumpin' on Sunset"},
+    {num:29,artist:'Weather Report', track:'Birdland'},
+    {num:30,artist:'The Crusaders', track:'Free as the Wind'},
+    {num:31,artist:'Robert Glasper', track:'Afro Blue'},
+    {num:32,artist:'Nujabes', track:'Feather'},
+    {num:33,artist:'Flying Lotus', track:'Do the Astral Plane'},
+    {num:34,artist:'Thundercat', track:'Them Changes'},
+    {num:35,artist:'Alfa Mist', track:'Antiphon'},
+    {num:36,artist:'Alfa Mist', track:'Bring Backs'},
+    {num:37,artist:'DOMi & JD Beck', track:'SMiLE'},
+    {num:38,artist:'BADBADNOTGOOD', track:"Chompy's Paradise"},
+    {num:39,artist:'BADBADNOTGOOD', track:'Signal from the Noise'},
+    {num:40,artist:'Yussef Dayes', track:'Chasing the Drum'},
+    {num:41,artist:'Tom Misch', track:'Nightrider'},
+    {num:42,artist:'KOKOROKO', track:'Could We Be More'},
+    {num:43,artist:'Nubya Garcia', track:'Source'},
+    {num:44,artist:'Kamasi Washington', track:'The Epic'},
+    {num:45,artist:'Hiromi', track:'Voice'},
+    {num:46,artist:'Snarky Puppy', track:'Lingus'},
+    {num:47,artist:'Cécile McLorin Salvant', track:'You Bring Out the Savage in Me'},
+    {num:48,artist:'Wes Montgomery', track:'West Coast Blues'},
+    {num:49,artist:'Herbie Hancock', track:'Speak Like a Child'},
+    {num:50,artist:'Lonnie Liston Smith', track:'Astral Traveling'},
+  ];
+
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function spFetchH(url, opts={}) {
+    const r = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(opts.method||'GET', url);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + spotifyToken);
+      if (opts.body) xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = () => resolve({status: xhr.status, json: () => JSON.parse(xhr.responseText), headers: {get: h => xhr.getResponseHeader(h)}});
+      xhr.onerror = reject;
+      xhr.send(opts.body ? JSON.stringify(opts.body) : null);
     });
-    totalAdded += allUris.length;
+    if (r.status === 429) { await sleep((parseInt(r.headers.get('Retry-After')||'2')*1000)+500); return spFetchH(url, opts); }
+    return r.status === 204 ? null : r.json();
   }
 
-  toast(`✓ Jazz playlist created — ${totalAdded} tracks · open.spotify.com/playlist/${playlistId}`);
+  toast('♪ Building jazz highlights playlist...');
+
+  const playlist = await spFetchH('https://api.spotify.com/v1/me/playlists', {
+    method: 'POST',
+    body: { name: 'The Vault — No Excuse for Jazz (Highlights)', description: 'One gateway track from each of 50 essential jazz albums. Via headphonesty.com', public: true }
+  });
+
+  if (!playlist?.id) { toast('Error: ' + (playlist?.error?.message || 'could not create playlist')); return; }
+  const playlistId = playlist.id;
+  const uris = [];
+
+  for (let i = 0; i < TRACKS.length; i++) {
+    const t = TRACKS[i];
+    toast(`♪ Highlights: searching ${i+1}/50 — ${t.track}`);
+    const q = encodeURIComponent(`track:${t.track} artist:${t.artist}`);
+    let uri = null;
+    const d = await spFetchH(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=3`);
+    if (d?.tracks?.items?.length) uri = d.tracks.items[0].uri;
+    if (!uri) {
+      const q2 = encodeURIComponent(`${t.track} ${t.artist}`);
+      const d2 = await spFetchH(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=3`);
+      if (d2?.tracks?.items?.length) uri = d2.tracks.items[0].uri;
+    }
+    if (uri) uris.push(uri);
+    await sleep(120);
+  }
+
+  // Add all tracks
+  for (let i = 0; i < uris.length; i += 100) {
+    await spFetchH(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      method: 'POST', body: { uris: uris.slice(i, i+100) }
+    });
+    await sleep(200);
+  }
+
+  toast(`✓ Highlights playlist created — ${uris.length} tracks · open.spotify.com/playlist/${playlistId}`);
 }
 
 </script>
