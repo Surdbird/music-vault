@@ -4771,50 +4771,57 @@ async function buildJazzHighlights() {
     try { return JSON.parse(r.body); } catch(e) { return {_raw: r.body, _status: r.status}; }
   }
 
-  toast('♪ Building jazz highlights playlist...');
+  try {
+    toast('♪ Building jazz highlights playlist...');
 
-  const playlist = await spFetchH('https://api.spotify.com/v1/me/playlists', {
-    method: 'POST',
-    body: { name: 'The Vault — No Excuse for Jazz (Highlights)', description: 'One gateway track from each of 50 essential jazz albums. Via headphonesty.com', public: true }
-  });
-
-  if (!playlist?.id) { toast('Error: ' + (playlist?.error?.message || 'could not create playlist')); return; }
-  const playlistId = playlist.id;
-  const uris = [];
-
-  for (let i = 0; i < TRACKS.length; i++) {
-    const t = TRACKS[i];
-    toast(`♪ Highlights: searching ${i+1}/50 — ${t.track}`);
-    const q = encodeURIComponent(`track:${t.track} artist:${t.artist}`);
-    let uri = null;
-    const d = await spFetchH(`https://api.spotify.com/v1/search?q=${q}&type=track&limit=3`);
-    if (d?.tracks?.items?.length) uri = d.tracks.items[0].uri;
-    if (!uri) {
-      const q2 = encodeURIComponent(`${t.track} ${t.artist}`);
-      const d2 = await spFetchH(`https://api.spotify.com/v1/search?q=${q2}&type=track&limit=3`);
-      if (d2?.tracks?.items?.length) uri = d2.tracks.items[0].uri;
-    }
-    if (uri) uris.push(uri);
-    await sleep(120);
-  }
-
-  // Add all tracks
-  let addedCount = 0;
-  for (let i = 0; i < uris.length; i += 100) {
-    const batch = uris.slice(i, i+100);
-    const addResult = await spFetchH(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-      method: 'POST', body: { uris: batch }
+    const playlist = await spFetchH('https://api.spotify.com/v1/me/playlists', {
+      method: 'POST',
+      body: { name: 'The Vault — No Excuse for Jazz (Highlights)', description: 'One gateway track from each of 50 essential jazz albums. Via headphonesty.com', public: true }
     });
-    if (addResult?.snapshot_id) {
-      addedCount += batch.length;
-    } else {
-      toast('Track add error: ' + JSON.stringify(addResult).slice(0, 100));
-      return;
-    }
-    await sleep(300);
-  }
 
-  toast(`✓ Highlights done — ${addedCount}/${uris.length} tracks · open.spotify.com/playlist/${playlistId}`);
+    if (!playlist?.id) { toast('Error creating: ' + JSON.stringify(playlist).slice(0,120)); return; }
+    const playlistId = playlist.id;
+    toast('♪ Playlist created: ' + playlistId + ' — searching tracks...');
+
+    const uris = [];
+    for (let i = 0; i < TRACKS.length; i++) {
+      const t = TRACKS[i];
+      const q = encodeURIComponent('track:' + t.track + ' artist:' + t.artist);
+      let uri = null;
+      const d = await spFetchH('https://api.spotify.com/v1/search?q=' + q + '&type=track&limit=3');
+      if (d?.tracks?.items?.length) uri = d.tracks.items[0].uri;
+      if (!uri) {
+        const q2 = encodeURIComponent(t.track + ' ' + t.artist);
+        const d2 = await spFetchH('https://api.spotify.com/v1/search?q=' + q2 + '&type=track&limit=3');
+        if (d2?.tracks?.items?.length) uri = d2.tracks.items[0].uri;
+      }
+      if (uri) uris.push(uri);
+      await sleep(120);
+    }
+
+    toast('♪ Found ' + uris.length + '/50 tracks — adding to playlist...');
+    await sleep(500);
+
+    let addedCount = 0;
+    for (let i = 0; i < uris.length; i += 100) {
+      const batch = uris.slice(i, i+100);
+      const addResult = await spFetchH('https://api.spotify.com/v1/playlists/' + playlistId + '/tracks', {
+        method: 'POST', body: { uris: batch }
+      });
+      if (addResult?.snapshot_id) {
+        addedCount += batch.length;
+      } else {
+        toast('Add error: ' + JSON.stringify(addResult).slice(0, 150));
+        return;
+      }
+      await sleep(300);
+    }
+
+    toast('✓ Highlights done — ' + addedCount + '/' + uris.length + ' tracks · open.spotify.com/playlist/' + playlistId);
+
+  } catch(e) {
+    toast('Exception: ' + (e.message || String(e)).slice(0, 150));
+  }
 }
 
 </script>
