@@ -4642,7 +4642,7 @@ async function buildJazzPlaylist() {
   if (!me?.id) { toast('Could not get Spotify user — reconnect'); return; }
 
   // Create playlist
-  const playlist = await spFetchJazz(`https://api.spotify.com/v1/users/${me.id}/playlists`, {
+  const playlist = await spFetchJazz(`https://api.spotify.com/v1/me/playlists`, {
     method: 'POST',
     body: {
       name: 'The Vault — No Excuse for Jazz',
