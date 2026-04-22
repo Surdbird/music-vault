@@ -4762,12 +4762,13 @@ async function buildJazzHighlights() {
       xhr.open(opts.method||'GET', url);
       xhr.setRequestHeader('Authorization', 'Bearer ' + spotifyToken);
       if (opts.body) xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.onload = () => resolve({status: xhr.status, json: () => JSON.parse(xhr.responseText), headers: {get: h => xhr.getResponseHeader(h)}});
+      xhr.onload = () => resolve({status: xhr.status, body: xhr.responseText, headers: {get: h => xhr.getResponseHeader(h)}});
       xhr.onerror = reject;
       xhr.send(opts.body ? JSON.stringify(opts.body) : null);
     });
     if (r.status === 429) { await sleep((parseInt(r.headers.get('Retry-After')||'2')*1000)+500); return spFetchH(url, opts); }
-    return r.status === 204 ? null : r.json();
+    if (!r.body || r.status === 204) return null;
+    try { return JSON.parse(r.body); } catch(e) { return {_raw: r.body, _status: r.status}; }
   }
 
   toast('♪ Building jazz highlights playlist...');
@@ -4798,14 +4799,22 @@ async function buildJazzHighlights() {
   }
 
   // Add all tracks
+  let addedCount = 0;
   for (let i = 0; i < uris.length; i += 100) {
-    await spFetchH(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-      method: 'POST', body: { uris: uris.slice(i, i+100) }
+    const batch = uris.slice(i, i+100);
+    const addResult = await spFetchH(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+      method: 'POST', body: { uris: batch }
     });
-    await sleep(200);
+    if (addResult?.snapshot_id) {
+      addedCount += batch.length;
+    } else {
+      toast('Track add error: ' + JSON.stringify(addResult).slice(0, 100));
+      return;
+    }
+    await sleep(300);
   }
 
-  toast(`✓ Highlights playlist created — ${uris.length} tracks · open.spotify.com/playlist/${playlistId}`);
+  toast(`✓ Highlights done — ${addedCount}/${uris.length} tracks · open.spotify.com/playlist/${playlistId}`);
 }
 
 </script>
