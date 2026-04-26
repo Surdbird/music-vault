@@ -3350,6 +3350,10 @@ async function generateSanctorum() {
   const spotifyProfile = 'https://open.spotify.com/user/sumit.nurpuri';
   const now = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
 
+  // Curated playlists — hardcoded URLs (update if rebuilt)
+  const jazzAlbumsUrl = 'https://open.spotify.com/playlist/7LO6P19aJEQossTlwJYWnh';
+  const jazzHighlightsUrl = 'https://open.spotify.com/playlist/33B5CNx0DvOc0WA4EgAbZQ';
+
   // Get Complete Vault playlist URL
   const genrePlaylists = JSON.parse(localStorage.getItem('vault_genre_playlists') || '{}');
   const completeVaultUrl = genrePlaylists['Complete']?.url || spotifyProfile;
@@ -3492,6 +3496,24 @@ async function generateSanctorum() {
     + '<div class="card-icon">◎</div>'
     + '<div class="card-title">The Vault — Complete</div>'
     + '<div class="card-desc">Every Spotify track ever shared in The Vault — ' + completeVaultTracks + ' tracks, 546+ hours.</div>'
+    + '<span class="card-platform sp">Spotify</span>'
+    + '</a>'
+    + '</div></div>'
+
+    // Curated Playlists
+    + '<div class="section">'
+    + '<div class="section-title">Curated Playlists</div>'
+    + '<div class="grid">'
+    + '<a class="card" href="' + jazzAlbumsUrl + '" target="_blank" rel="noopener">'
+    + '<div class="card-icon">♪</div>'
+    + '<div class="card-title">No Excuse for Jazz — Full Albums</div>'
+    + '<div class="card-desc">50 gateway jazz albums, up to 60 min each. ~417 tracks. Via headphonesty.com</div>'
+    + '<span class="card-platform sp">Spotify</span>'
+    + '</a>'
+    + '<a class="card" href="' + jazzHighlightsUrl + '" target="_blank" rel="noopener">'
+    + '<div class="card-icon">♪</div>'
+    + '<div class="card-title">No Excuse for Jazz — Highlights</div>'
+    + '<div class="card-desc">One gateway track from each of 50 essential jazz albums.</div>'
     + '<span class="card-platform sp">Spotify</span>'
     + '</a>'
     + '</div></div>'
