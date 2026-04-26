@@ -2539,7 +2539,11 @@ try { localStorage.removeItem('vault_chat'); } catch(e) {}
 function extractYTId(url) {
   try {
     const u = new URL(url);
-    return u.searchParams.get('v') || u.pathname.split('/').pop() || null;
+    // Reject playlist-only URLs (youtube.com/playlist?list=... or music.youtube.com/playlist?...)
+    if (u.pathname === '/playlist' || u.pathname.endsWith('/playlist/')) return null;
+    const id = u.searchParams.get('v') || u.pathname.split('/').pop() || null;
+    // YouTube video IDs are exactly 11 chars: [A-Za-z0-9_-]
+    return (id && /^[A-Za-z0-9_-]{11}$/.test(id)) ? id : null;
   } catch { return null; }
 }
 
