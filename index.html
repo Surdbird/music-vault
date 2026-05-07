@@ -3436,8 +3436,9 @@ async function generateSanctorum() {
     + '<p class="sub">A community music archive · 6 years of sharing</p>'
     + '<p class="date">Updated ' + now + '</p>'
     + '</header>'
-    + '<div class="container">'
+    + '<div class="container">';
 
+  const staticSections = ''
     // By Member
     + '<div class="section">'
     + '<div class="section-title">By Member</div>'
@@ -3520,7 +3521,7 @@ async function generateSanctorum() {
     + '<div class="card-desc">One gateway track from each of 50 essential jazz albums.</div>'
     + '<span class="card-platform sp">Spotify</span>'
     + '</a>'
-    + '</div></div>'
+    + '</div></div>';
 
     // Build current week's YouTube playlist
     const nowDate = new Date();
@@ -3606,7 +3607,7 @@ async function generateSanctorum() {
     + '<p style="font-size:0.72rem;color:#3d3530;margin-top:0.75rem">** Spotify digest is created at the end of each week — YouTube shows the current week live.</p>'
     + '</div>';
 
-    const pageHtmlEnd = dispatchesSection + weeklySection
+    const pageHtmlEnd = weeklySection + dispatchesSection + staticSections
     + '</div>'
     + '<footer>* Genre playlists are approximate — YouTube videos shown are from members who share that genre, not exclusively that genre.<br><br>'
     + 'Built with \u2665 by Sumit &amp; Claude \u00b7 <a href="' + base + '/" style="color:#3d3530">Open The Vault</a></footer>'
