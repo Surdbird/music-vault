@@ -1,0 +1,13 @@
+{
+  "name": "vault-weekly",
+  "version": "1.0.0",
+  "description": "Single-command weekly admin for The Vault — parses WhatsApp chat, updates Spotify playlists, generates HTML pages, captures the weekly Claude.ai summary, commits and pushes.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "vault-weekly": "./vault-weekly.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
