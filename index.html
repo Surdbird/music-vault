@@ -3659,13 +3659,20 @@ async function generateSanctorum() {
     + '<p style="font-size:0.72rem;color:#3d3530;margin-top:0.75rem">** Spotify digest is created at the end of each week — YouTube shows the current week live.</p>'
     + '</div>';
 
-    const pageHtmlEnd = dispatchesSection + weeklySection
-    + '</div>'
+    const pageHtmlEnd = '</div>'
     + '<footer>* Genre playlists are approximate — YouTube videos shown are from members who share that genre, not exclusively that genre.<br><br>'
     + 'Built with \u2665 by Sumit &amp; Claude \u00b7 <a href="' + base + '/" style="color:#3d3530">Open The Vault</a></footer>'
     + '</body></html>';
 
-  const blob = new Blob([pageHtml + pageHtmlEnd], { type: 'text/html' });
+  // Inject Weekly Dispatches + Weekly Digest at the TOP of the container (just after <div class="container">)
+  // so they appear above the static By Member / By Artist / By Genre / Curated Playlists sections.
+  // Order matches original generator output: Dispatches first, then Weekly Digest.
+  const pageHtmlReordered = pageHtml.replace(
+    '<div class="container">',
+    '<div class="container">' + dispatchesSection + weeklySection
+  );
+
+  const blob = new Blob([pageHtmlReordered + pageHtmlEnd], { type: 'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'links.html';
