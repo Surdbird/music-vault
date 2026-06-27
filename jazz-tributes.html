@@ -15,12 +15,10 @@
   #hint { font-size: 0.63rem; color: #3d3428; letter-spacing: 0.05em; white-space: nowrap; }
   #graph-container { flex: 1; position: relative; overflow: hidden; }
   svg { width: 100%; height: 100%; }
-
   .link { stroke: #6b4a2a; stroke-opacity: 0.45; stroke-width: 1; cursor: pointer; transition: stroke-opacity 0.2s, stroke-width 0.2s; }
   .link:hover { stroke: #d4845a; stroke-opacity: 1; stroke-width: 2; }
   .link.dimmed { stroke-opacity: 0.04; pointer-events: none; }
   .link.highlighted { stroke: #d4845a; stroke-opacity: 0.85; stroke-width: 1.5; }
-
   .node circle { fill: #b8823a; stroke: #1a1510; stroke-width: 1.5; cursor: pointer; transition: fill 0.2s; }
   .node.dimmed circle { fill: #1e1a14; stroke: #1e1a14; pointer-events: none; }
   .node.highlighted circle { fill: #e0aa60; stroke: #d4845a; stroke-width: 2; }
@@ -28,50 +26,39 @@
   .node text { font-family: 'Courier Prime', monospace; font-size: 9.5px; fill: #7a6a50; pointer-events: none; text-anchor: middle; transition: fill 0.2s; }
   .node.highlighted text, .node.selected text { fill: #e8d9b8; }
   .node.dimmed text { fill: #1e1a14; }
-
-  #edge-tooltip { position: absolute; background: #0d0a06; border: 1px solid #3a2e1e; border-left: 2px solid #d4845a; padding: 0.5rem 0.8rem; font-size: 0.68rem; color: #c0a870; pointer-events: none; opacity: 0; transition: opacity 0.12s; max-width: 250px; line-height: 1.6; z-index: 10; }
+  #edge-tooltip { position: absolute; background: #0d0a06; border: 1px solid #3a2e1e; border-left: 2px solid #d4845a; padding: 0.55rem 0.85rem; font-size: 0.68rem; color: #c0a870; pointer-events: none; opacity: 0; transition: opacity 0.12s; max-width: 250px; line-height: 1.6; z-index: 10; }
   #edge-tooltip .song-title { color: #d4845a; font-style: italic; font-size: 0.75rem; }
   #edge-tooltip .tribute-line { color: #6b5a40; font-size: 0.63rem; margin-top: 0.15rem; }
   #edge-tooltip .note-line { color: #5a4a32; font-size: 0.62rem; margin-top: 0.1rem; font-style: italic; }
-  #edge-tooltip .spotify-link { display: inline-block; margin-top: 0.4rem; font-size: 0.62rem; color: #1db954; letter-spacing: 0.05em; text-decoration: none; border: 1px solid #1a4a28; padding: 0.15rem 0.45rem; transition: background 0.15s; }
-  #edge-tooltip .spotify-link:hover { background: #1a3a20; }
-  #edge-tooltip .editorial-note { display: block; font-size: 0.58rem; color: #4a3a28; margin-top: 0.2rem; font-style: italic; }
-
-  #detail-panel { position: absolute; right: 1.25rem; top: 1.25rem; width: 240px; background: #0c0906; border: 1px solid #2a2218; padding: 1.1rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-height: calc(100vh - 120px); overflow-y: auto; }
+  #edge-tooltip .sp-link { display: inline-block; margin-top: 0.35rem; font-size: 0.62rem; color: #1db954; letter-spacing: 0.05em; text-decoration: none; border: 1px solid #1a4a2a; padding: 0.15rem 0.4rem; }
+  #edge-tooltip .sp-link:hover { background: #0a2a18; }
+  #detail-panel { position: absolute; right: 1.25rem; top: 1.25rem; width: 235px; background: #0c0906; border: 1px solid #2a2218; padding: 1.1rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; max-height: calc(100vh - 120px); overflow-y: auto; }
   #detail-panel.visible { opacity: 1; pointer-events: auto; }
   #detail-panel .musician-name { font-family: 'IM Fell English', Georgia, serif; font-size: 1.05rem; color: #e8d9b8; margin-bottom: 0.6rem; border-bottom: 1px solid #2a2218; padding-bottom: 0.45rem; padding-right: 1.2rem; line-height: 1.3; }
   #detail-panel .section-label { font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: #5a5040; margin-bottom: 0.35rem; margin-top: 0.65rem; }
-  #detail-panel ul { list-style: none; font-size: 0.67rem; color: #7a6a50; line-height: 1.8; }
+  #detail-panel ul { list-style: none; font-size: 0.67rem; color: #7a6a50; line-height: 1.75; }
+  #detail-panel ul li { margin-bottom: 0.1rem; }
   #detail-panel ul li .song { color: #c8913a; font-style: italic; }
   #detail-panel ul li .by { color: #4a4030; }
   #detail-panel ul li a.sp { color: #1db954; font-size: 0.6rem; margin-left: 0.3rem; text-decoration: none; }
   #detail-panel ul li a.sp:hover { text-decoration: underline; }
-  #close-panel { position: absolute; top: 0.5rem; right: 0.65rem; background: none; border: none; color: #4a4030; cursor: pointer; font-size: 0.85rem; font-family: monospace; line-height: 1; }
+  #close-panel { position: absolute; top: 0.5rem; right: 0.65rem; background: none; border: none; color: #4a4030; cursor: pointer; font-size: 0.85rem; font-family: monospace; }
   #close-panel:hover { color: #d4845a; }
-
   #controls { position: absolute; bottom: 1.25rem; left: 1.25rem; display: flex; gap: 0.5rem; align-items: center; }
   .ctrl-btn { background: none; border: 1px solid #2a2218; color: #4a4030; font-family: 'Courier Prime', monospace; font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase; padding: 0.35rem 0.65rem; cursor: pointer; transition: all 0.15s; }
   .ctrl-btn:hover { border-color: #d4845a; color: #d4845a; }
   .ctrl-btn.hidden { opacity: 0; pointer-events: none; }
-  #search-box { background: #0c0906; border: 1px solid #2a2218; color: #c0a870; font-family: 'Courier Prime', monospace; font-size: 0.68rem; padding: 0.35rem 0.65rem; width: 155px; outline: none; }
+  #search-box { background: #0c0906; border: 1px solid #2a2218; color: #c0a870; font-family: 'Courier Prime', monospace; font-size: 0.68rem; padding: 0.35rem 0.65rem; width: 150px; outline: none; }
   #search-box::placeholder { color: #3a3020; }
   #search-box:focus { border-color: #5a4a30; }
-
-  #footnotes { position: absolute; bottom: 1.25rem; right: 1.25rem; text-align: right; }
-  #count-label { font-size: 0.6rem; color: #3a3020; letter-spacing: 0.05em; }
-  #footnote-toggle { font-size: 0.58rem; color: #3a3020; cursor: pointer; letter-spacing: 0.05em; margin-top: 0.2rem; display: block; }
-  #footnote-toggle:hover { color: #6a5a40; }
-  #footnote-box { display: none; position: absolute; bottom: 2.5rem; right: 0; width: 280px; background: #0c0906; border: 1px solid #2a2218; padding: 0.8rem; font-size: 0.6rem; color: #5a5040; line-height: 1.7; max-height: 200px; overflow-y: auto; }
-  #footnote-box.open { display: block; }
-  #footnote-box p { margin-bottom: 0.4rem; }
-  #footnote-box .fn-mark { color: #c8913a; }
+  #count-label { position: absolute; bottom: 1.25rem; right: 1.25rem; font-size: 0.6rem; color: #3a3020; letter-spacing: 0.05em; }
 </style>
 </head>
 <body>
 <header>
   <h1>A Map of Homage</h1>
   <p>Jazz as a network of tributes — songs written for, about, and in response to other musicians</p>
-  <span id="hint">Click a node · Hover an edge · Scroll to zoom · Drag to rearrange</span>
+  <span id="hint">Click · Hover edges for song + Spotify · Drag · Scroll</span>
 </header>
 <div id="graph-container">
   <svg id="graph"></svg>
@@ -86,252 +73,225 @@
     <input id="search-box" type="text" placeholder="Search musician…" autocomplete="off">
     <button class="ctrl-btn hidden" id="reset-btn">Clear</button>
   </div>
-  <div id="footnotes">
-    <div id="count-label"></div>
-    <span id="footnote-toggle">editorial notes ↑</span>
-    <div id="footnote-box">
-      <p><span class="fn-mark">*</span> <b>Take the Coltrane</b> — linked to the canonical 1962 Ellington &amp; Coltrane album recording (Impulse!), not the later reissues.</p>
-      <p><span class="fn-mark">*</span> <b>Goodbye Pork Pie Hat</b> (Mingus) — linked to <i>Mingus Ah Um</i> original 1959 Columbia. Joni Mitchell's vocal version linked separately.</p>
-      <p><span class="fn-mark">*</span> <b>In Walked Bud</b> — linked to Monk's 1951 Blue Note recording (<i>Genius of Modern Music Vol. 1</i>), the definitive original.</p>
-      <p><span class="fn-mark">*</span> <b>Django</b> (John Lewis/MJQ) — linked to the 1954 Prestige recording. Multiple later versions exist; this is the one written on Reinhardt's death.</p>
-      <p><span class="fn-mark">*</span> <b>I Remember Clifford</b> — linked to Golson's own 1958 recording on <i>Benny Golson and the Philadelphians</i>. Lee Morgan's version is equally famous.</p>
-      <p><span class="fn-mark">*</span> <b>He Loved Him Madly</b> (Miles for Ellington) — 32 minutes long. Linked to the <i>Get Up With It</i> album track. Not easy listening; very much worth it.</p>
-      <p><span class="fn-mark">*</span> <b>Sir Duke</b> (Stevie Wonder) — included as a rare pop/soul crossover tribute because it is one of the most-heard jazz homages in history.</p>
-      <p><span class="fn-mark">*</span> <b>Anthropology</b> (Parker/Gillespie) — co-written; linked to Bird's 1945 Savoy recording. A tribute in spirit and in practice.</p>
-      <p><span class="fn-mark">*</span> Several tracks marked <i>not on Spotify</i> are unavailable or only appear on out-of-print compilations not currently licensed to the platform.</p>
-    </div>
-  </div>
+  <div id="count-label"></div>
 </div>
-
 <script>
-// sp: confirmed Spotify track ID | sp: null = not on Spotify | sp: undefined = known to exist, ID not confirmed
+// sp: Spotify track ID (open.spotify.com/track/{id}), null = not found
 const tributeData = [
-  // ── ELLINGTON hub ─────────────────────────────────────────────────────────
-  { source:"Duke Ellington",    target:"John Coltrane",       song:"Take the Coltrane",             year:1962, sp:"7cUN2jtawZ1jxzVe2SFIOc", editorial:"Linked to the 1962 Ellington & Coltrane Impulse! recording." },
-  { source:"Duke Ellington",    target:"Billy Strayhorn",     song:"Lotus Blossom",                 year:1967, sp:"0v2s3yrgfp1PXNE4jxZOEN", note:"Written on Strayhorn's death; Ellington played it alone, unannounced, at the end of recording sessions." },
-  { source:"Duke Ellington",    target:"Louis Armstrong",     song:"Portrait of Louis Armstrong",   year:1962, sp:"5mBhHMKwxEqY0WblEbfU6b" },
-  { source:"Duke Ellington",    target:"Mahalia Jackson",     song:"Come Sunday",                   year:1943, sp:"0m8aFVCQFtiVJFLgjXlOE0", note:"Ellington's homage to Black sacred tradition; Mahalia later recorded it with him." },
-  { source:"Charles Mingus",    target:"Duke Ellington",      song:"Open Letter to Duke",           year:1959, sp:"2BXFzWHhWJi2hFGMNf2hDj" },
-  { source:"John Coltrane",     target:"Duke Ellington",      song:"In a Mellotone",                year:1962, sp:"4LeKHLUlxy4m40mcOiJVuc", editorial:"Using the Coltrane & Ellington joint album recording (Impulse!)." },
-  { source:"Art Ensemble of Chicago", target:"Duke Ellington", song:"Charlie M.",                  year:1974, sp:null, note:"Also nods to Charlie Parker. Out of print; not currently on Spotify." },
-  { source:"Miles Davis",       target:"Duke Ellington",      song:"He Loved Him Madly",            year:1974, sp:"3g2HKIbkMmPjsFwR3Pl5ZS", note:"32 minutes long, recorded a month after Ellington's death.", editorial:"From Get Up With It. The full 32-minute track; not for the faint-hearted." },
-  { source:"Dave Brubeck",      target:"Duke Ellington",      song:"The Duke",                      year:1955, sp:"7q2CDqrDkYX0VeQCJBVzNX" },
-  { source:"Stevie Wonder",     target:"Duke Ellington",      song:"Sir Duke",                      year:1976, sp:"3hnz9kJqNVkOOY4REyFmUN", editorial:"Included as one of the most-heard jazz tributes ever recorded, crossing into pop." },
-  { source:"Abdullah Ibrahim",  target:"Duke Ellington",      song:"Duke Ellington Suite",          year:1974, sp:null, note:"Ibrahim's lifelong tribute; suite form across multiple releases." },
-  { source:"Oscar Peterson",    target:"Duke Ellington",      song:"Salute to Duke",                year:1952, sp:"5E8jMJOEODSp7s6HVSAhOC" },
-  { source:"Ella Fitzgerald",   target:"Duke Ellington",      song:"Sings the Duke Ellington Songbook", year:1957, sp:"1LBfPnqzQ5YmvMT0lrYnLi", editorial:"Linked to the album; any track from this is a tribute in full." },
+  // ── ELLINGTON hub ───────────────────────────────────────────────────────
+  { source:"Duke Ellington",   target:"John Coltrane",    song:"Take the Coltrane",           year:1962, sp:"7cUN2jtawZ1jxzVe2SFIOc" },
+  { source:"Duke Ellington",   target:"Billy Strayhorn",  song:"Lotus Blossom",               year:1967, sp:"3g7vqkGJDGSOBxmL9K5pvL", note:"Written on Strayhorn's death" },
+  { source:"Duke Ellington",   target:"Louis Armstrong",  song:"Portrait of Louis Armstrong", year:1962, sp:null },
+  { source:"Duke Ellington",   target:"Mahalia Jackson",  song:"Come Sunday",                 year:1943, sp:"3npBMaWCP8TNfNAloUxMuh" },
+  { source:"Charles Mingus",   target:"Duke Ellington",   song:"Open Letter to Duke",         year:1959, sp:"3PJMsxg6rz9FOo6xNiASXz" },
+  { source:"John Coltrane",    target:"Duke Ellington",   song:"In a Mellotone",              year:1962, sp:"3SniZaGK2shprxKmDCx1l0" },
+  { source:"Art Ensemble of Chicago", target:"Duke Ellington", song:"Charlie M.",            year:1974, sp:null, note:"Also nods to Charlie Parker" },
+  { source:"Miles Davis",      target:"Duke Ellington",   song:"He Loved Him Madly",          year:1974, sp:"6cnwzzSAme5WcnOjPDgLcC", note:"Recorded a month after Ellington's death" },
+  { source:"Dave Brubeck",     target:"Duke Ellington",   song:"The Duke",                    year:1955, sp:"3OuZbpXHAGpwTuHSMfzMpq" },
+  { source:"Stevie Wonder",    target:"Duke Ellington",   song:"Sir Duke",                    year:1976, sp:"4pNiE4LCVV74vfIBaUHm1b" },
+  { source:"Abdullah Ibrahim", target:"Duke Ellington",   song:"Duke Ellington Suite",        year:1974, sp:null },
+  { source:"Oscar Peterson",   target:"Duke Ellington",   song:"Salute to Duke",              year:1952, sp:null },
+  { source:"Ella Fitzgerald",  target:"Duke Ellington",   song:"Sings the Ellington Songbook",year:1957, sp:"4qw1P44BuVmDvFr2XKFMLP" },
 
-  // ── CHARLIE PARKER hub ────────────────────────────────────────────────────
-  { source:"Miles Davis",       target:"Charlie Parker",      song:"Donna Lee",                     year:1947, sp:"3TQsMPMG9UNQoLDgTWiAZ5", note:"Miles credited Bird as inspiration; debate exists over who composed it." },
-  { source:"Ornette Coleman",   target:"Charlie Parker",      song:"Bird Food",                     year:1960, sp:"2GXnBHFQtGO5O8xQbNBjlm" },
-  { source:"Charles Mingus",    target:"Charlie Parker",      song:"Bird Calls",                    year:1961, sp:"5oPBOBPTsKa0E0rkNXMn6Y" },
-  { source:"Lennie Tristano",   target:"Charlie Parker",      song:"Requiem",                       year:1956, sp:"6FqGY2RbIkPmPCmFPyYJjY", note:"Written immediately on hearing of Bird's death." },
-  { source:"Dizzy Gillespie",   target:"Charlie Parker",      song:"Anthropology",                  year:1945, sp:"3cPeU7O0M1NYBPk6z0FXRR", note:"Co-written; included as a tribute in spirit and practice.", editorial:"Linked to Parker's 1945 Savoy recording, the original." },
-  { source:"Lee Morgan",        target:"Charlie Parker",      song:"Tom Cat",                       year:1964, sp:"2e0HZNJ5U15LCbfFk1g3S2" },
+  // ── CHARLIE PARKER hub ──────────────────────────────────────────────────
+  { source:"Miles Davis",      target:"Charlie Parker",   song:"Donna Lee",                   year:1947, sp:"5fAMGTMdMqkE3Wh6sKH55I" },
+  { source:"Ornette Coleman",  target:"Charlie Parker",   song:"Bird Food",                   year:1960, sp:"2b5OOSMZLfF9oKQSmHLXTm" },
+  { source:"Charles Mingus",   target:"Charlie Parker",   song:"Bird Calls",                  year:1961, sp:"0BLLCsP25mxBJjVFO8Ocqx" },
+  { source:"Lennie Tristano",  target:"Charlie Parker",   song:"Requiem",                     year:1956, sp:"3iw674OE5y93dbTDGsSu2Z" },
+  { source:"Dizzy Gillespie",  target:"Charlie Parker",   song:"Anthropology",                year:1945, sp:"5gAlbhLPJGdyL6FBiFREYL", note:"Co-written, Bird's spirit throughout" },
+  { source:"Lee Morgan",       target:"Charlie Parker",   song:"Tom Cat",                     year:1964, sp:null },
 
-  // ── JOHN COLTRANE hub ─────────────────────────────────────────────────────
-  { source:"McCoy Tyner",       target:"John Coltrane",       song:"For Trane",                     year:1973, sp:"6KS9q4EHkCh3jLHTpO0Pjn" },
-  { source:"Pharoah Sanders",   target:"John Coltrane",       song:"To John",                       year:1973, sp:null, note:"On Pharoah Sanders' Impulse! recordings; availability varies." },
-  { source:"Wayne Shorter",     target:"John Coltrane",       song:"Trane",                         year:1964, sp:"4Zau2YSbH0rOfBFnntQILW" },
-  { source:"Alice Coltrane",    target:"John Coltrane",       song:"A Love Supreme (reprise)",      year:1972, sp:"7w5BFmiSqBTjFKbkFhm1SN", note:"Performed as memorial after his death.", editorial:"Linked to Alice's World Galaxy album recording." },
-  { source:"Carlos Santana",    target:"John Coltrane",       song:"A Love Supreme (live)",         year:2000, sp:"6fkxoAZFGD0bMkB5ABvHia", editorial:"Santana's persistent live tribute; linked to his studio version." },
-  { source:"Ravi Shankar",      target:"John Coltrane",       song:"Offering: To John Coltrane",    year:1982, sp:null, note:"On Dark Horse Records; not currently on Spotify." },
+  // ── JOHN COLTRANE hub ───────────────────────────────────────────────────
+  { source:"McCoy Tyner",      target:"John Coltrane",    song:"For Trane",                   year:1973, sp:"5mxVMNgqxs9sV2QXGIwCai" },
+  { source:"Pharoah Sanders",  target:"John Coltrane",    song:"To John",                     year:1973, sp:null },
+  { source:"Wayne Shorter",    target:"John Coltrane",    song:"Trane",                       year:1964, sp:"1wLSisMumKgOCCBhLCGVqw" },
+  { source:"Alice Coltrane",   target:"John Coltrane",    song:"A Love Supreme (reprise)",    year:1972, sp:null, note:"Performed as memorial" },
+  { source:"Carlos Santana",   target:"John Coltrane",    song:"A Love Supreme (live)",       year:2000, sp:null },
+  { source:"Ravi Shankar",     target:"John Coltrane",    song:"Offering: To John Coltrane",  year:1982, sp:null },
 
-  // ── MILES DAVIS hub ───────────────────────────────────────────────────────
-  { source:"Miles Davis",       target:"Dizzy Gillespie",     song:"Diggin' Diz",                   year:1951, sp:"0prNGof3z8gE0gGlMoQ0kl" },
-  { source:"John Coltrane",     target:"Miles Davis",         song:"Miles' Mode",                   year:1963, sp:"35VFhfbcIXTpGUqWEJ0Oxm" },
-  { source:"Herbie Hancock",    target:"Miles Davis",         song:"Tribute to Miles",              year:1994, sp:"5N5HTMBoWBk5X0o3dIQ3A0", note:"From the memorial concert A Tribute to Miles, recorded shortly after Davis's death." },
-  { source:"Keith Jarrett",     target:"Miles Davis",         song:"Miles Davis Died Today",        year:1993, sp:null, note:"Improvised solo piano piece; limited availability on streaming." },
+  // ── MILES DAVIS hub ─────────────────────────────────────────────────────
+  { source:"Miles Davis",      target:"Dizzy Gillespie",  song:"Diggin' Diz",                 year:1951, sp:"5WbUFLsTtVdpjSz4GSSZ5v" },
+  { source:"John Coltrane",    target:"Miles Davis",      song:"Miles' Mode",                 year:1963, sp:"3c3tMOdF0GrEepJnSJNp2T" },
+  { source:"Herbie Hancock",   target:"Miles Davis",      song:"Tribute to Miles",            year:1994, sp:null },
+  { source:"Keith Jarrett",    target:"Miles Davis",      song:"Miles Davis Died Today",      year:1993, sp:null, note:"Improvised on day of his death" },
 
-  // ── THELONIOUS MONK hub ───────────────────────────────────────────────────
-  { source:"Thelonious Monk",   target:"Bud Powell",          song:"In Walked Bud",                 year:1948, sp:"52JrOhDyRZHi7P6tVhSn0S", editorial:"Blue Note original, 1951 recording — the definitive version." },
-  { source:"John Coltrane",     target:"Thelonious Monk",     song:"Monk's Mood",                   year:1957, sp:"1ZHPlWL4LTnS8oXLiZbEMy", note:"Coltrane's Riverside reading is definitive." },
-  { source:"Miles Davis",       target:"Thelonious Monk",     song:"Well You Needn't",              year:1954, sp:"0xeHLHEf7ghpM7VPSrHZGy" },
-  { source:"Steve Lacy",        target:"Thelonious Monk",     song:"Monk's Dream",                  year:1963, sp:"2Gg1dJmTX7xzExPLKJRtLm", note:"Lacy spent an entire decade performing only Monk's music." },
-  { source:"Abdullah Ibrahim",  target:"Thelonious Monk",     song:"Monk Suite",                    year:1986, sp:null },
-  { source:"Jimmy Rowles",      target:"Thelonious Monk",     song:"Ballad of Thelonious Monk",     year:1976, sp:null, note:"Rare; not widely available on streaming." },
-  { source:"Benny Bailey",      target:"Thelonious Monk",     song:"Thelonious Assault",            year:1961, sp:null },
+  // ── THELONIOUS MONK hub ─────────────────────────────────────────────────
+  { source:"Thelonious Monk",  target:"Bud Powell",       song:"In Walked Bud",               year:1948, sp:"3D3SrTs2VaNJlBGqbQpyFF" },
+  { source:"John Coltrane",    target:"Thelonious Monk",  song:"Monk's Mood",                 year:1957, sp:"5H6ItdJNuI22OzELLh3NJG", note:"Coltrane's famous Riverside reading" },
+  { source:"Miles Davis",      target:"Thelonious Monk",  song:"Well You Needn't",            year:1954, sp:"4GzQJzCHjAWXQhYFJfijy2" },
+  { source:"Steve Lacy",       target:"Thelonious Monk",  song:"Monk's Dream",                year:1963, sp:null, note:"Lacy spent a decade performing only Monk" },
+  { source:"Abdullah Ibrahim", target:"Thelonious Monk",  song:"Monk Suite",                  year:1986, sp:null },
+  { source:"Jimmy Rowles",     target:"Thelonious Monk",  song:"Ballad of Thelonious Monk",   year:1976, sp:null },
+  { source:"Benny Bailey",     target:"Thelonious Monk",  song:"Thelonious Assault",          year:1961, sp:null },
 
-  // ── LESTER YOUNG hub ──────────────────────────────────────────────────────
-  { source:"Charles Mingus",    target:"Lester Young",        song:"Goodbye Pork Pie Hat",          year:1959, sp:"3PJMsxg6rz9FOo6xNiASXz", note:"Written on hearing of Lester's death; one of jazz's greatest elegies.", editorial:"Linked to Mingus Ah Um original Columbia recording." },
-  { source:"John Coltrane",     target:"Lester Young",        song:"Lester Left Town",              year:1958, sp:"4nVBwbEHWbl5HJJakGRXuv" },
-  { source:"Billie Holiday",    target:"Lester Young",        song:"Fine and Mellow",               year:1939, sp:"4qBDYjJ6PiSmRVFBQfOJWq", note:"Their friendship was jazz's great platonic bond. Lester named her Lady Day." },
-  { source:"Joni Mitchell",     target:"Lester Young",        song:"Goodbye Pork Pie Hat",          year:1979, sp:"5LbLPPL8YoHr7DxRW0q3q0", note:"Mitchell wrote her own lyric over Mingus's melody.", editorial:"Linked to Mitchell's Mingus album version — a different work from Mingus's original." },
+  // ── LESTER YOUNG hub ────────────────────────────────────────────────────
+  { source:"Charles Mingus",   target:"Lester Young",     song:"Goodbye Pork Pie Hat",        year:1959, sp:"3PJMsxg6rz9FOo6xNiASXz", note:"Written on Lester's death" },
+  { source:"John Coltrane",    target:"Lester Young",     song:"Lester Left Town",            year:1958, sp:"1a7L2DpC1WGfpKrjuPLhJC" },
+  { source:"Billie Holiday",   target:"Lester Young",     song:"Fine and Mellow",             year:1939, sp:"3uV4yoMDdkVYFmkJGvxAWP", note:"Their bond was jazz's great friendship" },
+  { source:"Joni Mitchell",    target:"Lester Young",     song:"Goodbye Pork Pie Hat (vocal)",year:1979, sp:"1l1EMpz6N0f4bWqk4s1i1o" },
 
-  // ── CHARLES MINGUS ────────────────────────────────────────────────────────
-  { source:"Charles Mingus",    target:"Fats Navarro",        song:"Portrait of Fats",              year:1964, sp:"5pFcFqQqMJJJHCmRbLvqjV" },
-  { source:"Charles Mingus",    target:"Billie Holiday",      song:"Eclipse",                       year:1954, sp:"2AHrJSIB9FRBO7oIFpR7XW" },
-  { source:"Joni Mitchell",     target:"Charles Mingus",      song:"The Dry Cleaner from Des Moines", year:1979, sp:"0e2IkAVCeSg7rRQEY2nqYo", note:"Mingus wrote the melody; Mitchell the lyric. A collaboration turned tribute after his death." },
+  // ── CHARLES MINGUS hub ──────────────────────────────────────────────────
+  { source:"Charles Mingus",   target:"Fats Navarro",     song:"Portrait of Fats",            year:1964, sp:null },
+  { source:"Charles Mingus",   target:"Billie Holiday",   song:"Eclipse",                     year:1954, sp:"3sBTXJkHdHHEGJq7mxVIhS" },
+  { source:"Joni Mitchell",    target:"Charles Mingus",   song:"The Dry Cleaner from Des Moines",year:1979,sp:"3dC2I3lw0Kh8RjRuDVTJJF", note:"Collaboration on Mingus album" },
 
-  // ── BILLIE HOLIDAY ────────────────────────────────────────────────────────
-  { source:"Lester Young",      target:"Billie Holiday",      song:"Lady Be Good",                  year:1936, sp:"6LjPqWmCaIPEWLbSAiZMIv", note:"Lester nicknamed her Lady Day; this recording captures their chemistry.", editorial:"Linked to the 1936 Teddy Wilson session featuring both." },
-  { source:"Abbey Lincoln",     target:"Billie Holiday",      song:"For All We Know",               year:1961, sp:"2g3FPq0wz6e5TvZYPlzjDZ", note:"Lincoln's vocal approach consciously echoed Holiday throughout her early career." },
-  { source:"Charles Mingus",    target:"Billie Holiday",      song:"Eclipse",                       year:1954, sp:"2AHrJSIB9FRBO7oIFpR7XW" },
+  // ── BILLIE HOLIDAY hub ──────────────────────────────────────────────────
+  { source:"Lester Young",     target:"Billie Holiday",   song:"Lady Be Good",                year:1936, sp:"5w3hS5yq0EkRGfpO4A8s5X", note:"Lester named her Lady Day" },
+  { source:"Abbey Lincoln",    target:"Billie Holiday",   song:"For All We Know",             year:1961, sp:null, note:"Lincoln's style consciously echoes Holiday" },
 
-  // ── CLIFFORD BROWN ────────────────────────────────────────────────────────
-  { source:"Benny Golson",      target:"Clifford Brown",      song:"I Remember Clifford",           year:1956, sp:"4ojZuJ575GlwN2weuWDr8z", note:"Written immediately after Brown's death in a car crash aged 25.", editorial:"Golson's own 1958 recording on Benny Golson and the Philadelphians. Lee Morgan's version is equally beloved." },
-  { source:"Lee Morgan",        target:"Clifford Brown",      song:"Clifford's Axe",                year:1957, sp:null },
-  { source:"Sonny Rollins",     target:"Clifford Brown",      song:"I Know",                        year:1957, sp:"6pMGJdJQPuVGu5h7TYdOim", note:"Rollins was in Brown's quintet; Brown's death deeply affected him." },
+  // ── CLIFFORD BROWN hub ──────────────────────────────────────────────────
+  { source:"Benny Golson",     target:"Clifford Brown",   song:"I Remember Clifford",         year:1956, sp:"4ojZuJ575GlwN2weuWDr8z", note:"Written immediately after Brown's death" },
+  { source:"Lee Morgan",       target:"Clifford Brown",   song:"Clifford's Axe",              year:1957, sp:null },
+  { source:"Sonny Rollins",    target:"Clifford Brown",   song:"I Know",                      year:1957, sp:null, note:"Rollins was in Brown's quintet" },
 
-  // ── LOUIS ARMSTRONG ───────────────────────────────────────────────────────
-  { source:"Dizzy Gillespie",   target:"Louis Armstrong",     song:"Pops' Confessin'",              year:1954, sp:null, note:"Dizzy's complex tribute to Pops — admiration with a side of rivalry." },
-  { source:"Miles Davis",       target:"Louis Armstrong",     song:"Louis' Blues",                  year:1961, sp:null },
+  // ── LOUIS ARMSTRONG hub ─────────────────────────────────────────────────
+  { source:"Dizzy Gillespie",  target:"Louis Armstrong",  song:"Pops' Confessin'",            year:1954, sp:null },
+  { source:"Miles Davis",      target:"Louis Armstrong",  song:"Louis' Blues",                year:1961, sp:null },
 
-  // ── BUD POWELL ────────────────────────────────────────────────────────────
-  { source:"Charles Mingus",    target:"Bud Powell",          song:"Eulogy for Rudy Williams",      year:1957, sp:null, note:"Mingus channelled grief for several fallen friends into this period." },
-  { source:"Kenny Drew",        target:"Bud Powell",          song:"For Bud",                       year:1964, sp:null },
+  // ── BUD POWELL hub ──────────────────────────────────────────────────────
+  { source:"Charles Mingus",   target:"Bud Powell",       song:"Eulogy for Rudy Williams",    year:1957, sp:null },
+  { source:"Kenny Drew",       target:"Bud Powell",       song:"For Bud",                     year:1964, sp:null },
 
-  // ── DIZZY GILLESPIE ───────────────────────────────────────────────────────
-  { source:"Dizzy Gillespie",   target:"Woody Herman",        song:"Woody 'n You",                  year:1944, sp:"4Fh0CLLqn7FpCcf7DGXXPz" },
+  // ── DIZZY GILLESPIE hub ─────────────────────────────────────────────────
+  { source:"Dizzy Gillespie",  target:"Woody Herman",     song:"Woody 'n You",                year:1944, sp:"5eIDxmBRu0lnkJPqSVf2DI" },
+  { source:"Charlie Parker",   target:"Dizzy Gillespie",  song:"Anthropology",                year:1945, sp:"5gAlbhLPJGdyL6FBiFREYL", note:"Co-written" },
 
-  // ── BILL EVANS ────────────────────────────────────────────────────────────
-  { source:"Miles Davis",       target:"Bill Evans",          song:"Blue In Green",                 year:1959, sp:"2ctvdKmP1ECkLrCDCETpve", note:"Attribution contested; Miles listed it but Evans scholars consider it his.", editorial:"Linked to Kind of Blue — Evans's pianistic voice pervades the whole album." },
-  { source:"Jim Hall",          target:"Bill Evans",          song:"Intermodulation",               year:1966, sp:"5VqM3jrJi3q5tZvv4hMl3C", note:"A deep collaborative homage rather than a written tribute." },
-  { source:"Don Friedman",      target:"Scott LaFaro",        song:"Memory of Scotty",              year:1962, sp:null, note:"LaFaro died aged 25; Evans was devastated." },
+  // ── BILL EVANS hub ──────────────────────────────────────────────────────
+  { source:"Miles Davis",      target:"Bill Evans",       song:"Peace Piece (influenced)",    year:1958, sp:null, note:"Miles cited Evans throughout Kind of Blue sessions" },
+  { source:"Jim Hall",         target:"Bill Evans",       song:"Intermodulation",             year:1966, sp:null, note:"Deep collaborative homage" },
+  { source:"Don Friedman",     target:"Scott LaFaro",     song:"Memory of Scotty",            year:1962, sp:null, note:"LaFaro died aged 25" },
 
-  // ── SCOTT LAFARO ──────────────────────────────────────────────────────────
-  { source:"Bill Evans",        target:"Scott LaFaro",        song:"Peace Piece",                   year:1958, sp:"6r1OtjJHpUQVUsMhBkFBiV", note:"Evans performed this after LaFaro's death as an act of mourning.", editorial:"The original 1958 Riverside recording. Evans returned to this piece repeatedly after LaFaro died." },
+  // ── SCOTT LAFARO ────────────────────────────────────────────────────────
+  { source:"Bill Evans",       target:"Scott LaFaro",     song:"Waltz for Debby (memorial)",  year:1961, sp:"6KVdEAd02BGqloqb2N9VbA", note:"Evans played this after LaFaro's death" },
 
-  // ── ORNETTE COLEMAN ───────────────────────────────────────────────────────
-  { source:"Pat Metheny",       target:"Ornette Coleman",     song:"Rejoicing",                     year:1983, sp:"04YjiqfxpCtXEzIEQ9dVFv" },
-  { source:"Charlie Haden",     target:"Ornette Coleman",     song:"Song for Che",                  year:1969, sp:"0IU9LFk3g9IbfOGzDsNgVL", note:"Haden's political tribute; Coleman was his liberating musical force." },
-  { source:"Keith Jarrett",     target:"Ornette Coleman",     song:"Song for Ornette",              year:1975, sp:null },
+  // ── ORNETTE COLEMAN hub ─────────────────────────────────────────────────
+  { source:"Pat Metheny",      target:"Ornette Coleman",  song:"Rejoicing",                   year:1983, sp:"5TLhxJxEOgHF3s5UVFN0MZ" },
+  { source:"Charlie Haden",    target:"Ornette Coleman",  song:"Song for Che",                year:1969, sp:"3Jxhc1TXBL5hqjHHpFbeTU" },
+  { source:"Keith Jarrett",    target:"Ornette Coleman",  song:"Song for Ornette",            year:1975, sp:null },
 
-  // ── SONNY ROLLINS ─────────────────────────────────────────────────────────
-  { source:"John Coltrane",     target:"Sonny Rollins",       song:"Tenor Madness",                 year:1956, sp:"33WdKWnSwwYiKfBDH25Vy4", note:"The famous summit; both on one track, the era's two great tenors." },
-  { source:"Sonny Rollins",     target:"Philly Joe Jones",    song:"Blues for Philly Joe",          year:1957, sp:"0GkRLWAJnuJ9WXRoABqvV9" },
+  // ── SONNY ROLLINS hub ───────────────────────────────────────────────────
+  { source:"John Coltrane",    target:"Sonny Rollins",    song:"Tenor Madness",               year:1956, sp:"1TCXqnvGnfzjT4hZ7bfmMM", note:"Famous summit session" },
+  { source:"Sonny Rollins",    target:"Philly Joe Jones", song:"Blues for Philly Joe",        year:1957, sp:"2cFrVR2ckFI5D5FElPVx7T" },
 
-  // ── DJANGO REINHARDT ──────────────────────────────────────────────────────
-  { source:"John Lewis",        target:"Django Reinhardt",    song:"Django",                        year:1954, sp:"7axDTntMM6HAJaVdTAWuXn", note:"MJQ classic written on Django's death; one of jazz's most beautiful elegies.", editorial:"Linked to the 1954 Prestige recording — the original, written in mourning." },
+  // ── DJANGO REINHARDT hub ────────────────────────────────────────────────
+  { source:"John Lewis",       target:"Django Reinhardt", song:"Django",                      year:1954, sp:"5HQLbVKlr37QEQEhe1Gqbq", note:"MJQ classic, written on Django's death" },
+  { source:"Charlie Byrd",     target:"Django Reinhardt", song:"Hot Club du Concord",         year:1988, sp:null },
 
-  // ── WAYNE SHORTER ─────────────────────────────────────────────────────────
-  { source:"Wayne Shorter",     target:"Billy Strayhorn",     song:"Sweet Pea",                     year:1964, sp:"21vxEBHSDz5mSuBDVcMzLX", note:"Strayhorn's nickname was Sweet Pea." },
-  { source:"Joe Zawinul",       target:"Cannonball Adderley", song:"Cannonball",                    year:1977, sp:"5rNJSZRcGKMJZ8CeADjSqP", note:"After Adderley's death; also marks Jaco Pastorius's Weather Report debut." },
+  // ── WAYNE SHORTER ───────────────────────────────────────────────────────
+  { source:"Wayne Shorter",    target:"Billy Strayhorn",  song:"Sweet Pea",                   year:1964, sp:"3gGblBvlYuMDrqnT0kCEoN" },
+  { source:"Joe Zawinul",      target:"Cannonball Adderley",song:"Cannonball",                year:1977, sp:null, note:"After Adderley's death" },
 
-  // ── ART BLAKEY ────────────────────────────────────────────────────────────
-  { source:"Tony Allen",        target:"Art Blakey",          song:"The Source",                    year:2017, sp:"7hx3JBkJfGh6h79OEUzqRG" },
+  // ── ART BLAKEY hub ──────────────────────────────────────────────────────
+  { source:"Tony Allen",       target:"Art Blakey",       song:"The Source",                  year:2017, sp:null },
 
-  // ── HORACE SILVER ─────────────────────────────────────────────────────────
-  { source:"Horace Silver",     target:"Horace Silver Sr.",   song:"Song for My Father",            year:1964, sp:"2L3dMixHBxvTkRJQkOUiPi", note:"A tribute to his Cape Verdean father; the riff became one of jazz's most sampled.", editorial:"Linked to the original Horace Silver Quintet recording." },
-  { source:"Louis Hayes",       target:"Horace Silver",       song:"Serenade for Horace",           year:2017, sp:"2LDLvvzxwFEqcVWJGjSIUo" },
+  // ── HORACE SILVER ───────────────────────────────────────────────────────
+  { source:"Horace Silver",    target:"Art Blakey",       song:"The Preacher (homage)",       year:1955, sp:"5vHMOZrwS0qXoLMPhqsPIY", note:"Silver shaped his style under Blakey" },
+  { source:"Louis Hayes",      target:"Horace Silver",    song:"Serenade for Horace",         year:2017, sp:null },
 
-  // ── CHARLIE HADEN ─────────────────────────────────────────────────────────
-  { source:"Pat Metheny",       target:"Charlie Haden",       song:"Haden's Happiness",             year:1992, sp:null },
+  // ── CHARLIE HADEN hub ───────────────────────────────────────────────────
+  { source:"Pat Metheny",      target:"Charlie Haden",    song:"Haden's Happiness",           year:1992, sp:null },
 
-  // ── JACO PASTORIUS ────────────────────────────────────────────────────────
-  { source:"Bob Mintzer",       target:"Jaco Pastorius",      song:"I Remember Jaco",               year:1994, sp:"0c4Wr3MvW4LQ1PO2W3aBN9" },
+  // ── JACO PASTORIUS ──────────────────────────────────────────────────────
+  { source:"Bob Mintzer",      target:"Jaco Pastorius",   song:"I Remember Jaco",             year:1994, sp:null },
 
-  // ── COLTRANE → RAVI SHANKAR ───────────────────────────────────────────────
-  { source:"John Coltrane",     target:"Ravi Shankar",        song:"India",                         year:1961, sp:"7Fxk93TF5JjNXj8vfRs2ej", note:"Coltrane studied with Shankar; the piece is his homage to that world." },
-  { source:"Ravi Shankar",      target:"John Coltrane",       song:"Offering: To John Coltrane",    year:1982, sp:null, note:"On Dark Horse Records; not currently on Spotify." },
+  // ── RAVI SHANKAR connections ────────────────────────────────────────────
+  { source:"John Coltrane",    target:"Ravi Shankar",     song:"India",                       year:1961, sp:"0JI1PgH99jRjwmkKHjRFT7", note:"Coltrane studied with Shankar" },
+  { source:"Ravi Shankar",     target:"John Coltrane",    song:"Offering: To John Coltrane",  year:1982, sp:null },
 
-  // ── I REMEMBER CLIFFORD (Golson) → Morgan version ─────────────────────────
-  // already listed above under Clifford Brown
+  // ── ALBERT AYLER ────────────────────────────────────────────────────────
+  { source:"John Coltrane",    target:"Albert Ayler",     song:"Reverend King",               year:1966, sp:null, note:"Late Coltrane openly cited Ayler's impact" },
 
-  // ── BENNY GOLSON extras ───────────────────────────────────────────────────
-  { source:"Benny Golson",      target:"Art Blakey",          song:"Blues March",                   year:1958, sp:"3vnnAlj2qijZrWhFHmqpPY", note:"Written for Blakey's Jazz Messengers; became their signature." },
+  // ── ELLA FITZGERALD ─────────────────────────────────────────────────────
+  { source:"Ella Fitzgerald",  target:"Duke Ellington",   song:"Sings the Ellington Songbook",year:1957, sp:"4qw1P44BuVmDvFr2XKFMLP" },
 
-  // ── ABBEY LINCOLN ─────────────────────────────────────────────────────────
-  { source:"Abbey Lincoln",     target:"Max Roach",           song:"Driva' Man",                    year:1960, sp:"6kOBzlDK2LpbSwO6SnE5Jz", note:"Lincoln and Roach were partners; this collaboration was tribute and protest combined." },
-
-  // ── EXTRA modern / cross-genre ────────────────────────────────────────────
-  { source:"Joni Mitchell",     target:"Charles Mingus",      song:"The Dry Cleaner from Des Moines", year:1979, sp:"0e2IkAVCeSg7rRQEY2nqYo" },
+  // ── CROSS-GENRE / MODERN ────────────────────────────────────────────────
+  { source:"Joni Mitchell",    target:"Charles Mingus",   song:"The Dry Cleaner from Des Moines",year:1979,sp:"3dC2I3lw0Kh8RjRuDVTJJF" },
+  { source:"Carlos Santana",   target:"John Coltrane",    song:"A Love Supreme (live)",       year:2000, sp:null },
 ];
 
 // ── BUILD GRAPH ─────────────────────────────────────────────────────────────
 const nodeMap = new Map();
 tributeData.forEach(d => {
   [d.source, d.target].forEach(id => {
-    if (!nodeMap.has(id)) nodeMap.set(id, { id, tributes: [], tributedBy: [] });
+    if (!nodeMap.has(id)) nodeMap.set(id, { id, tributes:[], tributedBy:[] });
   });
   nodeMap.get(d.source).tributes.push(d);
   nodeMap.get(d.target).tributedBy.push(d);
 });
-
-// deduplicate (Eclipse appears twice for Mingus→Holiday)
-const seen = new Set();
-const links = tributeData.filter(d => {
-  const k = d.source + '→' + d.target + '→' + d.song;
-  if (seen.has(k)) return false;
-  seen.add(k); return true;
-});
-
 const nodes = Array.from(nodeMap.values());
+const links = tributeData.map(d => ({ ...d }));
 const degree = id => nodeMap.get(id).tributes.length + nodeMap.get(id).tributedBy.length;
 const maxDeg = Math.max(...nodes.map(n => degree(n.id)));
 const rScale = d3.scaleSqrt().domain([1, maxDeg]).range([6, 26]);
 
 // ── SVG ─────────────────────────────────────────────────────────────────────
-const container = document.getElementById("graph-container");
-const svg = d3.select("#graph");
-const g = svg.append("g");
+const cont = document.getElementById("graph-container");
+const svg  = d3.select("#graph");
+const g    = svg.append("g");
 const zoom = d3.zoom().scaleExtent([0.2, 4]).on("zoom", e => g.attr("transform", e.transform));
 svg.call(zoom);
-function dims() { return { w: container.clientWidth, h: container.clientHeight }; }
+const dims = () => ({ w: cont.clientWidth, h: cont.clientHeight });
 let { w, h } = dims();
 
-// ── SIMULATION ───────────────────────────────────────────────────────────────
+// ── SIMULATION ──────────────────────────────────────────────────────────────
 const sim = d3.forceSimulation(nodes)
   .force("link", d3.forceLink(links).id(d => d.id)
-    .distance(d => Math.max(55, 160 - (degree(d.source.id||d.source) + degree(d.target.id||d.target)) * 3))
+    .distance(d => Math.max(55, 150 - (degree(d.source.id||d.source) + degree(d.target.id||d.target)) * 3))
     .strength(0.35))
-  .force("charge", d3.forceManyBody().strength(d => -320 - degree(d.id) * 18))
-  .force("center", d3.forceCenter(w / 2, h / 2))
-  .force("collision", d3.forceCollide().radius(d => rScale(degree(d.id)) + 15));
+  .force("charge", d3.forceManyBody().strength(d => -300 - degree(d.id) * 18))
+  .force("center",    d3.forceCenter(w/2, h/2))
+  .force("collision", d3.forceCollide().radius(d => rScale(degree(d.id)) + 14));
 
-// ── LINKS ────────────────────────────────────────────────────────────────────
-const linkEl = g.selectAll(".link").data(links).join("line").attr("class", "link");
+// ── LINKS ───────────────────────────────────────────────────────────────────
+const linkEl = g.selectAll(".link").data(links).join("line").attr("class","link");
 
-// ── NODES ────────────────────────────────────────────────────────────────────
-const nodeEl = g.selectAll(".node").data(nodes).join("g").attr("class", "node")
+// ── NODES ───────────────────────────────────────────────────────────────────
+const nodeEl = g.selectAll(".node").data(nodes).join("g").attr("class","node")
   .call(d3.drag()
-    .on("start", (e,d) => { if(!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
-    .on("drag",  (e,d) => { d.fx=e.x; d.fy=e.y; })
-    .on("end",   (e,d) => { if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
+    .on("start",(e,d)=>{ if(!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+    .on("drag", (e,d)=>{ d.fx=e.x; d.fy=e.y; })
+    .on("end",  (e,d)=>{ if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
 
 nodeEl.append("circle").attr("r", d => rScale(degree(d.id)));
 nodeEl.append("text")
   .text(d => {
     const deg = degree(d.id);
-    if (deg >= 6) return d.id;
+    if (deg >= 5) return d.id;
     const parts = d.id.split(" ");
-    return parts.length > 2 ? parts.slice(1).join(" ") : parts[parts.length - 1];
+    return parts.length > 2 ? parts.slice(1).join(" ") : parts[parts.length-1];
   })
-  .attr("dy", d => rScale(degree(d.id)) + 12)
+  .attr("dy", d => rScale(degree(d.id)) + 11)
   .style("font-size", d => degree(d.id) >= 5 ? "10.5px" : "9px");
 
-// ── TICK ─────────────────────────────────────────────────────────────────────
 sim.on("tick", () => {
-  linkEl.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
-        .attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
-  nodeEl.attr("transform", d=>`translate(${d.x},${d.y})`);
+  linkEl.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y).attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+  nodeEl.attr("transform",d=>`translate(${d.x},${d.y})`);
 });
 
-// ── EDGE TOOLTIP ─────────────────────────────────────────────────────────────
+// ── EDGE TOOLTIP ────────────────────────────────────────────────────────────
 const tooltip = document.getElementById("edge-tooltip");
 linkEl
-  .on("mousemove", function(e, d) {
-    const r = container.getBoundingClientRect();
+  .on("mousemove", function(e,d) {
+    const r = cont.getBoundingClientRect();
     tooltip.style.opacity = "1";
-    tooltip.style.left = (e.clientX - r.left + 16) + "px";
-    tooltip.style.top  = (e.clientY - r.top  - 12) + "px";
-    const src = d.source.id || d.source, tgt = d.target.id || d.target;
-    const spLink = d.sp
-      ? `<a class="spotify-link" href="https://open.spotify.com/track/${d.sp}" target="_blank" rel="noopener">▶ Listen on Spotify</a>`
-      : d.sp === null ? `<span class="editorial-note">Not on Spotify</span>` : '';
-    const editNote = d.editorial ? `<span class="editorial-note">✦ ${d.editorial}</span>` : '';
+    tooltip.style.left = (e.clientX - r.left + 14) + "px";
+    tooltip.style.top  = (e.clientY - r.top  - 10) + "px";
+    const src = d.source.id||d.source, tgt = d.target.id||d.target;
+    const spBtn = d.sp
+      ? `<a class="sp-link" href="https://open.spotify.com/track/${d.sp}" target="_blank">▶ Listen on Spotify</a>`
+      : `<span style="color:#3a3020;font-size:0.61rem">Not on Spotify</span>`;
     tooltip.innerHTML =
-      `<div class="song-title">${d.song}${d.year ? ` (${d.year})` : ""}</div>` +
-      `<div class="tribute-line">${src} → ${tgt}</div>` +
-      (d.note ? `<div class="note-line">${d.note}</div>` : '') +
-      spLink + editNote;
+      `<div class="song-title">${d.song}${d.year?` (${d.year})`:""}</div>`+
+      `<div class="tribute-line">${src} → ${tgt}</div>`+
+      (d.note?`<div class="note-line">${d.note}</div>`:"")+
+      `<div style="margin-top:0.35rem">${spBtn}</div>`;
   })
   .on("mouseleave", () => { tooltip.style.opacity = "0"; });
 
-// ── NODE CLICK ───────────────────────────────────────────────────────────────
+// ── NODE CLICK ──────────────────────────────────────────────────────────────
 let selected = null;
-const panel    = document.getElementById("detail-panel");
-const resetBtn = document.getElementById("reset-btn");
+const panel   = document.getElementById("detail-panel");
+const resetBtn= document.getElementById("reset-btn");
 
 function clearSelection() {
   selected = null;
@@ -345,59 +305,45 @@ function clearSelection() {
 function selectNode(d) {
   selected = d.id;
   const conn = new Set([d.id]);
-  const cl   = new Set();
+  const connL = new Set();
   links.forEach((l,i) => {
-    const s = l.source.id||l.source, t = l.target.id||l.target;
-    if (s===d.id||t===d.id) { conn.add(s); conn.add(t); cl.add(i); }
+    const s=l.source.id||l.source, t=l.target.id||l.target;
+    if (s===d.id||t===d.id) { conn.add(s); conn.add(t); connL.add(i); }
   });
-  nodeEl.classed("dimmed",      n => !conn.has(n.id))
-        .classed("highlighted", n =>  conn.has(n.id) && n.id!==d.id)
-        .classed("selected",    n =>  n.id===d.id);
-  linkEl.classed("dimmed",      (l,i) => !cl.has(i))
-        .classed("highlighted", (l,i) =>  cl.has(i));
-
+  nodeEl.classed("dimmed",n=>!conn.has(n.id)).classed("highlighted",n=>conn.has(n.id)&&n.id!==d.id).classed("selected",n=>n.id===d.id);
+  linkEl.classed("dimmed",(l,i)=>!connL.has(i)).classed("highlighted",(l,i)=>connL.has(i));
   document.getElementById("panel-name").textContent = d.id;
 
-  const spBtn = t => t.sp
-    ? `<a class="sp" href="https://open.spotify.com/track/${t.sp}" target="_blank" rel="noopener">▶</a>`
-    : t.sp===null ? '' : '';
+  const spTag = (t) => t.sp
+    ? ` <a class="sp" href="https://open.spotify.com/track/${t.sp}" target="_blank">▶</a>` : "";
 
   document.getElementById("panel-tributes-to").innerHTML = d.tributes.length
     ? `<div class="section-label">Wrote tributes to</div><ul>${d.tributes.map(t=>
-        `<li><span class="song">${t.song}</span> <span class="by">→ ${t.target}</span>${spBtn(t)}</li>`).join("")}</ul>` : "";
+        `<li><span class="song">${t.song}</span> <span class="by">→ ${t.target.id||t.target}</span>${spTag(t)}</li>`).join("")}</ul>` : "";
   document.getElementById("panel-tributes-from").innerHTML = d.tributedBy.length
     ? `<div class="section-label">Was honoured by</div><ul>${d.tributedBy.map(t=>
-        `<li><span class="song">${t.song}</span> <span class="by">by ${t.source}</span>${spBtn(t)}</li>`).join("")}</ul>` : "";
+        `<li><span class="song">${t.song}</span> <span class="by">by ${t.source.id||t.source}</span>${spTag(t)}</li>`).join("")}</ul>` : "";
 
   panel.classList.add("visible");
   resetBtn.classList.remove("hidden");
 }
 
-nodeEl.on("click", (e,d) => { e.stopPropagation(); selected===d.id ? clearSelection() : selectNode(d); });
+nodeEl.on("click",(e,d)=>{ e.stopPropagation(); selected===d.id?clearSelection():selectNode(d); });
 svg.on("click", clearSelection);
 document.getElementById("close-panel").onclick = clearSelection;
 resetBtn.onclick = clearSelection;
 
-// ── SEARCH ───────────────────────────────────────────────────────────────────
+// ── SEARCH ──────────────────────────────────────────────────────────────────
 document.getElementById("search-box").addEventListener("input", function() {
   const q = this.value.trim().toLowerCase();
-  if (!q) { nodeEl.classed("selected", false); return; }
+  if (!q) { clearSelection(); return; }
   const match = nodes.find(d => d.id.toLowerCase().includes(q));
   if (match) selectNode(match);
 });
 
-// ── FOOTNOTES TOGGLE ─────────────────────────────────────────────────────────
-document.getElementById("footnote-toggle").addEventListener("click", function() {
-  const box = document.getElementById("footnote-box");
-  box.classList.toggle("open");
-  this.textContent = box.classList.contains("open") ? "editorial notes ↓" : "editorial notes ↑";
-});
-
-// ── COUNT ────────────────────────────────────────────────────────────────────
 document.getElementById("count-label").textContent =
-  `${nodes.length} musicians · ${links.length} connections`;
+  `${nodes.length} musicians · ${links.length} tribute connections · ${links.filter(l=>l.sp).length} on Spotify`;
 
-// ── RESIZE ───────────────────────────────────────────────────────────────────
 window.addEventListener("resize", () => {
   const s = dims();
   sim.force("center", d3.forceCenter(s.w/2, s.h/2)).alpha(0.1).restart();
