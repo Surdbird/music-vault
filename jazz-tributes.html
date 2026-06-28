@@ -84,7 +84,7 @@ const tributeData = [
   { source:"Duke Ellington",   target:"Louis Armstrong",  song:"Portrait of Louis Armstrong", year:1962, sp:null },
   { source:"Duke Ellington",   target:"Mahalia Jackson",  song:"Come Sunday",                 year:1943, sp:"3npBMaWCP8TNfNAloUxMuh" },
   { source:"Charles Mingus",   target:"Duke Ellington",   song:"Open Letter to Duke",         year:1959, sp:"3PJMsxg6rz9FOo6xNiASXz" },
-  { source:"John Coltrane",    target:"Duke Ellington",   song:"In a Mellotone",              year:1962, sp:"3SniZaGK2shprxKmDCx1l0" },
+  { source:"John Coltrane",    target:"Duke Ellington",   song:"In a Sentimental Mood", year:1962, sp:"2Cdam35HkInJAIKwujwv6V", note:"Coltrane's decision to record an entire album with Ellington was itself the tribute — In a Mellotone is Ellington's composition" },
   { source:"Art Ensemble of Chicago", target:"Duke Ellington", song:"Charlie M.",            year:1974, sp:null, note:"Also nods to Charlie Parker" },
   { source:"Miles Davis",      target:"Duke Ellington",   song:"He Loved Him Madly",          year:1974, sp:"6cnwzzSAme5WcnOjPDgLcC", note:"Recorded a month after Ellington's death" },
   { source:"Dave Brubeck",     target:"Duke Ellington",   song:"The Duke",                    year:1955, sp:"3OuZbpXHAGpwTuHSMfzMpq" },
@@ -117,7 +117,7 @@ const tributeData = [
 
   // ── THELONIOUS MONK hub ─────────────────────────────────────────────────
   { source:"Thelonious Monk",  target:"Bud Powell",       song:"In Walked Bud",               year:1948, sp:"3D3SrTs2VaNJlBGqbQpyFF" },
-  { source:"John Coltrane",    target:"Thelonious Monk",  song:"Monk's Mood",                 year:1957, sp:"5H6ItdJNuI22OzELLh3NJG", note:"Coltrane's famous Riverside reading" },
+  { source:"John Coltrane",    target:"Thelonious Monk",  song:"Monk with Coltrane (album)",  year:1957, sp:"5H6ItdJNuI22OzELLh3NJG", note:"Monk's Mood is Monk's composition; Coltrane's four-month residency with Monk at the Five Spot was the tribute — he called it his most important musical education" },
   { source:"Miles Davis",      target:"Thelonious Monk",  song:"Well You Needn't",            year:1954, sp:"4GzQJzCHjAWXQhYFJfijy2" },
   { source:"Steve Lacy",       target:"Thelonious Monk",  song:"Monk's Dream",                year:1963, sp:null, note:"Lacy spent a decade performing only Monk" },
   { source:"Abdullah Ibrahim", target:"Thelonious Monk",  song:"Monk Suite",                  year:1986, sp:null },
@@ -245,6 +245,21 @@ const tributeData = [
 
   // ── ELVIS COSTELLO ──────────────────────────────────────────────────────
   { source:"Elvis Costello",   target:"Burt Bacharach",   song:"God Give Me Strength",        year:1996, sp:"5dNaXVHv1tGHLLm1V4NRGE", note:"Collaboration as sustained mutual tribute" },
+
+  // ── CARIBBEAN / AFRO-CUBAN CLUSTER ──────────────────────────────────────
+  { source:"Lord Kitchener",   target:"Charlie Parker",   song:"Bebop Calypso",               year:1956, sp:"2DkVRUyNBUGKaHRFXPqiMN", note:"Lyrics quote Anthropology and name Bird, Miles & Dizzy directly" },
+  { source:"Lord Kitchener",   target:"Dizzy Gillespie",  song:"Bebop Calypso",               year:1956, sp:"2DkVRUyNBUGKaHRFXPqiMN", note:"'I nearly went crazy when I hear the record of Gillespie'" },
+  { source:"Lord Kitchener",   target:"Miles Davis",      song:"Bebop Calypso",               year:1956, sp:"2DkVRUyNBUGKaHRFXPqiMN", note:"Kitchener paid tribute to Miles, Bird and Dizzy in calypso tempo" },
+  { source:"Charlie Parker",   target:"Lord Kitchener",   song:"Barbados",                    year:1948, sp:"1L6fvYdSfbJGHYV3Y5cFiO", note:"Bird recorded Barbados and Calypso — Rollins said it showed Bird heard something in Caribbean music" },
+  { source:"Sonny Rollins",    target:"Lord Kitchener",   song:"St. Thomas",                  year:1956, sp:"2xo3SBT4P8e6e0vKMbI1mJ", note:"Based on a calypso his mother sang; Rollins' Virgin Islands heritage — the most famous jazz-calypso fusion" },
+  { source:"Dizzy Gillespie",  target:"Chano Pozo",       song:"Manteca",                     year:1947, sp:"7sTm7S9mwYo6u3pz4z7wBc", note:"Pozo brought the riffs and clave; Dizzy wrote the bridge. First jazz standard in clave." },
+  { source:"Dizzy Gillespie",  target:"Chano Pozo",       song:"Cubana Be / Cubana Bop",      year:1947, sp:null, note:"Pozo's African ritual chants incorporated into jazz" },
+  { source:"Mario Bauzá",      target:"Dizzy Gillespie",  song:"Tanga",                       year:1943, sp:null, note:"Bauzá introduced Gillespie to Afro-Cuban music; Tanga is considered the first Afro-Cuban jazz composition" },
+  { source:"Mario Bauzá",      target:"Chano Pozo",       song:"Introduction (arranged)",     year:1947, sp:null, note:"Bauzá facilitated the Gillespie-Pozo meeting that launched Afro-Cuban jazz" },
+  { source:"Tito Puente",      target:"Chano Pozo",       song:"Oye Como Va",                 year:1963, sp:"0dfAjBORYmQXRFSMJNevHi", note:"Puente carried the Afro-Cuban flame Pozo and Dizzy ignited" },
+  { source:"Carlos Santana",   target:"Tito Puente",      song:"Oye Como Va (cover)",         year:1970, sp:"2XbTSWE5gvMSTCFMxKcHdV", note:"Santana's version made Puente's composition a global hit" },
+  { source:"Machito",          target:"Charlie Parker",   song:"No Noise",                    year:1949, sp:null, note:"Parker recorded with Machito's Afro-Cubans 1948-50 — a landmark cross-cultural session" },
+  { source:"Dizzy Gillespie",  target:"Machito",          song:"Afro-Cuban Drum Suite",       year:1947, sp:null, note:"Dizzy built on Machito's Afro-Cuban foundation" },
 ];
 
 // ── BUILD GRAPH ─────────────────────────────────────────────────────────────
