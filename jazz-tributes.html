@@ -197,6 +197,7 @@ const tributeData = [
 
   // ── BUD POWELL hub ──────────────────────────────────────────────────────
   { source:"Kenny Drew",       target:"Bud Powell",       song:"For Bud",                     type:"tribute", year:1964, sp:null },
+  { source:"Bud Powell",       target:"Lester Young",     song:"'Round Midnight (Tavernier film)", type:"inspiration", year:1986, sp:"3Q2orNwiRxvZlvxqSttl4i", spType:"album", imdb:"https://www.imdb.com/title/tt0090557/fullcredits/", note:"Dexter Gordon's Dale Turner — the expatriate saxophonist at the film's heart — is a composite of Lester Young and Bud Powell, and Bertrand Tavernier's 1986 film is dedicated to both (the story draws on Francis Paudras's Paris friendship with Powell). Herbie Hancock wrote the score and won the Academy Award for it; Gordon was nominated for Best Actor. Not a song one wrote for the other — a film that fuses the two." },
 
   // ── DIZZY GILLESPIE hub ─────────────────────────────────────────────────
   { source:"Dizzy Gillespie",  target:"Woody Herman",     song:"Woody 'n You",                type:"tribute", year:1944, sp:"476Y37CdRsUfFxMaWt0VIz" },
@@ -378,12 +379,15 @@ linkEl
       : d.yt
       ? `<a class="sp-link" style="color:#c07030;border-color:#5a3010;" href="https://youtu.be/${d.yt}" target="_blank">▶ Watch on YouTube</a>`
       : `<span style="color:#b0a090;font-size:0.61rem">Not on Spotify</span>`;
+    const imdbBtn = d.imdb
+      ? `<a class="sp-link" style="color:#f5c518;border-color:#5a4a10;margin-left:0.4rem;" href="${d.imdb}" target="_blank">▸ IMDb</a>`
+      : "";
     const tmeta = typeMeta(d.type); const typeLabel = `<div class="type-chip" style="color:${tmeta.color}">${tmeta.label}</div>`;
     tooltip.innerHTML =
       `<div class="song-title">${d.song}${d.year?` (${d.year})`:""}</div>`+typeLabel+
       `<div class="tribute-line">${src} → ${tgt}</div>`+
       (d.note?`<div class="note-line">${d.note}</div>`:"")+
-      `<div style="margin-top:0.35rem">${spBtn}</div>`;
+      `<div style="margin-top:0.35rem">${spBtn}${imdbBtn}</div>`;
   })
   .on("mouseleave", () => { tooltipHideTimer = setTimeout(() => { tooltip.style.opacity = "0"; }, 300); });
 
@@ -417,10 +421,14 @@ function selectNode(d) {
   linkEl.classed("dimmed",(l,i)=>!connL.has(i)).classed("highlighted",(l,i)=>connL.has(i));
   document.getElementById("panel-name").textContent = d.id;
 
-  const spTag = (t) => t.sp
-    ? ` <a class="sp" href="https://open.spotify.com/${t.spType||'track'}/${t.sp}" target="_blank">▶</a>`
-    : t.yt
-    ? ` <a class="sp" style="color:#c07030;" href="https://youtu.be/${t.yt}" target="_blank">▶</a>` : "";
+  const spTag = (t) => {
+    const play = t.sp
+      ? ` <a class="sp" href="https://open.spotify.com/${t.spType||'track'}/${t.sp}" target="_blank">▶</a>`
+      : t.yt
+      ? ` <a class="sp" style="color:#c07030;" href="https://youtu.be/${t.yt}" target="_blank">▶</a>` : "";
+    const im = t.imdb ? ` <a class="sp" style="color:#f5c518;" href="${t.imdb}" target="_blank">IMDb</a>` : "";
+    return play + im;
+  };
 
   document.getElementById("panel-tributes-to").innerHTML = d.tributes.length
     ? `<div class="section-label">Paid tribute to</div><ul>${d.tributes.map(t=>
