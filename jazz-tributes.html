@@ -149,18 +149,18 @@ const tributeData = [
 
   // ── JOHN COLTRANE hub ───────────────────────────────────────────────────
   { source:"McCoy Tyner",      target:"John Coltrane",    song:"Bluesin' for John C.",        type:"tribute", year:1987, yt:"oJuTHU607ic", sp:null, note:"Grammy-winning tribute album; Tyner's own composition named explicitly for Coltrane, with Pharoah Sanders and David Murray" },
-  { source:"McCoy Tyner",      target:"John Coltrane",    song:"The Believer",                type:"collaboration", year:1958, sp:null, note:"Written by Tyner at 19; Coltrane recorded it two years before Tyner even joined the quartet — the beginning of a lifelong musical bond. NEEDS LINK." },
+  { source:"McCoy Tyner",      target:"John Coltrane",    song:"Echoes of a Friend",          type:"tribute", year:1972, sp:"5HbJEL4SgUpiHT3o8IoVJg", spType:"album", note:"Solo-piano memorial to Coltrane, recorded in Tokyo a few years after his death — two Coltrane tunes (Naima, Promise), Tyner's own pieces, and My Favorite Things. (Replaces 'The Believer', a 1958 date that predates Tyner joining the quartet.)" },
   { source:"Pharoah Sanders",  target:"John Coltrane",    song:"To John",                     type:"tribute", year:1973, sp:"7BM6BEsr1poYkvhOVYeoNu" },
-  { source:"Wayne Shorter",    target:"John Coltrane",    song:"Tribute to John Coltrane (Live Under the Sky '87)", type:"cover", year:1987, sp:null, note:"There is no Shorter tune called Trane; the real homage is the 1987 Tokyo concert where Shorter, Liebman, Beirach, Gomez & DeJohnette played Coltrane's music. Link to be sourced." },
+  { source:"Wayne Shorter",    target:"John Coltrane",    song:"Tribute to John Coltrane (Live Under the Sky '87)", type:"cover", year:1987, sp:null, note:"The 1987 Tokyo concert — Shorter, Liebman, Beirach, Gomez & DeJohnette playing Coltrane (Mr. P.C., India/Impressions, After the Rain/Naima). Released on King Records, Japan; not on Spotify — YouTube fallback candidate." },
   { source:"Alice Coltrane",   target:"John Coltrane",    song:"A Love Supreme (reprise)",    type:"tribute", year:1972, note:"Performed as memorial", sp:"1VT4hCdbHrn87tfXXGyOOp" },
-  { source:"Carlos Santana",   target:"John Coltrane",    song:"A Love Supreme (live)",       type:"cover", year:2000, sp:null },
-  { source:"Ravi Shankar",     target:"John Coltrane",    song:"Offering: To John Coltrane",  type:"tribute", year:1982, sp:null },
+  { source:"Carlos Santana",   target:"John Coltrane",    song:"A Love Supreme",              type:"cover", year:1973, sp:"175DCvUVc8dcQpZoJB4Epk", spType:"track", note:"Santana & McLaughlin's electric reading of Coltrane's Acknowledgement, opening Love Devotion Surrender — their joint homage to Trane." },
+  { source:"John Coltrane",    target:"Ravi Shankar",     song:"India",                       type:"inspiration", year:1961, sp:"51QhPiebO1V2KbN3GgsneW", spType:"track", note:"Direction corrected: Shankar inspired Coltrane, not the reverse. 'India' (Village Vanguard, 1961) approximates the raga drone; Coltrane met Shankar, absorbed Indian modal ideas, and named his son Ravi after him. ('Offering' is a Shankar/Philip Glass piece from Passages, 1990 — no Coltrane link.)" },
 
   // ── MILES DAVIS hub ─────────────────────────────────────────────────────
   { source:"Miles Davis",      target:"Dizzy Gillespie",  song:"Diggin' Diz",                 type:"tribute", year:1951, sp:"2j4rE6uqtRIF4TH5xLdmvd" },
   { source:"John Coltrane",    target:"Miles Davis",      song:"Miles' Mode",                 type:"tribute", year:1962, sp:"2CpltbvU2rU5TXMpOLOjWo" },
-  { source:"Herbie Hancock",   target:"Miles Davis",      song:"Tribute to Miles",            type:"tribute", year:1994, sp:null },
-  { source:"Keith Jarrett",    target:"Miles Davis",      song:"Miles Davis Died Today",      type:"tribute", year:1993, sp:null, note:"Improvised on day of his death" },
+  { source:"Herbie Hancock",   target:"Miles Davis",      song:"A Tribute to Miles",          type:"tribute", year:1994, sp:"2RNHPzfjJS5CesMbhpw0Qo", spType:"album", note:"1992 reunion of Miles' second great quintet (Hancock, Shorter, Carter, Williams) with Wallace Roney in the Miles chair. Won the 1994 Grammy. Recorded after his death." },
+  { source:"Keith Jarrett",    target:"Miles Davis",      song:"Bye Bye Blackbird",           type:"tribute", year:1993, sp:"4ySP4myf2HroEXLQOUQQLs", spType:"album", note:"The Standards Trio recorded this album 12 days after Miles died, named for his signature tune. Jarrett also wrote the preface to the US edition of Geoff Dyer's But Beautiful." },
 
   // ── THELONIOUS MONK hub ─────────────────────────────────────────────────
   { source:"Thelonious Monk",  target:"Bud Powell",       song:"In Walked Bud",               type:"tribute", year:1948, sp:"3D3SrTs2VaNJlBGqbQpyFF" },
@@ -240,7 +240,6 @@ const tributeData = [
   { source:"Bob Mintzer",      target:"Jaco Pastorius",   song:"I Remember Jaco",             type:"tribute", year:1994, sp:null },
 
   // ── RAVI SHANKAR connections ────────────────────────────────────────────
-  { source:"John Coltrane",    target:"Ravi Shankar",     song:"India",                       type:"inspiration", year:1961, sp:"51QhPiebO1V2KbN3GgsneW", note:"Coltrane studied with Shankar and named his son Ravi" },
 
   // ── ALBERT AYLER ────────────────────────────────────────────────────────
   { source:"John Coltrane",    target:"Albert Ayler",     song:"Ascension (influenced)",      type:"inspiration", year:1965, sp:"2TtadFmrnrFZecasfj0p4t", spType:"album", note:"Coltrane openly cited Ayler: 'I found I was moving in the same direction'; Ascension shows Ayler's free approach absorbed into Coltrane's late work" },
@@ -252,10 +251,10 @@ const tributeData = [
   { source:"John Coltrane",    target:"Paul Chambers",    song:"Trane's Blues (aka John Paul Jones)", type:"tribute", year:1957, sp:"0TAGV555YbEZejIF820B7J", note:"Written by Coltrane and originally named after all three players — John (Coltrane), Paul (Chambers) and Jones (Philly Joe). Later retitled Trane's Blues on compilations." },
 
   // ── JOHN McLAUGHLIN ─────────────────────────────────────────────────────
-  { source:"John McLaughlin",  target:"John Coltrane",    song:"Follow Your Heart",           type:"inspiration", year:1970, sp:null, note:"McLaughlin cited Coltrane as his primary spiritual influence" },
+  { source:"John McLaughlin",  target:"John Coltrane",    song:"Naima",                       type:"cover", year:1973, sp:"5S6V7NVt2t9aN7q30RnpRl", spType:"track", note:"McLaughlin's solo acoustic reading of Coltrane's Naima on Love Devotion Surrender. (Replaces 'Follow Your Heart', his own tune, not a Coltrane homage.)" },
   { source:"John McLaughlin",  target:"Miles Davis",      song:"Miles Beyond",                type:"tribute", year:1973, sp:"5I9gXWTR37SMqJsea5jhSM", note:"McLaughlin on Bitches Brew; tribute on Birds of Fire" },
   { source:"John McLaughlin",  target:"Jimi Hendrix",     song:"The Wind Cries Mary",         type:"cover", year:1972, yt:"zNps6k7oVG4", sp:null, note:"Hendrix's composition — McLaughlin's recording is a direct act of tribute after his death" },
-  { source:"Carlos Santana",   target:"John McLaughlin",  song:"Love Devotion Surrender",     type:"collaboration", year:1973, sp:null, note:"Direct collaboration and mutual tribute. Album not on Spotify; search 'Love Devotion Surrender'" },
+  { source:"Carlos Santana",   target:"John McLaughlin",  song:"Love Devotion Surrender",     type:"collaboration", year:1973, sp:"24ITjyOZLWdjWZdQNy0wA5", spType:"album", note:"Their only album together (1973) — a joint Coltrane tribute built around two Trane compositions, under the spell of Sri Chinmoy." },
 
   // ── JIMI HENDRIX ────────────────────────────────────────────────────────
   { source:"Miles Davis",      target:"Jimi Hendrix",     song:"Tribute to Jack Johnson",     type:"inspiration", year:1971, sp:"7bDjarZzGCIoh3fkSoNwlF", note:"Miles was obsessed with Hendrix; wanted to record with him before his death" },
@@ -263,7 +262,7 @@ const tributeData = [
 
   // ── GIL EVANS ───────────────────────────────────────────────────────────
   { source:"Miles Davis",      target:"Gil Evans",        song:"Miles Ahead",                 type:"collaboration", year:1957, sp:"3t2ISZpaNmabTxqy2NyhkF", note:"Their orchestral collaborations were mutual tributes" },
-  { source:"Gil Evans",        target:"Miles Davis",      song:"Parabola",                    type:"inspiration", year:1975, sp:null, note:"Evans kept performing Miles' music throughout his life" },
+  { source:"Gil Evans",        target:"Miles Davis",      song:"Sketches of Spain",           type:"collaboration", year:1960, sp:"2xyhltm9XWSQ5xok4C81BD", spType:"album", note:"The defining Evans/Davis partnership — Evans arranged and conducted; credited jointly. (Their relationship is collaboration, not the earlier mis-attributed Parabola, which is a 1978 Gil Evans album unrelated to Miles.)" },
 
   // ── CHET BAKER ──────────────────────────────────────────────────────────
   { source:"Gerry Mulligan",   target:"Chet Baker",       song:"Chet",                        type:"collaboration", year:1959, sp:"5J4tCtDq8kvxACbGRaOLEX", note:"Mulligan's pianoless quartet made Baker's career" },
