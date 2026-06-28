@@ -86,7 +86,7 @@
 // sp: Spotify track ID (open.spotify.com/track/{id}), null = not found
 const tributeData = [
   // ── ELLINGTON hub ───────────────────────────────────────────────────────
-  { source:"Duke Ellington",   target:"John Coltrane",    song:"Take the Coltrane",           year:1962, sp:"7cUN2jtawZ1jxzVe2SFIOc" },
+  { source:"Duke Ellington",   target:"John Coltrane",    song:"Take the Coltrane",           year:1962, sp:"6aNnVdpAQu8R0qGq5NMXyZ" },
   { source:"Duke Ellington",   target:"Billy Strayhorn",  song:"Lotus Blossom",               year:1967, sp:"3g7vqkGJDGSOBxmL9K5pvL", note:"Written on Strayhorn's death" },
   { source:"Duke Ellington",   target:"Louis Armstrong",  song:"Portrait of Louis Armstrong", year:1962, sp:null },
   { source:"Duke Ellington",   target:"Mahalia Jackson",  song:"Come Sunday",                 year:1943, sp:"3npBMaWCP8TNfNAloUxMuh" },
@@ -205,7 +205,7 @@ const tributeData = [
   { source:"Ravi Shankar",     target:"John Coltrane",    song:"Offering: To John Coltrane",  year:1982, sp:null },
 
   // ── ALBERT AYLER ────────────────────────────────────────────────────────
-  { source:"John Coltrane",    target:"Albert Ayler",     song:"Ascension (influenced)",      year:1965, sp:"0bSIGokNFKUgGG1o4xSFhI", note:"Coltrane openly cited Ayler: 'I found I was moving in the same direction'; Ascension shows Ayler's free approach absorbed into Coltrane's late work" },
+  { source:"John Coltrane",    target:"Albert Ayler",     song:"Ascension (influenced)",      year:1965, sp:"2TtadFmrnrFZecasfj0p4t", spType:"album", note:"Coltrane openly cited Ayler: 'I found I was moving in the same direction'; Ascension shows Ayler's free approach absorbed into Coltrane's late work" },
 
   // ── ELLA FITZGERALD ─────────────────────────────────────────────────────
   { source:"Ella Fitzgerald",  target:"Duke Ellington",   song:"Sings the Ellington Songbook",year:1957, sp:"4qw1P44BuVmDvFr2XKFMLP" },
@@ -217,18 +217,17 @@ const tributeData = [
   // ── PAUL CHAMBERS ───────────────────────────────────────────────────────
   { source:"Sonny Rollins",    target:"Paul Chambers",    song:"Paul's Pal",                  year:1956, sp:"0PglXXSeNAvwXlFjKfWOeB", note:"Written for Chambers, recorded on Rollins' debut" },
   { source:"Miles Davis",      target:"Paul Chambers",    song:"Bye Bye Blackbird",           year:1956, sp:"0YHpVCMNpFXGFiMKHbAEXl", note:"Chambers anchored Miles' classic quintet on virtually every great session of the period" },
-  { source:"John Coltrane",    target:"Paul Chambers",    song:"Trane's Blues",              year:1957, sp:"5fH6e4B4xb5LuUCDVoQqBb", note:"Chambers and Coltrane were constant collaborators on the Prestige sessions" },
+  { source:"John Coltrane",    target:"Paul Chambers",    song:"Trane's Blues (aka John Paul Jones)", year:1957, sp:"0TAGV555YbEZejIF820B7J", note:"Written by Coltrane and originally named after all three players — John (Coltrane), Paul (Chambers) and Jones (Philly Joe). Later retitled Trane's Blues on compilations." },
 
   // ── JOHN McLAUGHLIN ─────────────────────────────────────────────────────
   { source:"John McLaughlin",  target:"John Coltrane",    song:"Follow Your Heart",           year:1970, sp:null, note:"McLaughlin cited Coltrane as his primary spiritual influence" },
   { source:"John McLaughlin",  target:"Miles Davis",      song:"Miles Beyond",                year:1973, sp:"5I9gXWTR37SMqJsea5jhSM", note:"McLaughlin on Bitches Brew; tribute on Birds of Fire" },
-  { source:"John McLaughlin",  target:"Jimi Hendrix",     song:"Tribute to Jimi Hendrix",     year:1972, sp:null, note:"Recorded after Hendrix's death; McLaughlin spoke of his profound impact" },
+  { source:"John McLaughlin",  target:"Jimi Hendrix",     song:"The Wind Cries Mary",          year:1972, yt:"zNps6k7oVG4", sp:null, note:"Hendrix's composition — McLaughlin's recording is a direct act of tribute after his death" },
   { source:"Carlos Santana",   target:"John McLaughlin",  song:"Love Devotion Surrender",     year:1973, sp:null, note:"Album not on Spotify; search 'Love Devotion Surrender'", note:"Direct collaboration and mutual tribute" },
 
   // ── JIMI HENDRIX ────────────────────────────────────────────────────────
   { source:"Miles Davis",      target:"Jimi Hendrix",     song:"Tribute to Jack Johnson",     year:1971, sp:"7bDjarZzGCIoh3fkSoNwlF", note:"Miles was obsessed with Hendrix; wanted to record with him before his death" },
   { source:"Gil Evans",        target:"Jimi Hendrix",     song:"Little Wing",                 year:1974, sp:"4wNQDMSou6glKtZhfOf3ZD", note:"Evans recorded entire Hendrix tribute album" },
-  { source:"John McLaughlin",  target:"Jimi Hendrix",     song:"Tribute to Jimi Hendrix",     year:1972, sp:null },
 
   // ── GIL EVANS ───────────────────────────────────────────────────────────
   { source:"Miles Davis",      target:"Gil Evans",        song:"Miles Ahead", type:"influence",                 year:1957, sp:"3t2ISZpaNmabTxqy2NyhkF", note:"Their orchestral collaborations were mutual tributes" },
@@ -337,7 +336,9 @@ linkEl
     tooltip.style.top  = (e.clientY - r.top  - 10) + "px";
     const src = d.source.id||d.source, tgt = d.target.id||d.target;
     const spBtn = d.sp
-      ? `<a class="sp-link" href="https://open.spotify.com/track/${d.sp}" target="_blank">▶ Listen on Spotify</a>`
+      ? `<a class="sp-link" href="https://open.spotify.com/${d.spType||'track'}/${d.sp}" target="_blank">▶ Listen on Spotify</a>`
+      : d.yt
+      ? `<a class="sp-link" style="color:#c07030;border-color:#5a3010;" href="https://youtu.be/${d.yt}" target="_blank">▶ Watch on YouTube</a>`
       : `<span style="color:#b0a090;font-size:0.61rem">Not on Spotify</span>`;
     const typeLabel = d.type === "influence" ? `<div class="tribute-line" style="color:#9a8a70;font-style:italic">absorbed influence</div>` : "";
     tooltip.innerHTML =
@@ -379,10 +380,12 @@ function selectNode(d) {
   document.getElementById("panel-name").textContent = d.id;
 
   const spTag = (t) => t.sp
-    ? ` <a class="sp" href="https://open.spotify.com/track/${t.sp}" target="_blank">▶</a>` : "";
+    ? ` <a class="sp" href="https://open.spotify.com/${t.spType||'track'}/${t.sp}" target="_blank">▶</a>`
+    : t.yt
+    ? ` <a class="sp" style="color:#c07030;" href="https://youtu.be/${t.yt}" target="_blank">▶</a>` : "";
 
   document.getElementById("panel-tributes-to").innerHTML = d.tributes.length
-    ? `<div class="section-label">Wrote tributes to</div><ul>${d.tributes.map(t=>
+    ? `<div class="section-label">Paid tribute to</div><ul>${d.tributes.map(t=>
         `<li><span class="song">${t.song}</span> <span class="by">→ ${t.target.id||t.target}</span>${spTag(t)}</li>`).join("")}</ul>` : "";
   document.getElementById("panel-tributes-from").innerHTML = d.tributedBy.length
     ? `<div class="section-label">Was honoured by</div><ul>${d.tributedBy.map(t=>
