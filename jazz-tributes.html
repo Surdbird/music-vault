@@ -16,6 +16,9 @@
   #graph-container { flex: 1; position: relative; overflow: hidden; }
   svg { width: 100%; height: 100%; }
   .link { stroke: #b09070; stroke-opacity: 0.45; stroke-width: 1; cursor: pointer; transition: stroke-opacity 0.2s, stroke-width 0.2s; }
+  .link.influence { stroke-dasharray: 4,3; stroke-opacity: 0.35; stroke: #8a7a60; }
+  .link.influence:hover { stroke: #c07030; stroke-opacity: 0.9; stroke-dasharray: 4,3; }
+  .link.influence.highlighted { stroke: #c07030; stroke-opacity: 0.8; stroke-dasharray: 4,3; }
   .link:hover { stroke: #c07030; stroke-opacity: 1; stroke-width: 2; }
   .link.dimmed { stroke-opacity: 0.04; pointer-events: none; }
   .link.highlighted { stroke: #c07030; stroke-opacity: 0.85; stroke-width: 1.5; }
@@ -59,6 +62,10 @@
   <h1>A Map of Homage</h1>
   <p>Jazz as a network of tributes — songs written for, about, and in response to other musicians</p>
   <span id="hint">Click · Hover edges for song + Spotify · Drag · Scroll</span>
+  <span style="font-size:0.6rem;color:#8a7a60;letter-spacing:0.05em">
+    <span style="display:inline-block;width:18px;height:1px;background:#b09070;vertical-align:middle;margin-right:4px"></span>tribute &nbsp;
+    <span style="display:inline-block;width:18px;height:1px;border-top:1px dashed #8a7a60;vertical-align:middle;margin-right:4px"></span>influence
+  </span>
 </header>
 <div id="graph-container">
   <svg id="graph"></svg>
@@ -84,7 +91,7 @@ const tributeData = [
   { source:"Duke Ellington",   target:"Louis Armstrong",  song:"Portrait of Louis Armstrong", year:1962, sp:null },
   { source:"Duke Ellington",   target:"Mahalia Jackson",  song:"Come Sunday",                 year:1943, sp:"3npBMaWCP8TNfNAloUxMuh" },
   { source:"Charles Mingus",   target:"Duke Ellington",   song:"Open Letter to Duke",         year:1959, sp:"3PJMsxg6rz9FOo6xNiASXz" },
-  { source:"John Coltrane",    target:"Duke Ellington",   song:"In a Sentimental Mood", year:1962, sp:"2Cdam35HkInJAIKwujwv6V", note:"Coltrane's decision to record an entire album with Ellington was itself the tribute — In a Mellotone is Ellington's composition" },
+  { source:"John Coltrane",    target:"Duke Ellington",   song:"In a Sentimental Mood",       year:1962, sp:"51BfVxH0QfxTpFgZMMbhwK", note:"Ellington's composition — Coltrane's act of tribute was recording an entire album with him. This is the joint 1962 session recording with both men." },
   { source:"Art Ensemble of Chicago", target:"Duke Ellington", song:"Charlie M.",            year:1974, sp:null, note:"Also nods to Charlie Parker" },
   { source:"Miles Davis",      target:"Duke Ellington",   song:"He Loved Him Madly",          year:1974, sp:"6cnwzzSAme5WcnOjPDgLcC", note:"Recorded a month after Ellington's death" },
   { source:"Dave Brubeck",     target:"Duke Ellington",   song:"The Duke",                    year:1955, sp:"3OuZbpXHAGpwTuHSMfzMpq" },
@@ -156,8 +163,8 @@ const tributeData = [
   { source:"Dizzy Gillespie",  target:"Woody Herman",     song:"Woody 'n You",                year:1944, sp:"5eIDxmBRu0lnkJPqSVf2DI" },
 
   // ── BILL EVANS hub ──────────────────────────────────────────────────────
-  { source:"Miles Davis",      target:"Bill Evans",       song:"Peace Piece (influenced)",    year:1958, sp:null, note:"Miles cited Evans throughout Kind of Blue sessions" },
-  { source:"Jim Hall",         target:"Bill Evans",       song:"Intermodulation",             year:1966, sp:null, note:"Deep collaborative homage" },
+  { source:"Miles Davis",      target:"Bill Evans",       song:"Peace Piece (influenced)", type:"influence",    year:1958, sp:null, note:"Miles cited Evans throughout Kind of Blue sessions" },
+  { source:"Jim Hall",         target:"Bill Evans",       song:"Intermodulation", type:"influence",             year:1966, sp:null, note:"Deep collaborative homage" },
   { source:"Don Friedman",     target:"Scott LaFaro",     song:"Memory of Scotty",            year:1962, sp:null, note:"LaFaro died aged 25" },
 
   // ── SCOTT LAFARO ────────────────────────────────────────────────────────
@@ -194,7 +201,7 @@ const tributeData = [
   { source:"Bob Mintzer",      target:"Jaco Pastorius",   song:"I Remember Jaco",             year:1994, sp:null },
 
   // ── RAVI SHANKAR connections ────────────────────────────────────────────
-  { source:"John Coltrane",    target:"Ravi Shankar",     song:"India",                       year:1961, sp:"0JI1PgH99jRjwmkKHjRFT7", note:"Coltrane studied with Shankar" },
+  { source:"John Coltrane",    target:"Ravi Shankar",     song:"India", type:"influence",                       year:1961, sp:"0JI1PgH99jRjwmkKHjRFT7", note:"Coltrane studied with Shankar" },
   { source:"Ravi Shankar",     target:"John Coltrane",    song:"Offering: To John Coltrane",  year:1982, sp:null },
 
   // ── ALBERT AYLER ────────────────────────────────────────────────────────
@@ -209,8 +216,8 @@ const tributeData = [
 
   // ── PAUL CHAMBERS ───────────────────────────────────────────────────────
   { source:"Sonny Rollins",    target:"Paul Chambers",    song:"Paul's Pal",                  year:1956, sp:"0PglXXSeNAvwXlFjKfWOeB", note:"Written for Chambers, recorded on Rollins' debut" },
-  { source:"Miles Davis",      target:"Paul Chambers",    song:"Chamber Music",               year:1956, sp:null, note:"Miles relied on Chambers on nearly every great session" },
-  { source:"John Coltrane",    target:"Paul Chambers",    song:"Trane's Blues (w/ Chambers)", year:1957, sp:null, note:"Constant collaborators on the Prestige sessions" },
+  { source:"Miles Davis",      target:"Paul Chambers",    song:"Chamber Music", type:"influence",               year:1956, sp:null, note:"Miles relied on Chambers on nearly every great session" },
+  { source:"John Coltrane",    target:"Paul Chambers",    song:"Trane's Blues (w/ Chambers)", type:"influence", year:1957, sp:null, note:"Constant collaborators on the Prestige sessions" },
 
   // ── JOHN McLAUGHLIN ─────────────────────────────────────────────────────
   { source:"John McLaughlin",  target:"John Coltrane",    song:"Follow Your Heart",           year:1970, sp:null, note:"McLaughlin cited Coltrane as his primary spiritual influence" },
@@ -224,7 +231,7 @@ const tributeData = [
   { source:"John McLaughlin",  target:"Jimi Hendrix",     song:"Tribute to Jimi Hendrix",     year:1972, sp:null },
 
   // ── GIL EVANS ───────────────────────────────────────────────────────────
-  { source:"Miles Davis",      target:"Gil Evans",        song:"Miles Ahead",                 year:1957, sp:"3t2ISZpaNmabTxqy2NyhkF", note:"Their orchestral collaborations were mutual tributes" },
+  { source:"Miles Davis",      target:"Gil Evans",        song:"Miles Ahead", type:"influence",                 year:1957, sp:"3t2ISZpaNmabTxqy2NyhkF", note:"Their orchestral collaborations were mutual tributes" },
   { source:"Gil Evans",        target:"Miles Davis",      song:"Parabola",                    year:1975, sp:null, note:"Evans kept performing Miles' music throughout his life" },
 
   // ── CHET BAKER ──────────────────────────────────────────────────────────
@@ -235,7 +242,7 @@ const tributeData = [
 
   // ── ART PEPPER ──────────────────────────────────────────────────────────
   { source:"Art Pepper",       target:"Miles Davis",      song:"Diane",                       year:1956, sp:"5f2ECXhXcRJBHBbfWXxFqr", note:"Pepper cited Miles as the defining influence on his conception" },
-  { source:"Art Pepper",       target:"Charlie Parker",   song:"Art Pepper Quartet (Bird studies)", year:1952, sp:null, note:"Pepper's early work is a sustained conversation with Bird" },
+  { source:"Art Pepper",       target:"Charlie Parker",   song:"Art Pepper Quartet (Bird studies)", type:"influence", year:1952, sp:null, note:"Pepper's early work is a sustained conversation with Bird" },
   { source:"Gary Foster",      target:"Art Pepper",       song:"For Art's Sake",              year:1991, sp:null, note:"Written after Pepper's death" },
 
   // ── GERRY MULLIGAN ──────────────────────────────────────────────────────
@@ -254,11 +261,11 @@ const tributeData = [
   { source:"Dizzy Gillespie",  target:"Chano Pozo",       song:"Manteca",                     year:1947, sp:"7sTm7S9mwYo6u3pz4z7wBc", note:"Pozo brought the riffs and clave; Dizzy wrote the bridge. First jazz standard in clave." },
   { source:"Dizzy Gillespie",  target:"Chano Pozo",       song:"Cubana Be / Cubana Bop",      year:1947, sp:null, note:"Pozo's African ritual chants incorporated into jazz" },
   { source:"Mario Bauzá",      target:"Dizzy Gillespie",  song:"Tanga",                       year:1943, sp:null, note:"Bauzá introduced Gillespie to Afro-Cuban music; Tanga is considered the first Afro-Cuban jazz composition" },
-  { source:"Mario Bauzá",      target:"Chano Pozo",       song:"Introduction (arranged)",     year:1947, sp:null, note:"Bauzá facilitated the Gillespie-Pozo meeting that launched Afro-Cuban jazz" },
+  { source:"Mario Bauzá",      target:"Chano Pozo",       song:"Introduction (arranged)", type:"influence",     year:1947, sp:null, note:"Bauzá facilitated the Gillespie-Pozo meeting that launched Afro-Cuban jazz" },
   { source:"Tito Puente",      target:"Chano Pozo",       song:"Oye Como Va",                 year:1963, sp:"0dfAjBORYmQXRFSMJNevHi", note:"Puente carried the Afro-Cuban flame Pozo and Dizzy ignited" },
   { source:"Carlos Santana",   target:"Tito Puente",      song:"Oye Como Va (cover)",         year:1970, sp:"2XbTSWE5gvMSTCFMxKcHdV", note:"Santana's version made Puente's composition a global hit" },
   { source:"Machito",          target:"Charlie Parker",   song:"No Noise",                    year:1949, sp:null, note:"Parker recorded with Machito's Afro-Cubans 1948-50 — a landmark cross-cultural session" },
-  { source:"Dizzy Gillespie",  target:"Machito",          song:"Afro-Cuban Drum Suite",       year:1947, sp:null, note:"Dizzy built on Machito's Afro-Cuban foundation" },
+  { source:"Dizzy Gillespie",  target:"Machito",          song:"Afro-Cuban Drum Suite", type:"influence",       year:1947, sp:null, note:"Dizzy built on Machito's Afro-Cuban foundation" },
 ];
 
 // ── BUILD GRAPH ─────────────────────────────────────────────────────────────
@@ -295,7 +302,7 @@ const sim = d3.forceSimulation(nodes)
   .force("collision", d3.forceCollide().radius(d => rScale(degree(d.id)) + 14));
 
 // ── LINKS ───────────────────────────────────────────────────────────────────
-const linkEl = g.selectAll(".link").data(links).join("line").attr("class","link");
+const linkEl = g.selectAll(".link").data(links).join("line").attr("class", d => "link" + (d.type === "influence" ? " influence" : ""));
 
 // ── NODES ───────────────────────────────────────────────────────────────────
 const nodeEl = g.selectAll(".node").data(nodes).join("g").attr("class","node")
@@ -332,8 +339,9 @@ linkEl
     const spBtn = d.sp
       ? `<a class="sp-link" href="https://open.spotify.com/track/${d.sp}" target="_blank">▶ Listen on Spotify</a>`
       : `<span style="color:#b0a090;font-size:0.61rem">Not on Spotify</span>`;
+    const typeLabel = d.type === "influence" ? `<div class="tribute-line" style="color:#9a8a70;font-style:italic">absorbed influence</div>` : "";
     tooltip.innerHTML =
-      `<div class="song-title">${d.song}${d.year?` (${d.year})`:""}</div>`+
+      `<div class="song-title">${d.song}${d.year?` (${d.year})`:""}</div>`+typeLabel+
       `<div class="tribute-line">${src} → ${tgt}</div>`+
       (d.note?`<div class="note-line">${d.note}</div>`:"")+
       `<div style="margin-top:0.35rem">${spBtn}</div>`;
