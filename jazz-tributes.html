@@ -87,6 +87,36 @@
   #about-box p:first-child { font-size: 1.05rem; color: #8b5e2a; font-style: italic; }
   #about-box p:not(:first-child) { font-size: 0.82rem; color: #5a4a30; }
 
+  /* ── left index panel ───────────────────────────────────────── */
+  #index-panel { position:absolute; top:1.25rem; left:1.25rem; width:214px; background:#ede8de; border:1px solid #d8d0c0; display:flex; flex-direction:column; max-height:calc(100vh - 168px); z-index:8; transition:transform 0.25s ease, opacity 0.25s ease; }
+  #index-panel.collapsed { transform:translateX(-118%); opacity:0; pointer-events:none; }
+  #index-head { display:flex; align-items:baseline; justify-content:space-between; padding:0.6rem 0.7rem 0.5rem; border-bottom:1px solid #d8d0c0; }
+  #index-head .ttl { font-family:'IM Fell English',Georgia,serif; font-size:0.95rem; color:#1a1208; }
+  #index-head .cnt { font-size:0.55rem; color:#9a8a70; letter-spacing:0.06em; }
+  #index-collapse { background:none; border:none; color:#b0a090; cursor:pointer; font-family:'Courier Prime',monospace; font-size:0.8rem; line-height:1; padding:0 0 0 0.4rem; }
+  #index-collapse:hover { color:#c2683a; }
+  #index-search { margin:0.55rem 0.7rem 0.4rem; background:#f7f2ea; border:1px solid #d8d0c0; color:#3a2a10; font-family:'Courier Prime',monospace; font-size:0.66rem; padding:0.32rem 0.5rem; outline:none; }
+  #index-search:focus { border-color:#8b5e2a; }
+  #index-search::placeholder { color:#b0a090; }
+  #index-list { overflow-y:auto; padding:0 0.35rem 0.45rem; }
+  #index-list .letter { font-size:0.55rem; letter-spacing:0.12em; color:#b09060; text-transform:uppercase; padding:0.45rem 0.4rem 0.12rem; position:sticky; top:0; background:#ede8de; }
+  #index-list .row { font-size:0.66rem; color:#5a4a30; padding:0.2rem 0.4rem; cursor:pointer; border-radius:3px; line-height:1.3; display:flex; justify-content:space-between; gap:0.4rem; transition:background 0.12s; }
+  #index-list .row:hover { background:#e2d8c4; color:#1a1208; }
+  #index-list .row.active { background:#e0a840; color:#3a2a10; }
+  #index-list .row .deg { font-size:0.55rem; color:#b0a090; }
+  #index-list .row.active .deg { color:#7a5a20; }
+  #index-list .row.hiddenrow, #index-list .letter.hiddenrow { display:none; }
+  #index-empty { font-size:0.62rem; color:#b0a090; font-style:italic; padding:0.5rem 0.45rem; display:none; }
+  #index-toggle { position:absolute; top:1.25rem; left:1.25rem; z-index:9; background:#ede8de; border:1px solid #d8d0c0; color:#8b5e2a; font-family:'Courier Prime',monospace; font-size:0.62rem; letter-spacing:0.06em; padding:0.38rem 0.6rem; cursor:pointer; display:none; }
+  #index-toggle:hover { border-color:#c2683a; color:#c2683a; }
+  #index-toggle.show { display:block; }
+
+  /* ── about-box further links ────────────────────────────────── */
+  #about-links { margin-top:1.05rem; border-top:1px solid #e0d4bc; padding-top:0.85rem; }
+  #about-links .about-links-head { font-size:0.58rem; letter-spacing:0.13em; text-transform:uppercase; color:#b09060; margin-bottom:0.5rem; }
+  #about-links a { display:block; font-family:'Courier Prime',monospace; font-size:0.73rem; color:#8b5e2a; text-decoration:none; padding:0.24rem 0; border-bottom:1px dotted transparent; width:fit-content; }
+  #about-links a:hover { color:#1a1208; border-bottom-color:#b89060; }
+
 </style>
 </head>
 <body>
@@ -106,9 +136,25 @@
   <p>These connections are not linear. They are melodic and harmonic.</p>
   <p>Some edges here are explicit dedications — songs named for the person they honour. Others are recordings made together across generations, or absorbed influences so deep they surface as composition. In jazz, the distinction between tribute, collaboration, and inheritance is always porous. Lester Young can sound indebted to Stan Getz, who owes everything to Lester Young. The arrow of influence runs both ways, and sometimes forward in time.</p>
   <p>Read each edge as you would a chord — not a statement of fact, but a relationship with tension and resonance.</p>
+  <div id="about-links">
+    <div class="about-links-head">Further</div>
+    <a href="https://www.amazon.com/But-Beautiful-Book-About-Jazz/dp/0312429479" target="_blank" rel="noopener">✦ <em>But Beautiful</em> — Geoff Dyer · the book this map is named for</a>
+    <a href="#" id="open-index-link">✦ Browse all musicians (A–Z)</a>
+    <a href="https://surdbird.github.io/music-vault/" target="_blank" rel="noopener">✦ Back to The Vault</a>
+  </div>
 </div>
 <div id="graph-container">
   <svg id="graph"></svg>
+  <div id="index-panel">
+    <div id="index-head">
+      <span><span class="ttl">Musicians</span> <span class="cnt" id="index-count"></span></span>
+      <button id="index-collapse" title="Collapse">‹</button>
+    </div>
+    <input id="index-search" type="text" placeholder="Search or browse…" autocomplete="off">
+    <div id="index-list"></div>
+    <div id="index-empty">No match</div>
+  </div>
+  <button id="index-toggle">☰ Musicians</button>
   <div id="edge-tooltip"></div>
   <div id="detail-panel">
     <button id="close-panel">✕</button>
@@ -117,8 +163,7 @@
     <div id="panel-tributes-from"></div>
   </div>
   <div id="controls">
-    <input id="search-box" type="text" placeholder="Search musician…" autocomplete="off">
-    <button class="ctrl-btn hidden" id="reset-btn">Clear</button>
+    <button class="ctrl-btn hidden" id="reset-btn">Clear selection</button>
   </div>
   <div id="count-label"></div>
 </div>
@@ -129,12 +174,12 @@ const tributeData = [
   { source:"Duke Ellington",   target:"John Coltrane",    song:"Take the Coltrane",           type:"collaboration", year:1962, sp:"6aNnVdpAQu8R0qGq5NMXyZ", note:"A blues jammed on their joint album — the title a friendly nod (after Take the A Train); the meeting itself was the homage" },
   { source:"Duke Ellington",   target:"Billy Strayhorn",  song:"Lotus Blossom",               type:"tribute", year:1967, note:"Written on Strayhorn's death", sp:"4mKNLkpfUfoTurf6Y6B1G5" },
   { source:"Duke Ellington",   target:"Louis Armstrong",  song:"Portrait of Louis Armstrong", type:"tribute", year:1970, note:"From the New Orleans Suite (1970), Ellington's portrait gallery of New Orleans greats — a feature for Cootie Williams", sp:"54VjVYePTlUS3aSibq9Y7Z" },
-  { source:"Duke Ellington",   target:"Mahalia Jackson",  song:"Come Sunday",                 type:"collaboration", year:1943, note:"From Black, Brown and Beige; the definitive version was recorded with Mahalia herself", sp:"2KkuZCrpg2YHars2ZAD0k3" },
+  { source:"Duke Ellington",   target:"Mahalia Jackson",  song:"Come Sunday",                 type:"collaboration", year:1958, note:"The definitive reading — Mahalia's aching vocal over the orchestra, from the 1958 recording of Ellington's Black, Brown and Beige suite.", sp:"2riGm2tQu96YMrMsXLTfiN", spType:"track" },
   { source:"Charles Mingus",   target:"Duke Ellington",   song:"Open Letter to Duke",         type:"tribute", year:1959, sp:"2wHIDNvfYyZWPpMqX3fDE4", note:"An explicit tribute to Ellington, drawing on three earlier Mingus pieces" },
   { source:"John Coltrane",    target:"Duke Ellington",   song:"Big Nick",                    type:"collaboration", year:1962, sp:"1vvAh4wlHcC4B6tv7NDGjl", note:"The one Coltrane composition on the 1962 session with Ellington — his act of tribute was recording an entire album with the Duke" },
   { source:"Art Ensemble of Chicago", target:"Charles Mingus",   song:"Charlie M.",            type:"tribute", year:1980, sp:"55QXmQTnMsjYAhNLZIgoqU", spType:"track", note:"The bluesy heart of Full Force (ECM, 1980) — Lester Bowie's trumpet leading a swinging elegy for Charles Mingus." },
   { source:"Miles Davis",      target:"Duke Ellington",   song:"He Loved Him Madly",          type:"tribute", year:1974, sp:"6cnwzzSAme5WcnOjPDgLcC", note:"Recorded a month after Ellington's death" },
-  { source:"Dave Brubeck",     target:"Duke Ellington",   song:"The Duke",                    type:"tribute", year:1955, sp:"4UfwWW6KumI520I14VRU9O" },
+  { source:"Dave Brubeck",     target:"Duke Ellington",   song:"The Duke",                    type:"tribute", year:1956, sp:"2LCgahVW0L5u9yNpdUViRE", spType:"track", note:"Brubeck's affectionate tribute tune, from the original solo-piano Brubeck Plays Brubeck (1956); its angular melody walks through every key — a nod to Duke's harmonic reach." },
   { source:"Stevie Wonder",    target:"Duke Ellington",   song:"Sir Duke",                    type:"tribute", year:1976, sp:"4pNiE4LCVV74vfIBaUHm1b" },
   { source:"Abdullah Ibrahim", target:"Duke Ellington",   song:"Ode to Duke Ellington",        type:"tribute", year:1973, sp:"4drUsXnYjuqhaG3alsn1ZV", spType:"album", note:"Solo-piano homage recorded in Dec 1973 — a decade after Ellington discovered Dollar Brand in a Zurich club and produced his debut LP. Ibrahim improvises impressionistic medleys of Ellington themes (Solitude, In a Sentimental Mood, Caravan) woven with his own." },
   { source:"Oscar Peterson",   target:"Duke Ellington",   song:"Plays the Duke Ellington Songbook", type:"tribute", year:1959, sp:"5VUbrSUAHxlbQ2RWy2qM4G", spType:"album", note:"Peterson's trio working through Ellington's book — part of his celebrated Verve 'Songbook' series. (Corrects the loosely-titled 'Salute to Duke'.)" },
@@ -168,12 +213,12 @@ const tributeData = [
   { source:"Miles Davis",      target:"Thelonious Monk",  song:"Well You Needn't",            type:"cover", year:1954, note:"Monk's composition — Miles recording it was the tribute; a key part of his Prestige sessions", sp:"3TpM5lyedin4HyLfru6kO2" },
   { source:"Steve Lacy",       target:"Thelonious Monk",  song:"Reflections",                 type:"cover", year:1958, sp:"6n0UYWZNm8svw4V7XlH09C", spType:"album", note:"Subtitled 'Steve Lacy Plays Thelonious Monk' — per Robin Kelley, the first album devoted entirely to Monk's music by another artist. Lacy (soprano sax) would go on to spend much of his life inside Monk's book." },
   { source:"Abdullah Ibrahim", target:"Thelonious Monk",  song:"Plays Sphere Jazz",           type:"tribute", year:1960, sp:"0zf4QsN9POYOShWJlLoQ2C", spType:"album", note:"Dollar Brand's first LP as leader (Sphere = Monk's middle name) — his earliest Monk homage; the man Mandela called 'our Mozart' was nicknamed 'South Africa's Monk.' (Corrects the non-existent 'Monk Suite'.)" },
-  { source:"Jimmy Rowles",     target:"Thelonious Monk",  song:"The Ballad of Thelonious Monk", type:"tribute", year:1972, sp:"1Lzv5AHQV9P7JuD44N7a3g", spType:"track", note:"Rowles's own country-and-western novelty that threads Monk tune-titles (Ruby My Dear, Pannonica, 'Round Midnight) into its lyric — heard here sung by Carmen McRae, with Rowles at the piano, on The Great American Songbook (live, 1972)." },
+  { source:"Carmen McRae",     target:"Thelonious Monk",  song:"The Ballad of Thelonious Monk", type:"tribute", year:1972, sp:"0w4Krsee39RxQRiC5XHuwG", spType:"track", note:"Jimmy Rowles's country-and-western novelty that threads Monk tune-titles (Ruby My Dear, Pannonica, 'Round Midnight) into its lyric — sung here by McRae with Rowles at the piano, on her live The Great American Songbook (1972)." },
   { source:"Benny Bailey",     target:"Thelonious Monk",  song:"Thelonious Assault",          type:"tribute", year:1978, sp:null, yt:"D46zppBTn-I", note:"A real Benny Bailey tune (recorded 1978, with Monk's own tenorman Charlie Rouse in the band). Grand Slam isn't on Spotify, so linked via YouTube." },
 
   // ── LESTER YOUNG hub ────────────────────────────────────────────────────
   { source:"Charles Mingus",   target:"Lester Young",     song:"Goodbye Pork Pie Hat",        type:"tribute", year:1959, sp:"3PJMsxg6rz9FOo6xNiASXz", note:"Written on Lester's death" },
-  { source:"Wayne Shorter",    target:"Lester Young",     song:"Lester Left Town",            type:"tribute", year:1964, note:"Written by Shorter as a direct tribute to Lester Young", sp:"2MrN59xDzti3QKFoNxggVQ" },
+  { source:"Wayne Shorter",    target:"Lester Young",     song:"Lester Left Town",            type:"tribute", year:1960, note:"Shorter's elegy for Lester Young; its first recording opens here on Art Blakey's The Big Beat (1960), the young Lee Morgan alongside him.", sp:"5yd2sKop47yaHTANrKsVKx", spType:"track" },
   { source:"Billie Holiday",   target:"Lester Young",     song:"Fine and Mellow",             type:"collaboration", year:1939, note:"Their bond was jazz's great friendship; Lester coined her nickname Lady Day", sp:"1QdQ4r05QWhtcTTXOgRtyA" },
   { source:"Joni Mitchell",    target:"Lester Young",     song:"Goodbye Pork Pie Hat (vocal)",type:"cover", year:1979, note:"Joni's lyric setting of Mingus's tribute to Lester", sp:"10lt3FoAtLN0Y4tL9i3FT9" },
 
@@ -246,7 +291,7 @@ const tributeData = [
   { source:"John Coltrane",    target:"Albert Ayler",     song:"Ascension (influenced)",      type:"inspiration", year:1965, sp:"2TtadFmrnrFZecasfj0p4t", spType:"album", note:"Coltrane openly cited Ayler: 'I found I was moving in the same direction'; Ascension shows Ayler's free approach absorbed into Coltrane's late work" },
 
   // ── PAUL CHAMBERS ───────────────────────────────────────────────────────
-  { source:"John Coltrane",    target:"Paul Chambers",    song:"Mr. P.C.",                    type:"tribute", year:1959, note:"The Giant Steps closer, named for the initials of bassist Paul Chambers, who played on every session. A blues in C minor, now a jam-session standard.", sp:"6WHzULDcQEgtET9c0jG7tj" },
+  { source:"John Coltrane",    target:"Paul Chambers",    song:"Mr. P.C.",                    type:"tribute", year:1959, note:"The Giant Steps closer, named for the initials of bassist Paul Chambers, who played on every session. A blues in C minor, now a jam-session standard.", sp:"0jFeSWzBltTbwBPcQEpT7A", spType:"track" },
   { source:"Sonny Rollins",    target:"Paul Chambers",    song:"Paul's Pal",                  type:"tribute", year:1956, sp:"0PglXXSeNAvwXlFjKfWOeB", note:"Written for Chambers, recorded on Rollins' debut" },
   { source:"Miles Davis",      target:"Paul Chambers",    song:"Bye Bye Blackbird",           type:"collaboration", year:1956, note:"Chambers anchored Miles' classic quintet on virtually every great session of the period", sp:"5kfo5bmWlVx1jArYzbvBSY" },
   { source:"John Coltrane",    target:"Paul Chambers",    song:"Trane's Blues (aka John Paul Jones)", type:"tribute", year:1957, sp:"0TAGV555YbEZejIF820B7J", note:"Written by Coltrane and originally named after all three players — John (Coltrane), Paul (Chambers) and Jones (Philly Joe). Later retitled Trane's Blues on compilations." },
@@ -405,7 +450,9 @@ function clearSelection() {
   linkEl.classed("dimmed highlighted", false);
   panel.classList.remove("visible");
   resetBtn.classList.add("hidden");
-  document.getElementById("search-box").value = "";
+  const _is = document.getElementById("index-search"); if (_is) _is.value = "";
+  if (typeof filterIndex === "function") filterIndex("");
+  if (typeof updateIndexActive === "function") updateIndexActive(null);
 }
 
 function selectNode(d) {
@@ -438,6 +485,7 @@ function selectNode(d) {
 
   panel.classList.add("visible");
   resetBtn.classList.remove("hidden");
+  if (typeof updateIndexActive === "function") updateIndexActive(d.id);
 }
 
 nodeEl.on("click",(e,d)=>{ e.stopPropagation(); selected===d.id?clearSelection():selectNode(d); });
@@ -445,12 +493,94 @@ svg.on("click", clearSelection);
 document.getElementById("close-panel").onclick = clearSelection;
 resetBtn.onclick = clearSelection;
 
-// ── SEARCH ──────────────────────────────────────────────────────────────────
-document.getElementById("search-box").addEventListener("input", function() {
-  const q = this.value.trim().toLowerCase();
-  if (!q) { clearSelection(); return; }
-  const match = nodes.find(d => d.id.toLowerCase().includes(q));
-  if (match) selectNode(match);
+// ── LEFT INDEX PANEL ────────────────────────────────────────────────────────
+const indexPanel  = document.getElementById("index-panel");
+const indexList   = document.getElementById("index-list");
+const indexSearch = document.getElementById("index-search");
+const indexEmpty  = document.getElementById("index-empty");
+const indexToggle = document.getElementById("index-toggle");
+const rowEls = {};
+
+document.getElementById("index-count").textContent = `(${nodes.length})`;
+
+// build sorted A–Z list with letter dividers + degree counts
+const sortedNodes = [...nodes].sort((a, b) => a.id.localeCompare(b.id));
+let curLetter = "";
+sortedNodes.forEach(n => {
+  const L = n.id[0].toUpperCase();
+  if (L !== curLetter) {
+    curLetter = L;
+    const lh = document.createElement("div");
+    lh.className = "letter"; lh.dataset.letter = L; lh.textContent = L;
+    indexList.appendChild(lh);
+  }
+  const row = document.createElement("div");
+  row.className = "row"; row.dataset.id = n.id;
+  row.innerHTML = `<span>${n.id}</span><span class="deg">${degree(n.id)}</span>`;
+  row.addEventListener("click", () => focusNode(n));
+  indexList.appendChild(row);
+  rowEls[n.id] = row;
+});
+
+function centerOnNode(n) {
+  if (n.x == null) return;
+  const k = d3.zoomTransform(svg.node()).k || 1;
+  const { w, h } = dims();
+  const t = d3.zoomIdentity.translate(w / 2 - n.x * k, h / 2 - n.y * k).scale(k);
+  svg.transition().duration(650).call(zoom.transform, t);
+}
+
+function focusNode(n) {
+  selectNode(n);
+  centerOnNode(n);
+}
+
+function updateIndexActive(id) {
+  Object.values(rowEls).forEach(r => r.classList.remove("active"));
+  if (id && rowEls[id]) {
+    rowEls[id].classList.add("active");
+    rowEls[id].scrollIntoView({ block: "nearest" });
+  }
+}
+
+function filterIndex(q) {
+  q = (q || "").trim().toLowerCase();
+  const lettersWith = new Set();
+  let anyVisible = false;
+  sortedNodes.forEach(n => {
+    const show = !q || n.id.toLowerCase().includes(q);
+    rowEls[n.id].classList.toggle("hiddenrow", !show);
+    if (show) { lettersWith.add(n.id[0].toUpperCase()); anyVisible = true; }
+  });
+  indexList.querySelectorAll(".letter").forEach(lh =>
+    lh.classList.toggle("hiddenrow", !!q && !lettersWith.has(lh.dataset.letter)));
+  indexEmpty.style.display = anyVisible ? "none" : "block";
+}
+
+indexSearch.addEventListener("input", function () { filterIndex(this.value); });
+indexSearch.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    const q = this.value.trim().toLowerCase();
+    const m = sortedNodes.find(n => n.id.toLowerCase().includes(q));
+    if (m) focusNode(m);
+  }
+});
+
+// collapse / expand
+function setIndexCollapsed(c) {
+  indexPanel.classList.toggle("collapsed", c);
+  indexToggle.classList.toggle("show", c);
+}
+document.getElementById("index-collapse").addEventListener("click", () => setIndexCollapsed(true));
+indexToggle.addEventListener("click", () => { setIndexCollapsed(false); indexSearch.focus(); });
+if (cont.clientWidth < 760) setIndexCollapsed(true);
+
+// "Browse all musicians" link inside the idea box
+document.getElementById("open-index-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  setIndexCollapsed(false);
+  document.getElementById("about-box").classList.remove("show");
+  indexSearch.focus();
 });
 
 document.getElementById("count-label").textContent =
