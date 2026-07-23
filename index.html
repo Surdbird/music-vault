@@ -2918,6 +2918,15 @@ function extractArtistFromTitle(title) {
   if (/^[\d\s]+$/.test(artist)) return null;
   // Skip if it looks like a playlist/compilation title (starts with common words)
   if (/^(best|top|greatest|classic|live|official|full|new|latest)\s/i.test(artist)) return null;
+  // Block common false positives
+  const JUNK_ARTISTS = new Set([
+    'album','full album','official','official video','official audio',
+    'lyrics','lyric video','hd','hq','remastered','remaster',
+    'goose','topic','music','records','audio','video','live',
+    'various artists','various','compilation','mix','mixtape',
+    'feat','ft','featuring','and','&'
+  ]);
+  if (JUNK_ARTISTS.has(artist.toLowerCase())) return null;
 
   return artist;
 }
@@ -4776,7 +4785,33 @@ async function createArtistSpotifyPlaylist(artistName) {
       }
     }
 
-    if (!allUrls.length) { toast('No Spotify tracks found for ' + artistName); if(btn){btn.textContent='SP ＋';btn.disabled=false;} return; }
+    if (!allUrls.length) {
+      // Fallback: search Spotify directly for this artist
+      if (btn) btn.textContent = '…searching';
+      try {
+        const searchQuery = encodeURIComponent(`artist:"${artistName}"`);
+        const searchRes = await spotifyFetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=50`);
+        const searchTracks = (searchRes.tracks?.items || [])
+          .filter(t => t.artists.some(a => a.name.toLowerCase() === artistName.toLowerCase()))
+          .map(t => `spotify:track:${t.id}`);
+        if (searchTracks.length) {
+          const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+            method: 'POST',
+            body: JSON.stringify({ name: `The Vault — ${artistName}`, description: `${artistName} tracks — searched from Spotify`, public: true })
+          });
+          const BATCH = 100;
+          for (let i = 0; i < searchTracks.length; i += BATCH) {
+            await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+              method: 'POST', body: JSON.stringify({ uris: searchTracks.slice(i, i + BATCH) })
+            });
+          }
+          if (btn) { btn.textContent = '✓ Open'; btn.style.background = '#1db954'; btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank'); btn.disabled = false; }
+          toast(`Playlist created for ${artistName} (${searchTracks.length} tracks via search)`);
+          return;
+        }
+      } catch(e) { console.warn('Spotify search fallback failed:', e); }
+      toast('No Spotify tracks found for ' + artistName); if(btn){btn.textContent='SP ＋';btn.disabled=false;} return;
+    }
 
     if (btn) btn.textContent = `…resolving`;
     const uris = [...new Set(allUrls)].map(u => { const m = u.match(/\/track\/([a-zA-Z0-9]+)/); return m ? `spotify:track:${m[1]}` : null; }).filter(Boolean);
