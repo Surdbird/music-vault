@@ -4859,18 +4859,44 @@ async function createArtistSpotifyPlaylist(artistName) {
         const searchTracks = [...new Set(allSearchTracks)]; // deduplicate
         console.log('[SP+] Tracks found:', searchTracks.length);
         if (searchTracks.length) {
-          const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
-            method: 'POST',
-            body: JSON.stringify({ name: `The Vault — ${artistName}`, description: `${artistName} tracks — searched from Spotify`, public: true })
-          });
-          const BATCH = 100;
-          for (let i = 0; i < searchTracks.length; i += BATCH) {
-            await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
-              method: 'POST', body: JSON.stringify({ uris: searchTracks.slice(i, i + BATCH) })
-            });
+          // Check if playlist already exists
+          const playlistName = `The Vault — ${artistName}`;
+          let plId = null;
+          let offset = 0;
+          while (true) {
+            const existing = await spotifyFetch(`https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`);
+            const match = (existing.items || []).find(p => p.name === playlistName);
+            if (match) { plId = match.id; break; }
+            if (!existing.next) break;
+            offset += 50;
           }
-          if (btn) { btn.textContent = '✓ Open'; btn.style.background = '#1db954'; btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank'); btn.disabled = false; }
-          toast(`Playlist created for ${artistName} (${searchTracks.length} tracks via search)`);
+          if (plId) {
+            // Update existing — replace all tracks
+            await spotifyFetch(`https://api.spotify.com/v1/playlists/${plId}/tracks`, {
+              method: 'PUT', body: JSON.stringify({ uris: searchTracks.slice(0, 100) })
+            });
+            for (let i = 100; i < searchTracks.length; i += 100) {
+              await spotifyFetch(`https://api.spotify.com/v1/playlists/${plId}/tracks`, {
+                method: 'POST', body: JSON.stringify({ uris: searchTracks.slice(i, i + 100) })
+              });
+            }
+            if (btn) { btn.textContent = '✓ Open'; btn.style.background = '#1db954'; btn.onclick = () => window.open(`https://open.spotify.com/playlist/${plId}`, '_blank'); btn.disabled = false; }
+            toast(`Updated playlist for ${artistName} (${searchTracks.length} tracks)`);
+          } else {
+            // Create new
+            const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+              method: 'POST',
+              body: JSON.stringify({ name: playlistName, description: `${artistName} tracks shared in The Vault`, public: true })
+            });
+            const BATCH = 100;
+            for (let i = 0; i < searchTracks.length; i += BATCH) {
+              await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
+                method: 'POST', body: JSON.stringify({ uris: searchTracks.slice(i, i + BATCH) })
+              });
+            }
+            if (btn) { btn.textContent = '✓ Open'; btn.style.background = '#1db954'; btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank'); btn.disabled = false; }
+            toast(`Created playlist for ${artistName} (${searchTracks.length} tracks)`);
+          }
           return;
         }
       } catch(e) { console.warn('Spotify search fallback failed:', e); }
@@ -4880,33 +4906,64 @@ async function createArtistSpotifyPlaylist(artistName) {
     if (btn) btn.textContent = `…resolving`;
     const uris = [...new Set(allUrls)].map(u => { const m = u.match(/\/track\/([a-zA-Z0-9]+)/); return m ? `spotify:track:${m[1]}` : null; }).filter(Boolean);
 
-    const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
-      method: 'POST',
-      body: JSON.stringify({ name: `The Vault — ${artistName}`, description: `${artistName} tracks shared in The Vault community`, public: true })
-    });
+    // Check if playlist already exists in localStorage cache
+    const savedPlaylists = JSON.parse(localStorage.getItem('vault_artist_playlists') || '{}');
+    const existingPl = savedPlaylists[artistName];
 
-    const BATCH = 100;
-    for (let i = 0; i < uris.length; i += BATCH) {
-      await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/items`, {
-        method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + BATCH) })
-      });
-      if (i + BATCH < uris.length) await sleep(500);
+    let plId = null;
+    if (existingPl?.playlistId) {
+      // Update existing playlist — replace tracks
+      if (btn) btn.textContent = '…updating';
+      try {
+        await spotifyFetch(`https://api.spotify.com/v1/playlists/${existingPl.playlistId}/tracks`, {
+          method: 'PUT', body: JSON.stringify({ uris: uris.slice(0, 100) })
+        });
+        for (let i = 100; i < uris.length; i += 100) {
+          await spotifyFetch(`https://api.spotify.com/v1/playlists/${existingPl.playlistId}/tracks`, {
+            method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + 100) })
+          });
+          if (i + 100 < uris.length) await sleep(300);
+        }
+        plId = existingPl.playlistId;
+        toast(`✓ Updated "The Vault — ${artistName}" with ${uris.length} tracks`);
+      } catch(e) {
+        // Playlist may have been deleted — fall through to create
+        plId = null;
+      }
     }
 
-    try { await spotifyFetch(`https://api.spotify.com/v1/playlists/${pl.id}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) }); } catch(e) {}
+    if (!plId) {
+      // Create new playlist
+      const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+        method: 'POST',
+        body: JSON.stringify({ name: `The Vault — ${artistName}`, description: `${artistName} tracks shared in The Vault community`, public: true })
+      });
+      plId = pl.id;
+
+      const BATCH = 100;
+      for (let i = 0; i < uris.length; i += BATCH) {
+        await spotifyFetch(`https://api.spotify.com/v1/playlists/${plId}/items`, {
+          method: 'POST', body: JSON.stringify({ uris: uris.slice(i, i + BATCH) })
+        });
+        if (i + BATCH < uris.length) await sleep(500);
+      }
+      toast(`✓ Created "The Vault — ${artistName}" with ${uris.length} tracks`);
+    }
+
+    try { await spotifyFetch(`https://api.spotify.com/v1/playlists/${plId}/followers`, { method: 'PUT', body: JSON.stringify({ public: true }) }); } catch(e) {}
 
     if (btn) {
       btn.textContent = '✓ Open';
       btn.style.background = 'var(--sp)'; btn.style.color = '#fff'; btn.disabled = false;
-      btn.onclick = () => window.open(`https://open.spotify.com/playlist/${pl.id}`, '_blank');
+      btn.onclick = () => window.open(`https://open.spotify.com/playlist/${plId}`, '_blank');
     }
     // Save artist playlist ID
     try {
       const saved = JSON.parse(localStorage.getItem('vault_artist_playlists') || '{}');
-      saved[artistName] = { playlistId: pl.id, url: `https://open.spotify.com/playlist/${pl.id}`, name: `The Vault — ${artistName}` };
+      saved[artistName] = { playlistId: plId, url: `https://open.spotify.com/playlist/${plId}`, name: `The Vault — ${artistName}` };
       localStorage.setItem('vault_artist_playlists', JSON.stringify(saved));
     } catch(e) {}
-    toast(`✓ Created "The Vault — ${artistName}" with ${uris.length} tracks`);
+    
   } catch(e) {
     if (btn) { btn.textContent = 'SP ＋'; btn.disabled = false; }
     toast('Error: ' + e.message);
