@@ -2455,6 +2455,15 @@ async function createSpotifyPlaylist() {
 
 // ── Spotify API helper ──
 async function spotifyFetch(url, options = {}, _retried = false) {
+  // Check token expiry before making call
+  const expiry = localStorage.getItem('sp_token_expiry');
+  if (expiry && Date.now() > parseInt(expiry) - 60000) {
+    // Token expired or expiring within 60 seconds
+    spotifyToken = null;
+    localStorage.removeItem('sp_token');
+    localStorage.removeItem('sp_token_expiry');
+    throw new Error('Spotify session expired — please reconnect Spotify');
+  }
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -4791,6 +4800,11 @@ async function createArtistSpotifyPlaylist(artistName) {
       try {
         const searchQuery = artistName.trim().replace(/\s+/g, '+');
         console.log('[SP+] Searching Spotify for:', searchQuery);
+        // Check token expiry
+        const spExpiry = localStorage.getItem('sp_token_expiry');
+        if (spExpiry && Date.now() > parseInt(spExpiry) - 60000) {
+          throw new Error('Spotify session expired — please reconnect');
+        }
         const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=20`, {
           headers: { 'Authorization': `Bearer ${spotifyToken}` }
         });
