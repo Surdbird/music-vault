@@ -4805,7 +4805,7 @@ async function createArtistSpotifyPlaylist(artistName) {
         if (spExpiry && Date.now() > parseInt(spExpiry) - 60000) {
           throw new Error('Spotify session expired — please reconnect');
         }
-        const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=20`, {
+        const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=10`, {
           headers: { 'Authorization': `Bearer ${spotifyToken}` }
         });
         console.log('[SP+] Search status:', searchResponse.status);
