@@ -2299,6 +2299,7 @@ async function handleSpotifyCallback() {
     spotifyToken = json.access_token;
     localStorage.setItem('sp_token', spotifyToken);
     localStorage.setItem('sp_token_expiry', Date.now() + json.expires_in * 1000);
+    if (json.refresh_token) localStorage.setItem('sp_refresh_token', json.refresh_token);
     
     const profile = await spotifyFetch('https://api.spotify.com/v1/me');
     spotifyUserId = profile.id;
@@ -2454,15 +2455,50 @@ async function createSpotifyPlaylist() {
 }
 
 // ── Spotify API helper ──
+
+// ── AUTO TOKEN REFRESH ────────────────────────────────────────────────────
+async function refreshSpotifyToken() {
+  const refreshToken = localStorage.getItem('sp_refresh_token');
+  const clientId = document.getElementById('clientIdInput')?.value.trim() 
+    || localStorage.getItem('sp_client_id') 
+    || '05d1e6e31ccf465a84de32fe886550fe';
+  if (!refreshToken || !clientId) return false;
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId,
+      })
+    });
+    const json = await res.json();
+    if (!json.access_token) return false;
+    spotifyToken = json.access_token;
+    localStorage.setItem('sp_token', spotifyToken);
+    localStorage.setItem('sp_token_expiry', Date.now() + json.expires_in * 1000);
+    if (json.refresh_token) localStorage.setItem('sp_refresh_token', json.refresh_token);
+    console.log('[Spotify] Token refreshed automatically');
+    return true;
+  } catch(e) {
+    console.warn('[Spotify] Auto-refresh failed:', e.message);
+    return false;
+  }
+}
+
 async function spotifyFetch(url, options = {}, _retried = false) {
   // Check token expiry before making call
   const expiry = localStorage.getItem('sp_token_expiry');
   if (expiry && Date.now() > parseInt(expiry) - 60000) {
-    // Token expired or expiring within 60 seconds
-    spotifyToken = null;
-    localStorage.removeItem('sp_token');
-    localStorage.removeItem('sp_token_expiry');
-    throw new Error('Spotify session expired — please reconnect Spotify');
+    // Token expired or expiring within 60 seconds — try auto-refresh first
+    const refreshed = await refreshSpotifyToken();
+    if (!refreshed) {
+      spotifyToken = null;
+      localStorage.removeItem('sp_token');
+      localStorage.removeItem('sp_token_expiry');
+      throw new Error('Spotify session expired — please reconnect Spotify');
+    }
   }
   const res = await fetch(url, {
     ...options,
@@ -4805,15 +4841,22 @@ async function createArtistSpotifyPlaylist(artistName) {
         if (spExpiry && Date.now() > parseInt(spExpiry) - 60000) {
           throw new Error('Spotify session expired — please reconnect');
         }
-        const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=10`, {
-          headers: { 'Authorization': `Bearer ${spotifyToken}` }
-        });
-        console.log('[SP+] Search status:', searchResponse.status);
-        const searchRes = await searchResponse.json();
-        console.log('[SP+] Search result:', searchRes);
-        const searchTracks = (searchRes.tracks?.items || [])
-          .filter(t => t.artists && t.artists.length > 0)
-          .map(t => `spotify:track:${t.id}`);
+        // Paginate through search results — limit=10 per call due to Dev Mode
+        const allSearchTracks = [];
+        for (let offset = 0; offset < 50; offset += 10) {
+          const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=10&offset=${offset}`, {
+            headers: { 'Authorization': `Bearer ${spotifyToken}` }
+          });
+          if (!searchResponse.ok) break;
+          const searchRes = await searchResponse.json();
+          const batch = (searchRes.tracks?.items || [])
+            .filter(t => t.artists && t.artists.length > 0)
+            .map(t => `spotify:track:${t.id}`);
+          allSearchTracks.push(...batch);
+          if (batch.length < 10) break; // no more results
+          await new Promise(r => setTimeout(r, 200)); // small delay between calls
+        }
+        const searchTracks = [...new Set(allSearchTracks)]; // deduplicate
         console.log('[SP+] Tracks found:', searchTracks.length);
         if (searchTracks.length) {
           const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
