@@ -4794,7 +4794,7 @@ async function createArtistSpotifyPlaylist(artistName) {
           headers: { 'Authorization': `Bearer ${spotifyToken}` }
         }).then(r => r.json());
         const searchTracks = (searchRes.tracks?.items || [])
-          .filter(t => t.artists.some(a => a.name.toLowerCase().includes(artistName.toLowerCase()) || artistName.toLowerCase().includes(a.name.toLowerCase())))
+          .filter(t => t.artists && t.artists.length > 0) // search query already filters by artist
           .map(t => `spotify:track:${t.id}`);
         if (searchTracks.length) {
           const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
