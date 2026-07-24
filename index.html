@@ -4790,12 +4790,17 @@ async function createArtistSpotifyPlaylist(artistName) {
       if (btn) btn.textContent = '…searching';
       try {
         const searchQuery = artistName.trim().replace(/\s+/g, '+');
-        const searchRes = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=20`, {
+        console.log('[SP+] Searching Spotify for:', searchQuery);
+        const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=20`, {
           headers: { 'Authorization': `Bearer ${spotifyToken}` }
-        }).then(r => r.json());
+        });
+        console.log('[SP+] Search status:', searchResponse.status);
+        const searchRes = await searchResponse.json();
+        console.log('[SP+] Search result:', searchRes);
         const searchTracks = (searchRes.tracks?.items || [])
-          .filter(t => t.artists && t.artists.length > 0) // search query already filters by artist
+          .filter(t => t.artists && t.artists.length > 0)
           .map(t => `spotify:track:${t.id}`);
+        console.log('[SP+] Tracks found:', searchTracks.length);
         if (searchTracks.length) {
           const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
             method: 'POST',
