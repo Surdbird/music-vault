@@ -4789,10 +4789,10 @@ async function createArtistSpotifyPlaylist(artistName) {
       // Fallback: search Spotify directly for this artist
       if (btn) btn.textContent = '…searching';
       try {
-        const searchQuery = encodeURIComponent(`artist:"${artistName}"`);
-        const searchRes = await spotifyFetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=50`);
+        const searchQuery = encodeURIComponent(artistName);
+        const searchRes = await spotifyFetch(`https://api.spotify.com/v1/search?q=${searchQuery}&type=track&limit=20&market=US`);
         const searchTracks = (searchRes.tracks?.items || [])
-          .filter(t => t.artists.some(a => a.name.toLowerCase() === artistName.toLowerCase()))
+          .filter(t => t.artists.some(a => a.name.toLowerCase().includes(artistName.toLowerCase()) || artistName.toLowerCase().includes(a.name.toLowerCase())))
           .map(t => `spotify:track:${t.id}`);
         if (searchTracks.length) {
           const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
