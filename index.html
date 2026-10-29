@@ -1237,8 +1237,8 @@ textarea::placeholder { color: var(--muted); }
     ◈ Generate Genres Links Page
   </button>
   <span style="display:inline-flex;gap:0.4rem;align-items:center">
-    <select id="targetWeekSelect" title="Target week for Sanctorum (default: this week — override for missed-Sunday recoveries)" onchange="onTargetWeekChange(this)" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.7rem;background:#0e0c0a;color:#d4845a;border:1px solid #d4845a;padding:0.35rem 0.5rem;border-radius:2px;cursor:pointer">
-      <option value="current">This week (default)</option>
+    <select id="targetWeekSelect" title="Month for the Sanctorum (default: this month — pick an earlier month to regenerate it)" onchange="onTargetWeekChange(this)" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.7rem;background:#0e0c0a;color:#d4845a;border:1px solid #d4845a;padding:0.35rem 0.5rem;border-radius:2px;cursor:pointer">
+      <option value="current">This month (default)</option>
     </select>
     <button onclick="generateSanctorum()" style="font-family:'Syne Mono','Courier New',monospace;font-size:0.72rem;background:#1a1612;color:#d4845a;border:1px solid #d4845a;padding:0.4rem 1rem;border-radius:2px;cursor:pointer">
       ✦ Generate The Vault Sanctorum
@@ -1433,9 +1433,9 @@ const PLATFORMS = {
   youtube: {
     name: 'YouTube', icon: '▶', cls: 'yt',
     patterns: [
-      /https?:\/\/(?:www\.)?youtube\.com\/watch\?[^\s<>"'\])]*/gi,
+      /https?:\/\/(?:www\.|m\.)?youtube\.com\/watch\?[^\s<>"'\])]*/gi,
       /https?:\/\/youtu\.be\/[^\s<>"'\])]*/gi,
-      /https?:\/\/(?:www\.)?youtube\.com\/shorts\/[^\s<>"'\])]*/gi,
+      /https?:\/\/(?:www\.|m\.)?youtube\.com\/(?:shorts|live|embed)\/[^\s<>"'\])]*/gi,
       /https?:\/\/music\.youtube\.com\/[^\s<>"'\])]*/gi,
     ]
   },
@@ -1508,20 +1508,18 @@ function parseChat(text) {
   
   // We need to keep date/sender lines that precede music link lines
   // Strategy: keep a line if it OR the next few lines contain a music link
+  // Keep whole messages that contain a music link (a message = header line + its continuation
+  // lines). The old fixed 3-line window dropped links sitting low down in long multi-line posts.
+  const HEADER = /^[\u200e\u200f]?(\[\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4},|\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4},?\s+\d{1,2}:\d{2})/;
   const lines = [];
-  for (let i = 0; i < allLines.length; i++) {
-    const line = allLines[i];
-    // Check if this line or continuation lines have a music link
-    const windowEnd = Math.min(i + 3, allLines.length);
-    let hasMusic = false;
-    for (let j = i; j < windowEnd; j++) {
-      if (MUSIC_DOMAINS.some(d => allLines[j].includes(d))) {
-        hasMusic = true;
-        break;
-      }
-    }
-    if (hasMusic) lines.push(line);
+  let block = [], blockHasMusic = false;
+  const flushBlock = () => { if (blockHasMusic) lines.push(...block); block = []; blockHasMusic = false; };
+  for (const line of allLines) {
+    if (HEADER.test(line)) flushBlock();
+    block.push(line);
+    if (!blockHasMusic && MUSIC_DOMAINS.some(d => line.includes(d))) blockHasMusic = true;
   }
+  flushBlock();
   
   const members = {};
   let totalLinks = 0;
@@ -1575,7 +1573,7 @@ function parseChat(text) {
         const msgBody = m[4] || '';
         // Skip system/notification lines (WhatsApp uses \u200e invisible char in them)
         const isSystem = (
-          line.includes('\u200e') ||
+          msgBody.startsWith('\u200e') ||
           /end-to-end encrypted/i.test(msgBody) ||
           /created this group/i.test(msgBody) ||
           /Messages to this group/i.test(msgBody) ||
@@ -2590,7 +2588,12 @@ try { localStorage.removeItem('vault_chat'); } catch(e) {}
 function extractYTId(url) {
   try {
     const u = new URL(url);
-    return u.searchParams.get('v') || u.pathname.split('/').pop() || null;
+    let id = u.searchParams.get('v');
+    if (!id) {
+      const parts = u.pathname.split('/').filter(Boolean);
+      id = parts.length ? parts[parts.length - 1] : null;   // youtu.be/ID, /shorts/ID, /live/ID
+    }
+    return (id && /^[A-Za-z0-9_-]{11}$/.test(id)) ? id : null;  // real IDs only: playlist URLs return null
   } catch { return null; }
 }
 
@@ -3408,50 +3411,42 @@ function generateSpotifyByArtistPage() {
 // ──────────────────────────────────────────────
 // TARGET WEEK OVERRIDE — for missed-Sunday recoveries
 // ──────────────────────────────────────────────
+function monthKeyOf(date) {
+  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+}
+function monthLabelOf(key) {
+  const [y, m] = key.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+function monthBounds(key) {
+  const [y, m] = key.split('-').map(Number);
+  return { first: new Date(y, m - 1, 1), last: new Date(y, m, 0) };
+}
+
+// Target MONTH for the Sanctorum (default: the current month; pick an earlier one to regenerate it)
 function getTargetWeek() {
   const sel = document.getElementById('targetWeekSelect');
   const val = sel?.value || 'current';
-  const today = new Date();
-
-  if (val === 'current' || !val) {
-    const { week, year } = getISOWeek(today);
-    const { monday, sunday } = getWeekRange(year, week);
-    return { week, year, monday, sunday, isOverride: false };
-  }
-
-  const m = val.match(/(\d{4})-W(\d+)/);
-  if (!m) {
-    const { week, year } = getISOWeek(today);
-    const { monday, sunday } = getWeekRange(year, week);
-    return { week, year, monday, sunday, isOverride: false };
-  }
-
-  const year = parseInt(m[1]);
-  const week = parseInt(m[2]);
-  const { monday, sunday } = getWeekRange(year, week);
-  return { week, year, monday, sunday, isOverride: true };
+  const isOverride = /^\d{4}-\d{2}$/.test(val);
+  const key = isOverride ? val : monthKeyOf(new Date());
+  const { first, last } = monthBounds(key);
+  return { key, label: monthLabelOf(key), first, last, isOverride };
 }
 
 function populateTargetWeekDropdown() {
   const sel = document.getElementById('targetWeekSelect');
   if (!sel) return;
-  const today = new Date();
   const prev = sel.value;
-
+  const today = new Date();
   const opts = [];
   for (let i = 0; i < 8; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i * 7);
-    const { week, year } = getISOWeek(d);
-    const { monday, sunday } = getWeekRange(year, week);
-    const dateRange = formatDateShort(monday) + ' – ' + formatDateShort(sunday);
-    const value = (i === 0) ? 'current' : (year + '-W' + String(week).padStart(2, '0'));
-    const label = (i === 0)
-      ? 'This week (W' + week + ', ' + dateRange + ')'
-      : 'W' + week + ' (' + dateRange + ')';
-    opts.push({ value, label });
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const key = monthKeyOf(d);
+    opts.push({
+      value: i === 0 ? 'current' : key,
+      label: i === 0 ? 'This month (' + monthLabelOf(key) + ')' : monthLabelOf(key)
+    });
   }
-
   sel.innerHTML = opts.map(o =>
     '<option value="' + o.value + '"' + (o.value === prev ? ' selected' : '') + '>' + o.label + '</option>'
   ).join('');
@@ -3460,10 +3455,10 @@ function populateTargetWeekDropdown() {
 function onTargetWeekChange(sel) {
   const val = sel.value;
   if (val === 'current') {
-    toast('Sanctorum will use this week (default)');
+    toast('Sanctorum will use this month (default)');
   } else {
     const opt = sel.options[sel.selectedIndex];
-    toast('⚠ Sanctorum target: ' + opt.text + ' — recovery mode');
+    toast('Sanctorum target: ' + opt.text);
   }
 }
 
@@ -3475,7 +3470,7 @@ async function generateSanctorum() {
   // Determine target week (default: this week, or override from dropdown)
   const targetWeek = getTargetWeek();
   if (targetWeek.isOverride) {
-    toast('⚠ Generating Sanctorum for W' + targetWeek.week + ' (recovery mode)');
+    toast('Generating Sanctorum for ' + targetWeek.label);
   }
 
   // Get Complete Vault playlist URL
@@ -3492,29 +3487,19 @@ async function generateSanctorum() {
       toast('Fetching weekly digest playlist...');
       let next = `https://api.spotify.com/v1/me/playlists?limit=50`;
       let found = null;
-      const targetRe = targetWeek.isOverride
-        ? new RegExp('The Vault.*W' + targetWeek.week + '\\b', 'i')
-        : /The Vault.*W\d+/i;
+      const wantName = ('The Vault — ' + targetWeek.label).toLowerCase();
       while (next && !found) {
         const data = await spotifyFetch(next);
-        const vaultWeekly = (data.playlists || data.items || [])
-          .filter(p => p.name && targetRe.test(p.name))
-          .sort((a, b) => {
-            const wa = parseInt(a.name.match(/W(\d+)/)?.[1] || 0);
-            const wb = parseInt(b.name.match(/W(\d+)/)?.[1] || 0);
-            return wb - wa;
-          });
-        if (vaultWeekly.length > 0) {
-          found = vaultWeekly[0];
-        }
+        const hit = (data.playlists || data.items || []).find(p => p.name && p.name.toLowerCase().trim() === wantName);
+        if (hit) found = hit;
         next = data.next || null;
       }
       if (found) {
         latestWeeklyName = found.name;
         latestWeeklyUrl = found.external_urls?.spotify || spotifyProfile;
         toast('✓ Found weekly: ' + found.name);
-      } else if (targetWeek.isOverride) {
-        toast('⚠ No Spotify playlist found for W' + targetWeek.week + ' — create it on Spotify first');
+      } else {
+        toast('No Spotify playlist named "The Vault — ' + targetWeek.label + '" yet — create it from DIGESTS first');
       }
     } catch(e) {
       console.warn('Could not fetch weekly playlist:', e.message);
@@ -3687,9 +3672,9 @@ async function generateSanctorum() {
       : '<div class="card" style="opacity:0.5"><div class="card-icon">▶</div><div class="card-title">This Week on YouTube</div><div class="card-desc">No YouTube links found for this week yet.</div><span class="card-platform yt">YouTube</span></div>';
 
     // Build YouTube links for the target week (current week by default, or override)
-    const _weekStart = new Date(targetWeek.monday);
+    const _weekStart = new Date(targetWeek.first);
     _weekStart.setHours(0,0,0,0);
-    const _weekEnd = new Date(targetWeek.sunday);
+    const _weekEnd = new Date(targetWeek.last);
     _weekEnd.setHours(23,59,59,999);
 
     const _weekYTIds = [];
@@ -3703,9 +3688,9 @@ async function generateSanctorum() {
         }
       }
     }
-    const _wNum = targetWeek.week;
-    const _weekLabel = 'W' + _wNum + ' (' + formatDateShort(targetWeek.monday) + ' – ' + formatDateShort(targetWeek.sunday) + ')';
-    const _cardTitle = targetWeek.isOverride ? ('Week of ' + formatDateShort(targetWeek.monday)) : 'This Week on YouTube';
+    const _wNum = targetWeek.label;
+    const _weekLabel = targetWeek.label + ' (' + formatDateShort(targetWeek.first) + ' – ' + formatDateShort(targetWeek.last) + ')';
+    const _cardTitle = 'YouTube — ' + targetWeek.label;
     const _ytChunks = [];
     for (let i=0; i<_weekYTIds.length; i+=50) _ytChunks.push(_weekYTIds.slice(i,i+50));
     const _ytCards = _weekYTIds.length > 0
@@ -3713,28 +3698,28 @@ async function generateSanctorum() {
       : '<div class="card" style="opacity:0.5;cursor:default"><div class="card-icon">\u25b6</div><div class="card-title">' + _cardTitle + '</div><div class="card-desc">No YouTube links found for ' + _weekLabel + '.</div><span class="card-platform yt">YouTube</span></div>';
 
     const dispatchesSection = '<div class="section">'
-    + '<div class="section-title">Weekly Dispatches</div>'
+    + '<div class="section-title">Dispatches</div>'
     + '<div class="grid">'
     + '<a class="card" href="' + base + '/links-summaries.html">'
     + '<div class="card-icon">✦</div>'
-    + '<div class="card-title">Weekly Dispatches</div>'
+    + '<div class="card-title">Dispatches</div>'
     + '<div class="card-desc">Six years of music, narrated in borrowed voices. Hunter S. Thompson, García Márquez, Ginsberg, DFW and more.</div>'
     + '<span class="card-platform multi">Archive</span>'
     + '</a>'
     + '</div></div>';
 
     const weeklySection = '<div class="section">'
-    + '<div class="section-title">Weekly Digest</div>'
+    + '<div class="section-title">Monthly Digest</div>'
     + '<div class="grid">'
     + '<a class="card" href="' + latestWeeklyUrl + '" target="_blank" rel="noopener">'
     + '<div class="card-icon">\ud83d\udcc5</div>'
-    + '<div class="card-title">' + (latestWeeklyName || 'Weekly Digest') + '</div>'
-    + '<div class="card-desc">' + (latestWeeklyName ? 'The latest weekly digest playlist — all music shared this week in one place.' : 'A new Spotify playlist every week with all the music shared that week.') + '</div>'
+    + '<div class="card-title">' + (latestWeeklyName || 'Monthly Digest') + '</div>'
+    + '<div class="card-desc">' + (latestWeeklyName ? 'The monthly digest playlist — all the music shared this month in one place.' : 'A new Spotify playlist every month with all the music shared that month.') + '</div>'
     + '<span class="card-platform sp">Spotify</span>'
     + '</a>'
     + _ytCards
     + '</div>'
-    + '<p style="font-size:0.72rem;color:#3d3530;margin-top:0.75rem">** Spotify digest is created at the end of each week — YouTube shows the current week live.</p>'
+    + '<p style="font-size:0.72rem;color:#3d3530;margin-top:0.75rem">** The Spotify digest is created at the end of each month — YouTube shows the whole month.</p>'
     + '</div>';
 
     const pageHtmlEnd = '</div>'
@@ -3845,10 +3830,9 @@ function renderDigests() {
       for (const track of tracks) {
         const date = parseWADate(track.date);
         if (!date) continue;
-        const { week, year } = getISOWeek(date);
-        const key = `${year}-W${String(week).padStart(2, '0')}`;
+        const key = monthKeyOf(date);
         if (!weekMap[key]) {
-          weekMap[key] = { year, week, tracks: [] };
+          weekMap[key] = { key, tracks: [] };
         }
         weekMap[key].tracks.push({
           url: track.url,
@@ -3875,14 +3859,14 @@ function renderDigests() {
   const totalWeeks = sortedWeeks.length;
   let html = `
     <div class="digest-header-bar">
-      <div class="digest-header-title">WEEKLY DIGESTS</div>
-      <div class="digest-header-sub">${totalWeeks} week${totalWeeks !== 1 ? 's' : ''} of shared music</div>
+      <div class="digest-header-title">MONTHLY DIGESTS</div>
+      <div class="digest-header-sub">${totalWeeks} month${totalWeeks !== 1 ? 's' : ''} of shared music</div>
     </div>`;
 
   for (const [key, data] of sortedWeeks) {
-    const { monday, sunday } = getWeekRange(data.year, data.week);
-    const dateRange = `${formatDateShort(monday)} – ${formatDateShort(sunday)}`;
-    const label = `W${data.week}`;
+    const { first, last } = monthBounds(key);
+    const dateRange = `${formatDateShort(first)} – ${formatDateShort(last)}`;
+    const label = monthLabelOf(key);
     const count = data.tracks.length;
 
     // Sort tracks within week chronologically
@@ -3956,13 +3940,11 @@ async function createDigestSpotifyPlaylist(weekKey) {
 }
 
 function digestWeekMeta(weekKey) {
-  const m = weekKey.match(/(\d{4})-W(\d+)/);
-  if (!m) return { weekLabel: weekKey, dateRange: '' };
-  const year = parseInt(m[1]), week = parseInt(m[2]);
-  const { monday, sunday } = getWeekRange(year, week);
+  if (!/^\d{4}-\d{2}$/.test(weekKey)) return { weekLabel: weekKey, dateRange: '' };
+  const { first, last } = monthBounds(weekKey);
   return {
-    weekLabel: 'W' + week,
-    dateRange: formatDateShort(monday) + ' – ' + formatDateShort(sunday)
+    weekLabel: monthLabelOf(weekKey),
+    dateRange: formatDateShort(first) + ' – ' + formatDateShort(last)
   };
 }
 
@@ -3975,7 +3957,7 @@ async function _buildDigestPlaylist(weekKey, weekLabel, dateRange) {
 
   if (!spotifyTracks.length) { toast('No Spotify tracks this week'); return; }
 
-  const playlistName = `The Vault — ${weekLabel} (${dateRange})`;
+  const playlistName = `The Vault — ${weekLabel}`;
 
   const btn = document.querySelector(`#dw-${weekKey} .btn-sp`);
   const origText = btn ? btn.textContent : '';
@@ -3986,7 +3968,7 @@ async function _buildDigestPlaylist(weekKey, weekLabel, dateRange) {
     // Log skipped URLs so we can see what's being dropped
     const skipped = [];
     const urls = spotifyTracks.map(t => t.url);
-    const uris = await resolveSpotifyUris(urls, null, skipped);
+    let uris = await resolveSpotifyUris(urls, null, skipped);
 
     if (uris.length === 0) {
       toast('No valid Spotify tracks found for this week');
@@ -3996,11 +3978,31 @@ async function _buildDigestPlaylist(weekKey, weekLabel, dateRange) {
 
     if (btn) btn.textContent = `…creating (${uris.length} tracks)`;
 
-    // Step 2: Create playlist
-    const pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
-      method: 'POST',
-      body: JSON.stringify({ name: playlistName, description: `All music shared in The Vault during ${dateRange}`, public: true })
-    });
+    // Step 2: reuse the playlist if it already exists (no duplicates), else create it
+    let pl = null;
+    let nextPl = 'https://api.spotify.com/v1/me/playlists?limit=50';
+    while (nextPl && !pl) {
+      const page = await spotifyFetch(nextPl);
+      pl = (page.items || []).find(p => p.name === playlistName) || null;
+      nextPl = page.next || null;
+    }
+    if (pl) {
+      // already exists: add only the tracks it doesn't have yet
+      const have = new Set();
+      let nx = `https://api.spotify.com/v1/playlists/${pl.id}/items?limit=100`;
+      while (nx) {
+        const pg = await spotifyFetch(nx);
+        for (const it of (pg.items || [])) if (it?.track?.uri) have.add(it.track.uri);
+        nx = pg.next || null;
+        if (nx) await sleep(150);
+      }
+      uris = uris.filter(u => !have.has(u));
+    } else {
+      pl = await spotifyFetch(`https://api.spotify.com/v1/me/playlists`, {
+        method: 'POST',
+        body: JSON.stringify({ name: playlistName, description: `All music shared in The Vault during ${dateRange}`, public: true })
+      });
+    }
 
     // Step 3: Add in batches of 100 with retry + backoff
     const BATCH = 100;
@@ -4060,9 +4062,8 @@ function buildWeekMap() {
       for (const track of tracks) {
         const date = parseWADate(track.date);
         if (!date) continue;
-        const { week, year } = getISOWeek(date);
-        const key = `${year}-W${String(week).padStart(2, '0')}`;
-        if (!weekMap[key]) weekMap[key] = { year, week, tracks: [] };
+        const key = monthKeyOf(date);
+        if (!weekMap[key]) weekMap[key] = { key, tracks: [] };
         weekMap[key].tracks.push({ ...track, platform, sender: memberName, sortDate: date });
       }
     }
